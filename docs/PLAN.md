@@ -277,7 +277,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 
 **Milestone C — Beyond the spreadsheet**
 
-- [ ] F12 Dashboard: KPIs, per-person breakdown, category visualization, warnings
+- [x] F12 Dashboard: KPIs, per-person breakdown, category visualization, warnings
 - [ ] F13 Monthly snapshots and trend charts
 - [ ] F14 Onboarding wizard and empty states
 - [ ] F15 Export/backup: JSON and CSV download, restore from JSON
