@@ -34,6 +34,17 @@ npm run dev
 Behind a reverse proxy, forward `X-Forwarded-For` so login throttling can tell clients
 apart, and serve the app over HTTPS so the session cookie is set with `Secure`.
 
+## Backups and exports
+
+Authenticated users can download a versioned JSON backup from **Einstellungen**. The JSON
+contains the complete household plan and monthly history, but never credentials, password
+hashes or session data. The same screen offers a UTF-8 CSV export of current incomes,
+fixed costs and savings pots for spreadsheets.
+
+Restoring a JSON backup requires an explicit confirmation and replaces the household data
+in one database transaction. Seeded system categories are retained; malformed, unsupported
+or inconsistent backups are rejected before any data is changed.
+
 ## Importing the legacy workbook
 
 The one-off importer reads the documented `Übersicht`, `Fixkosten`, and `Sparen & Rücklagen`

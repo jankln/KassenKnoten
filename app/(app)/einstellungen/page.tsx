@@ -7,6 +7,7 @@ import { listCategories } from "@/server/services/categories";
 import { getHouseholdSettings, getSplitContext } from "@/server/services/household";
 import { listMembersWithIncome } from "@/server/services/members";
 import { CategoryList } from "./category-list";
+import { DataBackup } from "./data-backup";
 import { DefaultSplitForm } from "./default-split";
 
 export const metadata: Metadata = { title: de.sections.settings.title };
@@ -50,6 +51,14 @@ export default async function SettingsPage() {
             />
           </Card>
         ) : null}
+
+        <Card>
+          <div className="mb-4">
+            <CardTitle>{copy.dataTitle}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{copy.dataHint}</p>
+          </div>
+          <DataBackup />
+        </Card>
 
         <Card>
           <div className="mb-4">

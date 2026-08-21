@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import { forwardRef, type ComponentProps, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /** A labelled form row with room for a hint and an error, always in that order. */
@@ -35,9 +35,11 @@ export function Field({
 const control =
   "border-line bg-canvas rounded-control h-11 w-full border px-3 text-base transition-colors outline-none focus-visible:border-brass disabled:opacity-60";
 
-export function Input({ className, ...props }: ComponentProps<"input">) {
-  return <input className={cn(control, className)} {...props} />;
-}
+export const Input = forwardRef<HTMLInputElement, ComponentProps<"input">>(
+  function Input({ className, ...props }, ref) {
+    return <input ref={ref} className={cn(control, className)} {...props} />;
+  },
+);
 
 export function Select({ className, ...props }: ComponentProps<"select">) {
   return <select className={cn(control, "pr-8", className)} {...props} />;

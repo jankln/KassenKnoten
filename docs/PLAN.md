@@ -280,7 +280,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F12 Dashboard: KPIs, per-person breakdown, category visualization, warnings
 - [x] F13 Monthly snapshots and trend charts
 - [x] F14 Onboarding wizard and empty states
-- [ ] F15 Export/backup: JSON and CSV download, restore from JSON
+- [x] F15 Export/backup: JSON and CSV download, restore from JSON
 
 **Milestone D — Ship**
 
