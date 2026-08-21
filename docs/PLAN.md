@@ -256,7 +256,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 **Milestone A — Foundation**
 
 - [x] F01 Bootstrap: Next.js + TS + Tailwind + shadcn, ESLint/Prettier, Vitest, npm scripts
-- [ ] F02 Database layer: Drizzle schema, migrations, SQLite connection, seed of system categories
+- [x] F02 Database layer: Drizzle schema, migrations, SQLite connection, seed of system categories
 - [ ] F03 Domain engine: money, intervals, income ratio, largest-remainder split, household summary — with full unit tests
 - [ ] F04 Auth: OIDC flow, session cookie, allowlist, local fallback, middleware, login screen
 
