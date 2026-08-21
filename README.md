@@ -10,15 +10,39 @@ shown on a dashboard that also keeps a monthly history.
 - **UI language:** German
 - **Code and documentation:** English
 - **Runs as:** a single Docker container with a SQLite file on a mounted volume
-- **Login:** OIDC (e.g. Authentik) with an optional local password fallback
+- **Login:** one shared household password today; OIDC (Authentik) is planned
+
+## Getting started
+
+```bash
+npm install
+cp .env.example .env.local
+
+# generate the household password hash and paste the printed line into .env.local
+npm run auth:hash
+
+# add a session secret
+echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env.local
+
+npm run dev
+```
+
+> The password hash is stored base64-encoded on purpose. A raw argon2id hash is full of
+> `$` characters, and both `.env` parsers and docker-compose expand those as variables,
+> which silently destroys it. `npm run auth:hash` prints the safe form.
+
+Behind a reverse proxy, forward `X-Forwarded-For` so login throttling can tell clients
+apart, and serve the app over HTTPS so the session cookie is set with `Secure`.
 
 ## Status
 
-Planning complete, implementation not started.
+In development. Milestone A (foundation) is complete: database, calculation engine and
+authentication. The screens that replace the spreadsheet are next.
 
 - [`docs/PLAN.md`](docs/PLAN.md) — architecture, data model, UX concept, roadmap
 - [`docs/WORKFLOW.md`](docs/WORKFLOW.md) — how changes are made and committed
 - [`docs/legacy-spreadsheet.md`](docs/legacy-spreadsheet.md) — what the original spreadsheet did
+- [`docs/design.md`](docs/design.md) — the visual direction and why it is what it is
 - [`CURRENT_WORK.md`](CURRENT_WORK.md) — what is being worked on right now
 
 ## License

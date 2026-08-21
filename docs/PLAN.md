@@ -157,45 +157,49 @@ month's computed state is frozen. No cron, no scheduler container.
 
 ## 5. Auth design
 
-**Primary — OIDC / Authentik**
+**Today — one shared household password** (F04, built)
 
-- Authorization Code flow with PKCE, `openid profile email` scopes.
-- Discovery via `OIDC_ISSUER`, so Authentik, Authelia, Keycloak or Zitadel all work.
-- ID token verified against the JWKS (`jose`), issuer/audience/expiry checked server-side.
-- On success: e-mail is matched against `AUTH_ALLOWED_EMAILS`. Not on the list → 403,
-  no session, event logged.
-- Session = encrypted, signed cookie (`httpOnly`, `Secure`, `SameSite=Lax`), sliding
-  expiry, secret from `SESSION_SECRET`.
+- argon2id (OWASP interactive parameters), hash supplied through the environment. The
+  password never reaches the database, so a copy of the SQLite file is not a copy of the
+  password.
+- The hash is read base64-encoded or from a file. An argon2id hash is full of `$`, and
+  both `.env` parsers and docker-compose expand those as variables — a raw hash arrives
+  as `=19=19456,t=2,p=1`. The app names that failure explicitly instead of saying
+  "invalid".
+- Attempts are throttled per client (five per fifteen minutes, in-process sliding
+  window). A correct password is refused while throttled.
+- The session is an **encrypted** cookie (JWE, A256GCM, key derived from
+  `SESSION_SECRET` via HKDF), `httpOnly`, `SameSite=Lax`, `Secure` when `APP_URL` is
+  HTTPS. It is re-issued once past half its lifetime, so an active household stays signed
+  in and an abandoned session still expires.
 
-**Fallback — local password** (`AUTH_MODE=local` or `both`)
+**Later — OIDC / Authentik** (F04b, deferred by request)
 
-- Single household password, argon2id hash supplied via env — no password ever in the DB
-  or in the image.
-- Rate-limited (in-memory token bucket per IP) and constant-time compared.
-- Off by default so a misconfigured deployment cannot accidentally expose a weak login.
+- Authorization Code flow with PKCE, discovery via `OIDC_ISSUER`, ID token verified
+  against the JWKS with `jose`, then the e-mail matched against an allowlist.
+- The seam already exists: the session module knows nothing about how an identity was
+  proven, so the callback becomes a second caller of `startSession()` rather than a
+  rewrite. `AUTH_MODE` deliberately rejects `oidc` until that code exists — a config
+  value that silently locks the household out would be worse than an unsupported one.
 
 **Everything else**
 
 - `proxy.ts` (Next.js 16 renamed `middleware.ts` to `proxy.ts`, and it always runs on the
-  Node.js runtime) denies every route except `/login`, `/api/auth/*` and `/api/health`
-  without a valid session — deny-by-default, not route-by-route opt-in.
+  Node.js runtime) denies every route except `/login` and `/api/health` without a valid
+  session — deny-by-default, not route-by-route opt-in.
 - Server Actions re-check the session server-side; the proxy is never the only gate.
-- CSRF: `SameSite=Lax` cookie + origin check on mutations.
-- Security headers via `next.config.ts` (CSP, HSTS, `X-Content-Type-Options`,
-  `Referrer-Policy`), no external CDN, no telemetry, no analytics.
-- The login identity is not a household member. Members stay pure data records
-  with no credentials, exactly as intended.
+- CSRF: `SameSite=Lax` cookie plus the origin check Next performs on Server Actions.
+- Security headers (CSP, HSTS, `Referrer-Policy`) land with the deployment work in F17.
+- The login identity is not a household member. Members stay pure data records with no
+  credentials, exactly as intended.
 
 ```env
-AUTH_MODE=oidc                  # oidc | local | both
-OIDC_ISSUER=https://auth.example.com/application/o/kassenknoten/
-OIDC_CLIENT_ID=
-OIDC_CLIENT_SECRET=
-AUTH_ALLOWED_EMAILS=jan@example.com,jana@example.com
-LOCAL_PASSWORD_HASH=            # argon2id, only for AUTH_MODE=local|both
-SESSION_SECRET=                 # 32+ random bytes
 APP_URL=https://kassen.example.com
 DATABASE_PATH=/data/kassenknoten.db
+SESSION_SECRET=                 # 32+ random bytes
+AUTH_MODE=local
+LOCAL_PASSWORD_HASH=            # base64 of the argon2id hash, from npm run auth:hash
+LOCAL_PASSWORD_HASH_FILE=       # alternative: read it from a Docker secret
 ```
 
 ---
@@ -258,7 +262,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F01 Bootstrap: Next.js + TS + Tailwind + shadcn, ESLint/Prettier, Vitest, npm scripts
 - [x] F02 Database layer: Drizzle schema, migrations, SQLite connection, seed of system categories
 - [x] F03 Domain engine: money, intervals, income ratio, largest-remainder split, household summary — with full unit tests
-- [ ] F04 Auth: OIDC flow, session cookie, allowlist, local fallback, middleware, login screen
+- [x] F04 Auth: local password, session cookie, deny-by-default proxy, login screen
+- [ ] F04b Auth: OIDC flow against Authentik, e-mail allowlist (deferred by request)
 
 **Milestone B — Replacing the spreadsheet**
 

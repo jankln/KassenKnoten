@@ -5,58 +5,66 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Design tokens. This is the starting palette; the final visual direction is
- * settled in F05 (app shell) — see docs/PLAN.md section 6.
+ * Design tokens — "Papier & Tinte".
  *
- * Calm and near-neutral so that money figures, not chrome, carry the colour.
- * Semantic money colours (positive / negative / warning) are deliberately part
- * of the token set: "free cash is negative" must be readable at a glance.
+ * Direction: a household ledger, not a banking dashboard. Warm paper against cool ink,
+ * with brass as the single accent — the metal of a cash box, and the one warm colour
+ * allowed to shout. Members are drawn as coloured strands (see the Knoten mark), which
+ * is why member accents are part of the core palette rather than chart decoration.
+ *
+ * Full rationale in docs/design.md.
  */
 :root {
   color-scheme: light;
 
-  --color-canvas: oklch(0.985 0.004 95);
-  --color-surface: oklch(1 0 0);
-  --color-surface-muted: oklch(0.965 0.005 95);
-  --color-ink: oklch(0.24 0.015 255);
-  --color-ink-muted: oklch(0.52 0.015 255);
-  --color-line: oklch(0.915 0.006 255);
+  --color-canvas: oklch(0.972 0.006 85);
+  --color-surface: oklch(0.995 0.003 85);
+  --color-surface-muted: oklch(0.945 0.008 85);
+  --color-ink: oklch(0.235 0.018 265);
+  --color-ink-muted: oklch(0.52 0.016 265);
+  --color-line: oklch(0.885 0.008 85);
+  /* Ruled-paper hairlines. Separate from --color-line because a texture needs to be
+     fainter than a border, and much fainter on a dark ground. */
+  --color-rule: oklch(0.885 0.008 85 / 0.9);
 
-  --color-brand: oklch(0.55 0.11 178);
-  --color-brand-ink: oklch(0.99 0.005 178);
-  --color-positive: oklch(0.56 0.13 155);
-  --color-negative: oklch(0.55 0.19 25);
-  --color-warning: oklch(0.72 0.15 75);
+  --color-brass: oklch(0.76 0.13 72);
+  --color-brass-ink: oklch(0.26 0.05 72);
 
-  /* Per-member accents, assigned in order when a member is created. */
-  --color-member-1: oklch(0.58 0.12 195);
-  --color-member-2: oklch(0.58 0.15 305);
-  --color-member-3: oklch(0.68 0.14 70);
-  --color-member-4: oklch(0.6 0.16 15);
-  --color-member-5: oklch(0.6 0.12 145);
+  --color-positive: oklch(0.55 0.12 160);
+  --color-negative: oklch(0.54 0.19 25);
+  --color-warning: oklch(0.7 0.14 60);
+
+  /* Strand colours, assigned to members in order. */
+  --color-member-1: oklch(0.58 0.11 215);
+  --color-member-2: oklch(0.57 0.16 345);
+  --color-member-3: oklch(0.58 0.13 145);
+  --color-member-4: oklch(0.6 0.15 40);
+  --color-member-5: oklch(0.55 0.13 290);
 }
 
 .dark {
   color-scheme: dark;
 
-  --color-canvas: oklch(0.17 0.012 258);
-  --color-surface: oklch(0.213 0.014 258);
-  --color-surface-muted: oklch(0.245 0.014 258);
-  --color-ink: oklch(0.955 0.005 255);
-  --color-ink-muted: oklch(0.7 0.013 255);
-  --color-line: oklch(0.3 0.014 258);
+  --color-canvas: oklch(0.165 0.014 265);
+  --color-surface: oklch(0.208 0.016 265);
+  --color-surface-muted: oklch(0.248 0.018 265);
+  --color-ink: oklch(0.955 0.006 85);
+  --color-ink-muted: oklch(0.7 0.013 265);
+  --color-line: oklch(0.3 0.016 265);
+  --color-rule: oklch(0.3 0.016 265 / 0.35);
 
-  --color-brand: oklch(0.74 0.1 178);
-  --color-brand-ink: oklch(0.2 0.02 178);
-  --color-positive: oklch(0.72 0.13 155);
-  --color-negative: oklch(0.68 0.16 25);
-  --color-warning: oklch(0.79 0.13 75);
+  --color-brass: oklch(0.8 0.12 72);
+  --color-brass-ink: oklch(0.2 0.04 72);
 
-  --color-member-1: oklch(0.72 0.11 195);
-  --color-member-2: oklch(0.72 0.13 305);
-  --color-member-3: oklch(0.78 0.12 70);
-  --color-member-4: oklch(0.72 0.14 15);
-  --color-member-5: oklch(0.73 0.11 145);
+  --color-positive: oklch(0.74 0.13 160);
+  --color-negative: oklch(0.7 0.16 25);
+  --color-warning: oklch(0.81 0.13 60);
+
+  --color-member-1: oklch(0.73 0.1 215);
+  --color-member-2: oklch(0.72 0.14 345);
+  --color-member-3: oklch(0.73 0.12 145);
+  --color-member-4: oklch(0.74 0.13 40);
+  --color-member-5: oklch(0.7 0.12 290);
 }
 
 @theme inline {
@@ -73,8 +81,8 @@
   --color-ink: var(--color-ink);
   --color-ink-muted: var(--color-ink-muted);
   --color-line: var(--color-line);
-  --color-brand: var(--color-brand);
-  --color-brand-ink: var(--color-brand-ink);
+  --color-brass: var(--color-brass);
+  --color-brass-ink: var(--color-brass-ink);
   --color-positive: var(--color-positive);
   --color-negative: var(--color-negative);
   --color-warning: var(--color-warning);
@@ -84,9 +92,15 @@
   --color-member-4: var(--color-member-4);
   --color-member-5: var(--color-member-5);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Display: expressive grotesque for headings and headline figures.
+     Body: humanist sans for everything that is read as prose.
+     Ledger: monospaced digits for amounts, so columns line up like a ledger. */
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-ledger: var(--font-plex-mono), ui-monospace, monospace;
 
-  --radius-card: 1rem;
+  --radius-control: 0.625rem;
+  --radius-card: 0.875rem;
 }
 
 @layer base {
@@ -107,8 +121,30 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand);
+    outline: 2px solid var(--color-brass);
     outline-offset: 2px;
+  }
+}
+
+/* Faint ruled paper, the one texture in the app. Used behind full-page moments. */
+.ruled {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 2.25rem,
+    var(--color-rule) 2.25rem,
+    var(--color-rule) calc(2.25rem + 1px)
+  );
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 50%, black, transparent 75%);
+}
+
+/* The knot ties itself once, on the login screen. */
+@keyframes knot-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
   }
 }
 
