@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Production
+build/
+dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database (SQLite lives on a volume, never in the repo)
+*.db
+*.db-shm
+*.db-wal
+/data/
+
+# Private household data — never commit real finances
+Finanzplan.xlsx
+*.xlsx
+!docs/**/*.xlsx
+
+# Testing
+coverage/
+playwright-report/
+test-results/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
