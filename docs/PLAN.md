@@ -270,7 +270,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F05 App shell: layout, navigation (desktop sidebar / mobile bottom bar), theming, German copy module, formatting helpers
 - [x] F06 Household and members: CRUD, colours, income sources per member
 - [x] F07 Categories management
-- [ ] F08 Private fixed costs: list, create, edit, delete-with-undo, interval handling
+- [x] F08 Private fixed costs: list, create, edit, delete-with-undo, interval handling
 - [ ] F09 Shared fixed costs: same plus mandatory per-item split mode with live share preview
 - [ ] F10 Savings pots: rate, balance, target, progress
 - [ ] F11 Excel import: one-off seed script from `Finanzplan.xlsx`
