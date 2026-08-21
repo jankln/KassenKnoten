@@ -33,7 +33,7 @@ transaction bookkeeping, tax features, mobile native apps.
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Stack          | Next.js 16 full-stack (App Router, TypeScript, Turbopack)                                                                                                                 |
 | Styling        | Tailwind CSS + shadcn/ui primitives, custom theme                                                                                                                         |
-| Animation      | CSS keyframes and view transitions, no animation library                                                                                                                  |
+| Animation      | CSS keyframes, no animation library                                                                                                                                       |
 | Data           | SQLite via Drizzle ORM, file on a mounted volume                                                                                                                          |
 | Auth           | OIDC (Authentik) as primary, optional local password fallback                                                                                                             |
 | Authorization  | E-mail allowlist inside the app                                                                                                                                           |
@@ -48,9 +48,13 @@ component. The dashboard, the savings list and the fixed-cost sections are React
 Components that render money the server already computed; wrapping their cards in
 `motion.div` would ship all of that markup and logic to the browser to buy a staggered
 fade. The motion this app wants — a number counting to its new value, a share bar
-re-proportioning, a row leaving a list — is reachable with CSS keyframes and the
-platform's view transitions, at no bundle cost and with the server components intact.
-`prefers-reduced-motion` is honoured globally in the base layer either way.
+re-proportioning, a row leaving a list — is reachable with CSS keyframes alone, at no
+bundle cost and with the server components intact. `prefers-reduced-motion` is honoured
+globally in the base layer either way.
+
+React's `<ViewTransition>` would be the natural next step for cross-route motion, but it
+only exists in React canary; this project pins React 19.2.8, where the export is absent
+and `@types/react` does not declare it. Revisit when it ships in a stable React.
 
 ### Why SQLite
 
