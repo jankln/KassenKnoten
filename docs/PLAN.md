@@ -29,17 +29,17 @@ transaction bookkeeping, tax features, mobile native apps.
 
 ## 2. Decisions taken
 
-| Topic | Decision |
-|---|---|
-| Stack | Next.js 15 full-stack (App Router, TypeScript) |
-| Styling | Tailwind CSS + shadcn/ui primitives, custom theme |
-| Animation | Framer Motion |
-| Data | SQLite via Drizzle ORM, file on a mounted volume |
-| Auth | OIDC (Authentik) as primary, optional local password fallback |
-| Authorization | E-mail allowlist inside the app |
-| Time dimension | Current plan + automatic monthly snapshots for history |
-| Split modes | Fixed quota (default 50/50, configurable) and income-proportional; **the split mode is chosen explicitly per shared item**, the household default only pre-fills the form |
-| UI language | German. Code and docs: English |
+| Topic          | Decision                                                                                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stack          | Next.js 16 full-stack (App Router, TypeScript, Turbopack)                                                                                                                 |
+| Styling        | Tailwind CSS + shadcn/ui primitives, custom theme                                                                                                                         |
+| Animation      | Framer Motion                                                                                                                                                             |
+| Data           | SQLite via Drizzle ORM, file on a mounted volume                                                                                                                          |
+| Auth           | OIDC (Authentik) as primary, optional local password fallback                                                                                                             |
+| Authorization  | E-mail allowlist inside the app                                                                                                                                           |
+| Time dimension | Current plan + automatic monthly snapshots for history                                                                                                                    |
+| Split modes    | Fixed quota (default 50/50, configurable) and income-proportional; **the split mode is chosen explicitly per shared item**, the household default only pre-fills the form |
+| UI language    | German. Code and docs: English                                                                                                                                            |
 
 ### Why SQLite
 
@@ -59,10 +59,10 @@ Drizzle keeps the door open — the schema is portable if it ever needs Postgres
                 │ Server Actions (mutations) / RSC (reads)
 ┌───────────────▼──────────────────────────────────────────┐
 │  Next.js server                                          │
-│  ├─ middleware: session check, allowlist, redirect        │
-│  ├─ server/services/*   use cases, transactions           │
-│  ├─ lib/domain/*        PURE calculation engine (tested)  │
-│  └─ db/*                Drizzle schema + migrations        │
+│  ├─ proxy.ts             session, allowlist, redirects   │
+│  ├─ server/services/*    use cases, transactions         │
+│  ├─ lib/domain/*         PURE calculation engine         │
+│  └─ db/*                 Drizzle schema + migrations     │
 └───────────────┬──────────────────────────────────────────┘
                 │
         SQLite file on /data volume
@@ -71,6 +71,14 @@ Drizzle keeps the door open — the schema is portable if it ever needs Postgres
 Hard rule: **the domain layer is pure.** No database, no framework, no dates from
 `Date.now()` passed implicitly. It takes plain objects and returns plain objects, which is
 what makes the money math testable to the cent.
+
+### Framework notes (Next.js 16)
+
+Next.js 16 differs from earlier versions in ways that matter here: `middleware.ts` is now
+`proxy.ts` and always runs on the Node.js runtime (which suits server-side session
+verification), request APIs such as `cookies()`, `headers()`, `params` and `searchParams`
+are async-only, and Turbopack is the default for dev and build. Version-matched docs ship
+inside `node_modules/next/dist/docs/` — consult them rather than memory.
 
 ### Directory layout
 
@@ -168,9 +176,10 @@ month's computed state is frozen. No cron, no scheduler container.
 
 **Everything else**
 
-- `middleware.ts` denies every route except `/login`, `/api/auth/*` and `/api/health`
+- `proxy.ts` (Next.js 16 renamed `middleware.ts` to `proxy.ts`, and it always runs on the
+  Node.js runtime) denies every route except `/login`, `/api/auth/*` and `/api/health`
   without a valid session — deny-by-default, not route-by-route opt-in.
-- Server Actions re-check the session server-side; middleware alone is never the only gate.
+- Server Actions re-check the session server-side; the proxy is never the only gate.
 - CSRF: `SameSite=Lax` cookie + origin check on mutations.
 - Security headers via `next.config.ts` (CSP, HSTS, `X-Content-Type-Options`,
   `Referrer-Policy`), no external CDN, no telemetry, no analytics.
@@ -195,15 +204,15 @@ DATABASE_PATH=/data/kassenknoten.db
 
 ### Screens
 
-| Route | Purpose |
-|---|---|
-| `/` | Dashboard — KPI row, per-person breakdown, category split, trend, savings progress, warnings |
-| `/haushalt` | Members and their income sources |
-| `/fixkosten` | Fixed costs — segmented into "Privat" per member and "Gemeinsam" |
-| `/sparen` | Savings pots with rate, balance, target, progress |
-| `/einstellungen` | Default split, categories, snapshots, import/export, appearance |
-| `/login` | Authentik button and/or password form |
-| `/willkommen` | First-run onboarding wizard |
+| Route            | Purpose                                                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| `/`              | Dashboard — KPI row, per-person breakdown, category split, trend, savings progress, warnings |
+| `/haushalt`      | Members and their income sources                                                             |
+| `/fixkosten`     | Fixed costs — segmented into "Privat" per member and "Gemeinsam"                             |
+| `/sparen`        | Savings pots with rate, balance, target, progress                                            |
+| `/einstellungen` | Default split, categories, snapshots, import/export, appearance                              |
+| `/login`         | Authentik button and/or password form                                                        |
+| `/willkommen`    | First-run onboarding wizard                                                                  |
 
 ### Interaction principles
 
@@ -245,12 +254,14 @@ Each item is one feature and one commit on `main`, preceded by a committed
 `CURRENT_WORK.md` describing the intent — see `docs/WORKFLOW.md`.
 
 **Milestone A — Foundation**
-- [ ] F01 Bootstrap: Next.js + TS + Tailwind + shadcn, ESLint/Prettier, Vitest, npm scripts
+
+- [x] F01 Bootstrap: Next.js + TS + Tailwind + shadcn, ESLint/Prettier, Vitest, npm scripts
 - [ ] F02 Database layer: Drizzle schema, migrations, SQLite connection, seed of system categories
 - [ ] F03 Domain engine: money, intervals, income ratio, largest-remainder split, household summary — with full unit tests
 - [ ] F04 Auth: OIDC flow, session cookie, allowlist, local fallback, middleware, login screen
 
 **Milestone B — Replacing the spreadsheet**
+
 - [ ] F05 App shell: layout, navigation (desktop sidebar / mobile bottom bar), theming, German copy module, formatting helpers
 - [ ] F06 Household and members: CRUD, colours, income sources per member
 - [ ] F07 Categories management
@@ -260,12 +271,14 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [ ] F11 Excel import: one-off seed script from `Finanzplan.xlsx`
 
 **Milestone C — Beyond the spreadsheet**
+
 - [ ] F12 Dashboard: KPIs, per-person breakdown, category visualization, warnings
 - [ ] F13 Monthly snapshots and trend charts
 - [ ] F14 Onboarding wizard and empty states
 - [ ] F15 Export/backup: JSON and CSV download, restore from JSON
 
 **Milestone D — Ship**
+
 - [ ] F16 Mobile polish, animation pass, accessibility audit
 - [ ] F17 Docker image, compose file, `.env.example`, health check, README with setup and Authentik instructions
 

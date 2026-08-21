@@ -29,7 +29,7 @@ silence — that file explains what was in flight and how to resume.
 Lifecycle of `CURRENT_WORK.md`:
 
 1. **Before implementation** — fill in the template (see below) and commit it on its own
-   (`docs(current-work): start F07 ...`). It is committed *first*, before a single line of
+   (`docs(current-work): start F07 ...`). It is committed _first_, before a single line of
    the feature is written, so an interrupted session always leaves a committed record of
    what was in flight.
 2. **During implementation** — tick off steps, add notes about decisions and surprises.
@@ -46,20 +46,25 @@ Template:
 **Started:** 2026-08-21
 
 ## Goal
+
 One paragraph: what the user can do after this that they could not do before.
 
 ## Scope
+
 - In: ...
 - Out: ...
 
 ## Plan
+
 - [ ] Step 1
 - [ ] Step 2
 
 ## Notes / decisions
+
 - ...
 
 ## Resume here
+
 What the next person (or the next session) should do first.
 ```
 
