@@ -77,6 +77,21 @@ Idle state:
 Next up per `docs/PLAN.md`: F08 – Shared fixed costs.
 ```
 
+## No real household data in the repository
+
+The repository must contain **no real figures from the household** — no actual salaries,
+balances, rents or member names. Not in code, not in tests, not in documentation, not in
+commit messages. The project's own goal is that anyone can self-host it, so this
+repository may become public one day, and git history cannot be un-published.
+
+Tests and docs use the example household instead: **Alex and Robin**, 2050 € and 2310 €
+net, 1182,35 € of shared costs. Those figures are chosen to exercise the awkward cases
+(unequal incomes, a shared total that cannot be halved evenly), so they are a better
+regression net than real data anyway.
+
+`Finanzplan.xlsx` and every `*.xlsx` are gitignored. Real numbers belong in the running
+instance and in its database — nowhere else.
+
 ## Branching
 
 Work is committed directly to `main`. This is a single-maintainer project, and the
@@ -91,3 +106,5 @@ not typecheck, lint and test cleanly.
 - German UI copy reviewed, no English leaking into the interface.
 - Works on a 375 px viewport, not only on desktop.
 - `docs/PLAN.md` roadmap entry ticked, `CURRENT_WORK.md` reset.
+- Committed **and pushed**. Every commit is pushed to `origin/main` right after it is
+  made, so the remote never lags behind the local branch.

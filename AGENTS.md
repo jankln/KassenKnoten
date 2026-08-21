@@ -20,7 +20,12 @@ decisions and `docs/WORKFLOW.md` before committing.
   on amounts, ever. Splits use the largest-remainder method so shares sum to the total.
 - **`lib/domain/` stays pure**: no database, no framework imports, no ambient clock.
   It is unit-tested; everything else leans on it.
+- **No real household data anywhere in the repository** — no actual salaries, balances,
+  rents or member names in code, tests, docs or commit messages. Use the example
+  household (Alex and Robin) documented in `docs/WORKFLOW.md`. This repo may become
+  public; git history cannot be un-published.
 - One feature per commit, with `CURRENT_WORK.md` describing the intent committed first.
+  Push to `origin/main` immediately after every commit.
 - `npm run check` (typecheck + lint + format + test) must pass before every commit.
 - Nothing is done until it works at 375 px width.
 
