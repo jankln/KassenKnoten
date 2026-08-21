@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { KnotMark } from "@/components/brand/knot-mark";
 import { LoginForm } from "./login-form";
 
@@ -6,7 +7,13 @@ export const metadata: Metadata = {
   title: "Anmelden",
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  // Every other route reads cookies and is dynamic already; this one is not, and a
+  // prerendered login screen cannot carry the per-request CSP nonce that `proxy.ts`
+  // issues. Its scripts would be blocked and the form would never become interactive.
+  // A login page has nothing worth caching anyway.
+  await connection();
+
   return (
     <main className="relative flex flex-1 items-center justify-center px-6 py-16">
       <div className="ruled pointer-events-none absolute inset-0" aria-hidden="true" />

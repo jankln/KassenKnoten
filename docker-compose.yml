@@ -1,0 +1,43 @@
+# KassenKnoten — one container, one SQLite file on a volume.
+#
+#   cp .env.example .env      and fill in SESSION_SECRET and LOCAL_PASSWORD_HASH
+#   docker compose up -d --build
+#
+# Put a reverse proxy in front of this for TLS; see the README.
+
+services:
+  kassenknoten:
+    build:
+      context: .
+    image: kassenknoten:latest
+    container_name: kassenknoten
+    restart: unless-stopped
+    # Bind to localhost: the container is meant to sit behind a reverse proxy, not on
+    # the open network. Change to "3000:3000" only if you know it should be reachable.
+    ports:
+      - "127.0.0.1:3000:3000"
+    env_file:
+      - .env
+    environment:
+      # The volume below, not whatever DATABASE_PATH says for local development.
+      DATABASE_PATH: /data/kassenknoten.db
+    volumes:
+      # A named volume inherits the image's ownership, so the unprivileged user in the
+      # container can write to it. A bind mount does not — see the README before
+      # replacing this with a host path.
+      - kassenknoten-data:/data
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+volumes:
+  kassenknoten-data:

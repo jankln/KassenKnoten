@@ -307,7 +307,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 **Milestone D — Ship**
 
 - [x] F16 Mobile polish, animation pass, accessibility audit
-- [ ] F17 Docker image, compose file, `.env.example`, health check, README with setup and Authentik instructions
+- [x] F17 Docker image, compose file, `.env.example`, health check, README with setup and Authentik instructions
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: plan-vs-actual bookkeeping, recurring irregular expenses,

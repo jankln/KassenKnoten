@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Bricolage_Grotesque, IBM_Plex_Mono, Manrope } from "next/font/google";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
@@ -41,7 +42,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // next-themes writes an inline script that applies the stored theme before the first
+  // paint. Under the CSP in `proxy.ts` an unsigned inline script is blocked, and the
+  // whole point of that script is to prevent a flash of the wrong theme — so it needs
+  // the same nonce the proxy issued for this request.
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html
       lang="de"
@@ -49,7 +56,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${bricolage.variable} ${manrope.variable} ${plexMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
       </body>
     </html>
   );
