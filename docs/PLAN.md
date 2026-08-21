@@ -254,9 +254,16 @@ edit/delete. Layouts are designed at 375 px first and then expanded.
 
 ### Motion
 
-Purposeful only: shared-element transitions between list and detail, staggered card entry
-on the dashboard, count-up on KPI numbers, spring-based progress rings, optimistic list
-reordering. All of it behind `prefers-reduced-motion`.
+Purposeful only, and `docs/design.md` sets the bar: motion belongs to state that actually
+changed, never to the page merely appearing. So a share bar re-proportions while a split
+is being edited, a quantity bar draws itself to the length it represents, and the trend
+line draws along the axis it is measured on. All of it behind `prefers-reduced-motion`.
+
+Counting a KPI up from zero was in this section originally and is dropped. The pages are
+server-rendered: the correct figure is already in the HTML and on screen before any
+JavaScript runs, so a count-up can only start by throwing that figure away and jumping
+back to zero. Staggered card entry goes with it — it animates the page arriving, which is
+the ambient decoration `docs/design.md` rules out.
 
 ### Visual direction
 
