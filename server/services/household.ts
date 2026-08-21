@@ -17,7 +17,7 @@ export interface OnboardingIncomeInput {
 export interface OnboardingMemberInput {
   name: string;
   colorIndex: number;
-  income?: OnboardingIncomeInput;
+  incomes?: OnboardingIncomeInput[];
 }
 
 /**
@@ -75,14 +75,14 @@ export function completeOnboarding(
         .get().id;
       memberIds.push(memberId);
 
-      if (input.income) {
+      for (const income of input.incomes ?? []) {
         tx.insert(schema.income)
           .values({
             memberId,
-            label: input.income.label,
-            kind: input.income.kind,
-            amountCents: input.income.amountCents,
-            intervalMonths: input.income.intervalMonths,
+            label: income.label,
+            kind: income.kind,
+            amountCents: income.amountCents,
+            intervalMonths: income.intervalMonths,
           })
           .run();
       }

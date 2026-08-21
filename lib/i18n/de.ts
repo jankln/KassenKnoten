@@ -38,9 +38,12 @@ export const de = {
     removeSecondMember: "Zweite Person entfernen",
     incomeTitle: "Einnahmen ergänzen",
     incomeBody:
-      "Dieser Schritt ist optional. Du kannst Einnahmen jetzt eintragen oder später im Haushalt ergänzen.",
+      "Dieser Schritt ist optional. Trage pro Person eine oder mehrere Einnahmequellen ein oder ergänze sie später im Haushalt.",
     incomeFor: (name: string) => `Einnahmen für ${name}`,
+    incomeSource: (number: number) => `Einnahmequelle ${number}`,
     incomeLabelPlaceholder: "z. B. Gehalt",
+    addIncome: "Einnahmequelle hinzufügen",
+    removeIncome: "Entfernen",
     saving: "Wird gespeichert …",
     skipIncome: "Überspringen",
     finish: "Haushalt anlegen",

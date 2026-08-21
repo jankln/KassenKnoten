@@ -10,14 +10,21 @@ import { formatInterval } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
 import { completeOnboarding } from "./actions";
 
-type DraftMember = { name: string; colorIndex: number };
+type DraftIncome = { id: number; label: string };
+type DraftMember = {
+  name: string;
+  colorIndex: number;
+  incomes: DraftIncome[];
+};
 
 const INTERVALS = [1, 3, 6, 12] as const;
+const emptyIncome = (id: number): DraftIncome => ({ id, label: "" });
 
 export function OnboardingWizard() {
   const [step, setStep] = useState(0);
-  const [members, setMembers] = useState<DraftMember[]>([{ name: "", colorIndex: 1 }]);
-  const [incomeLabels, setIncomeLabels] = useState<string[]>([""]);
+  const [members, setMembers] = useState<DraftMember[]>(() => [
+    { name: "", colorIndex: 1, incomes: [emptyIncome(1)] },
+  ]);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
   const copy = de.onboarding;
@@ -31,34 +38,84 @@ export function OnboardingWizard() {
   }
 
   function addSecondMember() {
-    setMembers((current) => [...current, { name: "", colorIndex: 2 }]);
-    setIncomeLabels((current) => [...current, ""]);
+    setMembers((current) => [
+      ...current,
+      { name: "", colorIndex: 2, incomes: [emptyIncome(1)] },
+    ]);
   }
 
   function removeSecondMember() {
     setMembers((current) => current.slice(0, 1));
-    setIncomeLabels((current) => current.slice(0, 1));
+  }
+
+  function updateIncomeLabel(memberIndex: number, incomeId: number, label: string) {
+    setMembers((current) =>
+      current.map((member, currentMemberIndex) =>
+        currentMemberIndex === memberIndex
+          ? {
+              ...member,
+              incomes: member.incomes.map((income) =>
+                income.id === incomeId ? { ...income, label } : income,
+              ),
+            }
+          : member,
+      ),
+    );
+  }
+
+  function addIncome(memberIndex: number) {
+    setMembers((current) =>
+      current.map((member, currentMemberIndex) =>
+        currentMemberIndex === memberIndex
+          ? {
+              ...member,
+              incomes: [
+                ...member.incomes,
+                emptyIncome(
+                  Math.max(0, ...member.incomes.map((income) => income.id)) + 1,
+                ),
+              ],
+            }
+          : member,
+      ),
+    );
+  }
+
+  function removeIncome(memberIndex: number, incomeId: number) {
+    setMembers((current) =>
+      current.map((member, currentMemberIndex) =>
+        currentMemberIndex === memberIndex
+          ? {
+              ...member,
+              incomes: member.incomes.filter((income) => income.id !== incomeId),
+            }
+          : member,
+      ),
+    );
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const onboardingMembers = members.map((member, index) => {
-      const label = String(formData.get(`incomeLabel-${index}`) ?? "").trim();
-      const amountValue = String(formData.get(`incomeAmountCents-${index}`) ?? "");
-      const amountCents = amountValue === "" ? -1 : Number(amountValue);
-      const income =
-        label || amountValue
-          ? {
-              label,
-              kind: String(formData.get(`incomeKind-${index}`) ?? "salary"),
-              amountCents,
-              intervalMonths: Number(
-                formData.get(`incomeIntervalMonths-${index}`) ?? 1,
-              ),
-            }
-          : undefined;
-      return { ...member, income };
+      const incomes = member.incomes.flatMap((income) => {
+        const fieldKey = `${index}-${income.id}`;
+        const label = String(formData.get(`incomeLabel-${fieldKey}`) ?? "").trim();
+        const amountValue = String(formData.get(`incomeAmountCents-${fieldKey}`) ?? "");
+        if (!label && !amountValue) return [];
+
+        return [
+          {
+            label,
+            kind: String(formData.get(`incomeKind-${fieldKey}`) ?? "salary"),
+            amountCents: amountValue === "" ? -1 : Number(amountValue),
+            intervalMonths: Number(
+              formData.get(`incomeIntervalMonths-${fieldKey}`) ?? 1,
+            ),
+          },
+        ];
+      });
+      return { name: member.name, colorIndex: member.colorIndex, incomes };
     });
     formData.set("members", JSON.stringify(onboardingMembers));
 
@@ -178,75 +235,102 @@ export function OnboardingWizard() {
               {members.map((member, index) => (
                 <fieldset
                   key={index}
-                  className="border-line rounded-control border p-4"
+                  className="border-line rounded-control min-w-0 border p-4"
                 >
                   <legend className="px-1 text-sm font-semibold">
                     {copy.incomeFor(member.name)}
                   </legend>
                   <div className="mt-3 space-y-4">
-                    <Field
-                      label={de.sections.household.incomeLabel}
-                      htmlFor={`income-label-${index}`}
-                    >
-                      <Input
-                        id={`income-label-${index}`}
-                        name={`incomeLabel-${index}`}
-                        value={incomeLabels[index] ?? ""}
-                        onChange={(event) =>
-                          setIncomeLabels((current) =>
-                            current.map((label, labelIndex) =>
-                              labelIndex === index ? event.target.value : label,
-                            ),
-                          )
-                        }
-                        placeholder={copy.incomeLabelPlaceholder}
-                        maxLength={60}
-                      />
-                    </Field>
-                    <Field
-                      label={de.sections.household.amount}
-                      htmlFor={`income-amount-${index}`}
-                    >
-                      <MoneyInput
-                        id={`income-amount-${index}`}
-                        name={`incomeAmountCents-${index}`}
-                      />
-                    </Field>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Field
-                        label={de.sections.household.interval}
-                        htmlFor={`income-interval-${index}`}
-                      >
-                        <Select
-                          id={`income-interval-${index}`}
-                          name={`incomeIntervalMonths-${index}`}
-                          defaultValue={1}
+                    {member.incomes.map((income, incomeIndex) => {
+                      const fieldKey = `${index}-${income.id}`;
+                      return (
+                        <div
+                          key={income.id}
+                          className="border-line/70 rounded-control space-y-4 border p-3"
                         >
-                          {INTERVALS.map((months) => (
-                            <option key={months} value={months}>
-                              {formatInterval(months)}
-                            </option>
-                          ))}
-                        </Select>
-                      </Field>
-                      <Field
-                        label={de.sections.household.incomeKind}
-                        htmlFor={`income-kind-${index}`}
-                      >
-                        <Select
-                          id={`income-kind-${index}`}
-                          name={`incomeKind-${index}`}
-                          defaultValue="salary"
-                        >
-                          <option value="salary">
-                            {de.sections.household.incomeKindSalary}
-                          </option>
-                          <option value="other">
-                            {de.sections.household.incomeKindOther}
-                          </option>
-                        </Select>
-                      </Field>
-                    </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm font-semibold">
+                              {copy.incomeSource(incomeIndex + 1)}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeIncome(index, income.id)}
+                            >
+                              {copy.removeIncome}
+                            </Button>
+                          </div>
+                          <Field
+                            label={de.sections.household.incomeLabel}
+                            htmlFor={`income-label-${fieldKey}`}
+                          >
+                            <Input
+                              id={`income-label-${fieldKey}`}
+                              name={`incomeLabel-${fieldKey}`}
+                              value={income.label}
+                              onChange={(event) =>
+                                updateIncomeLabel(index, income.id, event.target.value)
+                              }
+                              placeholder={copy.incomeLabelPlaceholder}
+                              maxLength={60}
+                            />
+                          </Field>
+                          <Field
+                            label={de.sections.household.amount}
+                            htmlFor={`income-amount-${fieldKey}`}
+                          >
+                            <MoneyInput
+                              id={`income-amount-${fieldKey}`}
+                              name={`incomeAmountCents-${fieldKey}`}
+                            />
+                          </Field>
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <Field
+                              label={de.sections.household.interval}
+                              htmlFor={`income-interval-${fieldKey}`}
+                            >
+                              <Select
+                                id={`income-interval-${fieldKey}`}
+                                name={`incomeIntervalMonths-${fieldKey}`}
+                                defaultValue={1}
+                              >
+                                {INTERVALS.map((months) => (
+                                  <option key={months} value={months}>
+                                    {formatInterval(months)}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                            <Field
+                              label={de.sections.household.incomeKind}
+                              htmlFor={`income-kind-${fieldKey}`}
+                            >
+                              <Select
+                                id={`income-kind-${fieldKey}`}
+                                name={`incomeKind-${fieldKey}`}
+                                defaultValue="salary"
+                              >
+                                <option value="salary">
+                                  {de.sections.household.incomeKindSalary}
+                                </option>
+                                <option value="other">
+                                  {de.sections.household.incomeKindOther}
+                                </option>
+                              </Select>
+                            </Field>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full sm:w-auto"
+                      onClick={() => addIncome(index)}
+                    >
+                      {copy.addIncome}
+                    </Button>
                   </div>
                 </fieldset>
               ))}
