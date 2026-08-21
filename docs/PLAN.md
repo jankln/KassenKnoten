@@ -257,7 +257,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 
 - [x] F01 Bootstrap: Next.js + TS + Tailwind + shadcn, ESLint/Prettier, Vitest, npm scripts
 - [x] F02 Database layer: Drizzle schema, migrations, SQLite connection, seed of system categories
-- [ ] F03 Domain engine: money, intervals, income ratio, largest-remainder split, household summary — with full unit tests
+- [x] F03 Domain engine: money, intervals, income ratio, largest-remainder split, household summary — with full unit tests
 - [ ] F04 Auth: OIDC flow, session cookie, allowlist, local fallback, middleware, login screen
 
 **Milestone B — Replacing the spreadsheet**
