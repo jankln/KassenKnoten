@@ -88,6 +88,16 @@ export const de = {
         noTarget: "Kein Ziel festgelegt",
         overTarget: "Ziel überschritten",
       },
+      trend: {
+        title: "Monatlicher Verlauf",
+        empty: "Für den Verlauf braucht es mindestens zwei Monatsaufnahmen.",
+        income: "Einnahmen",
+        fixedCosts: "Fixkosten",
+        savingsRate: "Sparrate",
+        freeCash: "Freies Geld",
+        chartLabel: "Verlauf von Einnahmen, Fixkosten, Sparrate und freiem Geld",
+        dataLabel: "Monatliche Verlaufsdaten",
+      },
     },
     household: {
       title: "Haushalt",

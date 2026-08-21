@@ -6,16 +6,18 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { buttonStyles } from "@/components/ui/button";
-import { formatCents, formatRatio } from "@/lib/format";
+import { formatCents, formatPeriod, formatRatio } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
 import type { DashboardCategory, DashboardData } from "@/server/services/dashboard";
 import { getDashboardData } from "@/server/services/dashboard";
+import { getSnapshotTrend, type SnapshotTrendPoint } from "@/server/services/snapshots";
 
 export const metadata: Metadata = { title: de.sections.overview.title };
 
 export default function OverviewPage() {
   const copy = de.sections.overview;
   const dashboard = getDashboardData();
+  const trend = getSnapshotTrend();
 
   if (!dashboard.hasData) {
     return (
@@ -30,6 +32,7 @@ export default function OverviewPage() {
             </Link>
           }
         />
+        <TrendSection trend={trend} />
       </>
     );
   }
@@ -85,6 +88,7 @@ export default function OverviewPage() {
       </div>
 
       <SavingsSection dashboard={dashboard} />
+      <TrendSection trend={trend} />
     </>
   );
 }
@@ -335,5 +339,144 @@ function SavingsSection({ dashboard }: { dashboard: DashboardData }) {
         ))}
       </div>
     </section>
+  );
+}
+
+const trendLines = [
+  {
+    key: "incomeCents",
+    label: de.sections.overview.trend.income,
+    color: "var(--color-member-1)",
+  },
+  {
+    key: "fixedCostsCents",
+    label: de.sections.overview.trend.fixedCosts,
+    color: "var(--color-member-2)",
+  },
+  {
+    key: "savingsRateCents",
+    label: de.sections.overview.trend.savingsRate,
+    color: "var(--color-member-3)",
+  },
+  {
+    key: "freeCashCents",
+    label: de.sections.overview.trend.freeCash,
+    color: "var(--color-brass)",
+  },
+] as const;
+
+function TrendSection({ trend }: { trend: SnapshotTrendPoint[] }) {
+  const copy = de.sections.overview.trend;
+  return (
+    <section aria-labelledby="dashboard-trend" className="mt-6">
+      <CardTitle id="dashboard-trend" className="mb-3">
+        {copy.title}
+      </CardTitle>
+      <Card className="min-w-0 p-4 sm:p-5">
+        {trend.length < 2 ? (
+          <p className="text-ink-muted text-sm">{copy.empty}</p>
+        ) : (
+          <>
+            <div
+              role="img"
+              aria-label={copy.chartLabel}
+              className="bg-surface-muted/35 rounded-control min-w-0 p-2 sm:p-4"
+            >
+              <TrendChart trend={trend} />
+            </div>
+            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
+              {trendLines.map((line) => (
+                <li key={line.key} className="flex items-center gap-2">
+                  <span
+                    aria-hidden
+                    className="size-2 shrink-0 rounded-full"
+                    style={{ backgroundColor: line.color }}
+                  />
+                  <span>{line.label}</span>
+                </li>
+              ))}
+            </ul>
+            <ul
+              aria-label={copy.dataLabel}
+              className="border-line mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3"
+            >
+              {trend.map((point) => (
+                <li key={point.period} className="min-w-0">
+                  <p className="font-display text-sm font-semibold">
+                    {formatPeriod(point.period)}
+                  </p>
+                  <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                    {trendLines.map((line) => (
+                      <div key={line.key} className="min-w-0">
+                        <dt className="text-ink-muted truncate">{line.label}</dt>
+                        <dd className="font-ledger tabular mt-0.5 truncate font-medium">
+                          {formatCents(point[line.key])}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Card>
+    </section>
+  );
+}
+
+function TrendChart({ trend }: { trend: SnapshotTrendPoint[] }) {
+  const values = trend.flatMap((point) => trendLines.map((line) => point[line.key]));
+  const min = Math.min(0, ...values);
+  const max = Math.max(0, ...values);
+  const range = max - min || 1;
+  const width = 640;
+  const height = 240;
+  const x = (index: number) =>
+    Math.round(24 + (index * (width - 48)) / (trend.length - 1));
+  const y = (value: number) => Math.round(24 + ((max - value) * (height - 48)) / range);
+
+  return (
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="block h-auto w-full"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <line
+        x1="24"
+        x2={width - 24}
+        y1={y(0)}
+        y2={y(0)}
+        stroke="var(--color-line)"
+        strokeDasharray="4 5"
+      />
+      {trendLines.map((line) => (
+        <polyline
+          key={line.key}
+          points={trend
+            .map((point, index) => `${x(index)},${y(point[line.key])}`)
+            .join(" ")}
+          fill="none"
+          stroke={line.color}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="4"
+        />
+      ))}
+      {trendLines.map((line) =>
+        trend.map((point, index) => (
+          <circle
+            key={`${line.key}-${point.period}`}
+            cx={x(index)}
+            cy={y(point[line.key])}
+            r="4"
+            fill="var(--color-surface)"
+            stroke={line.color}
+            strokeWidth="3"
+          />
+        )),
+      )}
+    </svg>
   );
 }

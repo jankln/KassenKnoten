@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { requireSession } from "@/lib/auth/current-session";
+import { ensurePreviousMonthSnapshot } from "@/server/services/snapshots";
 
 /**
  * The authenticated frame. Sidebar on wide screens, bottom bar on narrow ones — the same
@@ -15,6 +16,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // makes this segment dynamic, so pages read the database per request instead of being
   // prerendered once at build time.
   await requireSession();
+  try {
+    ensurePreviousMonthSnapshot();
+  } catch (error) {
+    // A history write must never make the authenticated app unavailable.
+    console.error("Unable to create the previous month snapshot.", error);
+  }
 
   return (
     <div className="flex min-h-full flex-1">
