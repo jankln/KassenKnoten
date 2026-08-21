@@ -106,6 +106,18 @@ export const de = {
       title: "Einstellungen",
       subtitle: "Aufteilung, Kategorien und Daten.",
       themeHint: "Gilt nur auf diesem Gerät.",
+      categories: "Kategorien",
+      categoriesHint: "Womit Fixkosten sortiert werden.",
+      addCategory: "Kategorie hinzufügen",
+      editCategory: "Kategorie bearbeiten",
+      newCategory: "Neue Kategorie",
+      categoryName: "Name",
+      categoryNamePlaceholder: "z. B. Haustier",
+      categoryIcon: "Symbol",
+      removeCategory: "Kategorie entfernen",
+      categoryRemoved: (name: string) => `${name} entfernt.`,
+      systemCategoryHint:
+        "Voreingestellte Kategorien lassen sich umbenennen, aber nicht entfernen.",
     },
   },
 
@@ -133,6 +145,8 @@ export const de = {
     amountInvalid: "Das ist kein gültiger Betrag.",
     amountNegative: "Der Betrag darf nicht negativ sein.",
     amountTooLarge: "Der Betrag ist zu groß.",
+    iconInvalid: "Bitte ein Symbol auswählen.",
+    nameTaken: "Diesen Namen gibt es schon.",
     failed: "Das hat nicht geklappt. Bitte noch einmal versuchen.",
   },
 

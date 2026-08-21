@@ -3,11 +3,14 @@ import { ThemeToggle } from "@/components/navigation/theme-toggle";
 import { PageHeader } from "@/components/patterns/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { de } from "@/lib/i18n/de";
+import { listCategories } from "@/server/services/categories";
+import { CategoryList } from "./category-list";
 
 export const metadata: Metadata = { title: de.sections.settings.title };
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
   const copy = de.sections.settings;
+  const categories = listCategories();
 
   return (
     <>
@@ -23,8 +26,11 @@ export default function SettingsPage() {
         </Card>
 
         <Card>
-          <CardTitle>{de.underConstruction.title}</CardTitle>
-          <p className="text-ink-muted mt-2 text-sm">{de.underConstruction.body}</p>
+          <div className="mb-4">
+            <CardTitle>{copy.categories}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{copy.categoriesHint}</p>
+          </div>
+          <CategoryList categories={categories} />
         </Card>
       </div>
     </>
