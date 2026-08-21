@@ -28,8 +28,10 @@ silence — that file explains what was in flight and how to resume.
 
 Lifecycle of `CURRENT_WORK.md`:
 
-1. **Before implementation** — fill in the template (see below) and commit it as part of
-   the feature's first commit, or as its own `docs:` commit if the feature is large.
+1. **Before implementation** — fill in the template (see below) and commit it on its own
+   (`docs(current-work): start F07 ...`). It is committed *first*, before a single line of
+   the feature is written, so an interrupted session always leaves a committed record of
+   what was in flight.
 2. **During implementation** — tick off steps, add notes about decisions and surprises.
 3. **After the feature is committed** — reset the file to the "idle" state so it never
    describes finished work.
@@ -42,7 +44,6 @@ Template:
 **Feature:** F07 – Private fixed costs
 **Status:** in progress
 **Started:** 2026-08-21
-**Branch:** feat/f07-private-fixed-costs
 
 ## Goal
 One paragraph: what the user can do after this that they could not do before.
@@ -73,8 +74,10 @@ Next up per `docs/PLAN.md`: F08 – Shared fixed costs.
 
 ## Branching
 
-Each feature gets a branch `feat/<id>-<slug>` (or `fix/`, `docs/`, `chore/`) and is merged
-into `main` when it is complete and the checks below pass.
+Work is committed directly to `main`. This is a single-maintainer project, and the
+one-feature-per-commit rule plus `CURRENT_WORK.md` already provide the traceability that
+feature branches would. `main` is expected to stay green: never commit something that does
+not typecheck, lint and test cleanly.
 
 ## Definition of done for a feature
 

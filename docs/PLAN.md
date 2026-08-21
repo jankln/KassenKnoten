@@ -241,8 +241,8 @@ tabular figures for all amounts so columns line up.
 
 ## 7. Roadmap
 
-Each item is one feature, one branch, one commit, preceded by a filled-in `CURRENT_WORK.md`
-per `docs/WORKFLOW.md`.
+Each item is one feature and one commit on `main`, preceded by a committed
+`CURRENT_WORK.md` describing the intent — see `docs/WORKFLOW.md`.
 
 **Milestone A — Foundation**
 - [ ] F01 Bootstrap: Next.js + TS + Tailwind + shadcn, ESLint/Prettier, Vitest, npm scripts
