@@ -17,7 +17,9 @@ const button = cva(
         sm: "h-8 px-2.5 text-sm",
         md: "h-10 px-4 text-sm",
         lg: "h-12 px-5 text-base",
-        icon: "size-10",
+        // 44 px is the comfortable thumb target; a mouse pointer does not need it,
+        // and at desktop density a row of 44 px ghost buttons reads as heavy.
+        icon: "size-11 sm:size-10",
       },
     },
     defaultVariants: { variant: "secondary", size: "md" },

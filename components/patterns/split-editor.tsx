@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FULL_SHARE_BP } from "@/lib/domain/money";
 import { splitExpense, type SplitMode } from "@/lib/domain/split";
 import { formatCents, formatShareBp } from "@/lib/format";
@@ -73,6 +73,15 @@ export function SplitEditor({
   );
 
   const noIncome = members.every((member) => member.monthlyIncomeCents === 0);
+  const colorIndexOf = new Map(members.map((member) => [member.id, member.colorIndex]));
+
+  // The preview recomputes on every keystroke. Reading it out that often is worse than
+  // not reading it at all, so the spoken copy lags behind the visible one and only
+  // catches up once the user stops typing.
+  const spoken = preview.perMember
+    .map((share) => `${share.name} ${formatCents(share.cents)}`)
+    .join(", ");
+  const announced = useSettledValue(spoken, 700);
 
   return (
     <fieldset>
@@ -92,7 +101,7 @@ export function SplitEditor({
             aria-pressed={mode === value}
             onClick={() => setMode(value)}
             className={cn(
-              "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+              "rounded-full px-3 py-2.5 text-sm font-medium transition-colors sm:py-1.5",
               mode === value ? "bg-surface text-ink shadow-sm" : "text-ink-muted",
             )}
           >
@@ -120,7 +129,7 @@ export function SplitEditor({
                 <input
                   id={`share-${member.id}`}
                   type="number"
-                  inputMode="numeric"
+                  inputMode="decimal"
                   min={0}
                   max={100}
                   step="0.01"
@@ -158,6 +167,30 @@ export function SplitEditor({
       {/* What this actually costs each person, updated as the form changes. */}
       <div className="border-line mt-4 space-y-1.5 border-t pt-3">
         <p className="text-ink-muted text-xs font-medium">{copy.splitPreview}</p>
+        <p aria-live="polite" className="sr-only">
+          {`${copy.splitPreview}: ${announced}`}
+        </p>
+
+        {/* The strands from the Knoten mark, laid flat: one segment per person, its
+            width carrying that person's share. It re-proportions as the amount, the mode
+            or a quota is typed — the one piece of motion in this form, and it is showing
+            state that actually changed. The numbers below are the accessible reading;
+            this is the shape of them. */}
+        <div
+          aria-hidden
+          className="bg-surface-muted mt-2 mb-2.5 flex h-2 overflow-hidden rounded-full"
+        >
+          {preview.perMember.map((share) => (
+            <span
+              key={share.memberId}
+              className="bar-move h-full"
+              style={{
+                width: `${share.shareBp / 100}%`,
+                backgroundColor: `var(--color-member-${colorIndexOf.get(share.memberId) ?? 1})`,
+              }}
+            />
+          ))}
+        </div>
         {preview.perMember.map((share) => (
           <div key={share.memberId} className="flex items-center gap-2 text-sm">
             <span className="truncate">{share.name}</span>
@@ -180,4 +213,16 @@ export function SplitEditor({
 
 function round2(shareBp: number): number {
   return Math.round(shareBp) / 100;
+}
+
+/** The given value, but only after it has stopped changing for `delay` milliseconds. */
+function useSettledValue<T>(value: T, delay: number): T {
+  const [settled, setSettled] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSettled(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return settled;
 }

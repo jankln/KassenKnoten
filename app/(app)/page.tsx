@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
@@ -230,11 +231,12 @@ function CategoriesSection({ dashboard }: { dashboard: DashboardData }) {
           </p>
         ) : (
           <ul className="space-y-4">
-            {dashboard.categories.map((category) => (
+            {dashboard.categories.map((category, index) => (
               <CategoryRow
                 key={category.categoryId ?? "uncategorized"}
                 category={category}
                 max={max}
+                index={index}
               />
             ))}
           </ul>
@@ -250,7 +252,15 @@ function CategoriesSection({ dashboard }: { dashboard: DashboardData }) {
   );
 }
 
-function CategoryRow({ category, max }: { category: DashboardCategory; max: number }) {
+function CategoryRow({
+  category,
+  max,
+  index,
+}: {
+  category: DashboardCategory;
+  max: number;
+  index: number;
+}) {
   const copy = de.sections.overview.categories;
   const width = max > 0 ? Math.round((category.monthlyCents * 100) / max) : 0;
   return (
@@ -268,8 +278,16 @@ function CategoryRow({ category, max }: { category: DashboardCategory; max: numb
       </div>
       <div className="bg-surface-muted mt-2 h-2 overflow-hidden rounded-full">
         <div
-          className="bg-brass h-full rounded-full"
-          style={{ width: `${width}%` }}
+          className="bar-grow bg-brass h-full rounded-full"
+          // The bars are already sorted by size, so a per-row delay lets the ranking
+          // read top to bottom instead of landing as one block. Capped, because past a
+          // handful of categories the tail would still be drawing while the user reads.
+          style={
+            {
+              width: `${width}%`,
+              "--motion-delay": `${Math.min(index, 6) * 60}ms`,
+            } as CSSProperties
+          }
           aria-hidden
         />
       </div>
@@ -321,7 +339,7 @@ function SavingsSection({ dashboard }: { dashboard: DashboardData }) {
                   aria-label={copy.progress}
                 >
                   <div
-                    className="bg-brass h-full rounded-full"
+                    className="bar-grow bg-brass h-full rounded-full"
                     style={{ width: `${(pot.progressBp ?? 0) / 100}%` }}
                   />
                 </div>
@@ -458,10 +476,12 @@ function TrendChart({ trend }: { trend: SnapshotTrendPoint[] }) {
             .map((point, index) => `${x(index)},${y(point[line.key])}`)
             .join(" ")}
           fill="none"
+          pathLength={1}
           stroke={line.color}
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth="4"
+          className="line-draw"
         />
       ))}
       {trendLines.map((line) =>
@@ -474,6 +494,7 @@ function TrendChart({ trend }: { trend: SnapshotTrendPoint[] }) {
             fill="var(--color-surface)"
             stroke={line.color}
             strokeWidth="3"
+            className="dot-appear"
           />
         )),
       )}

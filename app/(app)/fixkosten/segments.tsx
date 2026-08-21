@@ -29,7 +29,7 @@ export function Segments({
           href={item.href}
           aria-current={current === item.key ? "page" : undefined}
           className={cn(
-            "rounded-full py-1.5 text-center text-sm font-medium transition-colors",
+            "flex min-h-11 items-center justify-center rounded-full text-sm font-medium transition-colors sm:min-h-9",
             current === item.key ? "bg-surface text-ink shadow-sm" : "text-ink-muted",
           )}
         >

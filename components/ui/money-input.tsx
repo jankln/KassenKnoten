@@ -3,7 +3,6 @@
 import { useId, useState } from "react";
 import { formatCents, parseAmountToCents } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
-import { cn } from "@/lib/utils";
 import { Input } from "./field";
 
 /**
@@ -41,6 +40,7 @@ export function MoneyInput({
           id={id}
           inputMode="decimal"
           autoComplete="off"
+          enterKeyHint="done"
           placeholder="0,00"
           value={text}
           required={required}
@@ -59,11 +59,18 @@ export function MoneyInput({
         </span>
       </div>
       <input type="hidden" name={name} value={cents ?? ""} />
-      <p id={hiddenId} className="text-ink-muted text-sm tabular-nums">
+      {/* The readback is the whole point of this field, and it is useless to someone who
+          cannot see it: aria-live announces what was understood as it is typed, which is
+          when a mistyped separator is still cheap to fix. */}
+      <p
+        id={hiddenId}
+        aria-live="polite"
+        className="text-ink-muted text-sm tabular-nums"
+      >
         {text.trim() === ""
           ? " "
           : cents === null
-            ? "Kein gültiger Betrag"
+            ? de.validation.amountNotUnderstood
             : formatCents(cents)}
       </p>
     </div>

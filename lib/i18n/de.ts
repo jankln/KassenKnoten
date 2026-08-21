@@ -20,6 +20,7 @@ export const de = {
     savings: "Sparen",
     settings: "Einstellungen",
     menu: "Navigation",
+    skipToContent: "Zum Inhalt springen",
   },
 
   onboarding: {
@@ -326,6 +327,7 @@ export const de = {
     nameTaken: "Diesen Namen gibt es schon.",
     splitModeRequired: "Bitte auswählen, wie geteilt wird.",
     sharesMustSum: "Die Anteile müssen zusammen 100 % ergeben.",
+    amountNotUnderstood: "Kein gültiger Betrag",
     failed: "Das hat nicht geklappt. Bitte noch einmal versuchen.",
   },
 

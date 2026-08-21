@@ -148,6 +148,72 @@
   }
 }
 
+/*
+ * Motion.
+ *
+ * All of it is CSS, on purpose: the dashboard, the savings list and the fixed-cost
+ * sections are server components, and an animation library would turn every animated
+ * card into a client component to buy a fade. See docs/PLAN.md.
+ */
+
+/*
+ * A bar drawing itself to the length it represents. Only `from` is declared, so the
+ * final frame is whatever width the element actually has — the inline percentage stays
+ * the single source of truth, and the rounded cap is never squashed the way a
+ * transform-based grow would squash it.
+ *
+ * Stagger a group by setting --motion-delay per sibling. It is a plain inline custom
+ * property, so the server renders the whole sequence and no JavaScript is involved.
+ */
+@keyframes bar-grow {
+  from {
+    width: 0;
+  }
+}
+
+.bar-grow {
+  animation: bar-grow 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--motion-delay, 0ms);
+}
+
+/*
+ * A bar that has already drawn itself and is now being re-proportioned — the split
+ * preview, where the shares move as the amount or the quotas are typed. It moves to the
+ * new length rather than redrawing from zero, because the quantity did not appear, it
+ * changed.
+ */
+.bar-move {
+  transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/*
+ * The trend line drawing along its own axis. `pathLength="1"` normalises every polyline
+ * to a length of 1 regardless of its shape, so one dash offset animates them all, and
+ * the line arrives in the direction time runs.
+ */
+@keyframes line-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+
+.line-draw {
+  stroke-dasharray: 1;
+  animation: line-draw 900ms cubic-bezier(0.33, 1, 0.68, 1) both;
+}
+
+@keyframes dot-appear {
+  from {
+    opacity: 0;
+  }
+}
+
+.dot-appear {
+  /* Held back until the line has passed through, so the markers land on a drawn line
+     instead of floating ahead of it. */
+  animation: dot-appear 260ms ease-out 900ms both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -156,5 +222,10 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+    /* Without this a staggered bar would sit at zero width for the length of its
+       delay — a shortened animation with an intact delay is not "no motion", it is a
+       gap where the value should be. */
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
   }
 }

@@ -113,7 +113,7 @@ export function SavingsList({
                   aria-label={copy.progress}
                 >
                   <div
-                    className="bg-brass h-full rounded-full transition-[width]"
+                    className="bar-grow bg-brass h-full rounded-full"
                     style={{ width: `${(pot.progressBp ?? 0) / 100}%` }}
                   />
                 </div>
