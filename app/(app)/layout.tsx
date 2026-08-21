@@ -1,0 +1,26 @@
+import type { ReactNode } from "react";
+import { AppHeader } from "@/components/navigation/app-header";
+import { BottomNav } from "@/components/navigation/bottom-nav";
+import { Sidebar } from "@/components/navigation/sidebar";
+
+/**
+ * The authenticated frame. Sidebar on wide screens, bottom bar on narrow ones — the same
+ * four destinations either way, so the app has one mental model rather than two.
+ */
+export default function AppLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex min-h-full flex-1">
+      <Sidebar />
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <AppHeader />
+        {/* Bottom padding clears the mobile bar, which floats above the content. */}
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-6 pb-28 sm:px-6 lg:pb-10">
+          {children}
+        </main>
+      </div>
+
+      <BottomNav />
+    </div>
+  );
+}
