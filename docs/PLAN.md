@@ -33,13 +33,24 @@ transaction bookkeeping, tax features, mobile native apps.
 | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Stack          | Next.js 16 full-stack (App Router, TypeScript, Turbopack)                                                                                                                 |
 | Styling        | Tailwind CSS + shadcn/ui primitives, custom theme                                                                                                                         |
-| Animation      | Framer Motion                                                                                                                                                             |
+| Animation      | CSS keyframes and view transitions, no animation library                                                                                                                  |
 | Data           | SQLite via Drizzle ORM, file on a mounted volume                                                                                                                          |
 | Auth           | OIDC (Authentik) as primary, optional local password fallback                                                                                                             |
 | Authorization  | E-mail allowlist inside the app                                                                                                                                           |
 | Time dimension | Current plan + automatic monthly snapshots for history                                                                                                                    |
 | Split modes    | Fixed quota (default 50/50, configurable) and income-proportional; **the split mode is chosen explicitly per shared item**, the household default only pre-fills the form |
 | UI language    | German. Code and docs: English                                                                                                                                            |
+
+### Why no animation library
+
+Framer Motion was the original choice, but every `motion.*` element is a client
+component. The dashboard, the savings list and the fixed-cost sections are React Server
+Components that render money the server already computed; wrapping their cards in
+`motion.div` would ship all of that markup and logic to the browser to buy a staggered
+fade. The motion this app wants — a number counting to its new value, a share bar
+re-proportioning, a row leaving a list — is reachable with CSS keyframes and the
+platform's view transitions, at no bundle cost and with the server components intact.
+`prefers-reduced-motion` is honoured globally in the base layer either way.
 
 ### Why SQLite
 
