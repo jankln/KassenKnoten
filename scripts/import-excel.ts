@@ -19,6 +19,7 @@ const SECTION_LABEL =
   /^(?:einnahmen|fixkosten|sparen(?:\s*&.*)?|monatsergebnis|aufteilung|einstellungen|gemeinsam|shared)$/iu;
 const HEADER_LABEL =
   /^(?:person|name|bezeichnung|beschreibung|kategorie|betrag|amount|wer|topf|ziel|rate|stand|zielbetrag|fortschritt|art|typ|kind)$/iu;
+const TOTAL_WORD = /(?:summe|gesamt|total)/iu;
 
 export interface ImportIncome {
   memberName: string;
@@ -100,6 +101,12 @@ function rowsOf(sheet: ExcelJS.Worksheet): Row[] {
 
 function normal(value: string): string {
   return value.trim().toLocaleLowerCase("de-DE").replace(/\s+/gu, " ");
+}
+
+function memberMentionedIn(textValue: string, members: string[]): string | undefined {
+  return [...members]
+    .sort((left, right) => right.length - left.length)
+    .find((member) => normal(textValue).includes(normal(member)));
 }
 
 function findSheet(workbook: ExcelJS.Workbook, name: string): ExcelJS.Worksheet {
@@ -215,7 +222,10 @@ function isIgnorableRow(row: Row): boolean {
   return (
     nonEmpty.length === 0 ||
     nonEmpty.every(
-      (cell) => TOTAL_LABEL.test(normal(cell)) || HEADER_LABEL.test(normal(cell)),
+      (cell) =>
+        TOTAL_LABEL.test(normal(cell)) ||
+        TOTAL_WORD.test(normal(cell)) ||
+        HEADER_LABEL.test(normal(cell)),
     )
   );
 }
@@ -246,7 +256,7 @@ function memberForSection(
   members: string[],
   fallbackIndex: number,
 ): string {
-  const found = members.find((member) => normal(title).includes(normal(member)));
+  const found = memberMentionedIn(title, members);
   if (found) return found;
   const personMatch = title.match(/person\s*([ab])/iu);
   if (personMatch) {
@@ -282,8 +292,13 @@ function parseOverview(
       continue;
     }
     if (isIgnorableRow(row)) continue;
-    const name = row[0] ?? "";
-    if (!name || TOTAL_LABEL.test(normal(name))) continue;
+    const firstCell = row[0] ?? "";
+    if (
+      !firstCell ||
+      TOTAL_LABEL.test(normal(firstCell)) ||
+      TOTAL_WORD.test(normal(firstCell))
+    )
+      continue;
     try {
       const amountIndex = header.findIndex((cell) =>
         /^(?:betrag|amount|netto)$/iu.test(normal(cell)),
@@ -298,21 +313,30 @@ function parseOverview(
         row[amountIndex >= 0 ? amountIndex : 1] ||
         row.slice(1).find((cell) => cell !== "");
       if (!amountCell) throw new Error("income amount is empty");
+      const dash = firstCell.search(/\s+[–—-]\s+/u);
+      const memberName =
+        dash >= 0 ? firstCell.slice(dash).replace(/^[\s–—-]+/u, "") : firstCell;
+      const labelFromRow =
+        dash >= 0
+          ? firstCell.slice(0, dash).trim()
+          : row[labelIndex >= 0 ? labelIndex : 2];
+      if (!memberName) throw new Error("income member is empty");
       const amountCents = parseMoney(amountCell, `Übersicht row ${index + 1}`) ?? 0;
-      if (!members.some((member) => normal(member) === normal(name)))
-        members.push(name);
+      if (!members.some((member) => normal(member) === normal(memberName)))
+        members.push(memberName);
       const kindValue = kindIndex >= 0 ? row[kindIndex] : "";
       let kind: "salary" | "other" = "salary";
-      if (kindIndex >= 0) {
-        if (!kindValue) throw new Error("income type is empty");
-        if (/sonstig|other|bonus|neben/iu.test(normal(kindValue))) kind = "other";
-        else if (!/gehalt|salary|lohn|netto/iu.test(normal(kindValue))) {
-          throw new Error(`unknown income type "${kindValue}"`);
+      if (kindIndex >= 0 || /sonstig|bonus|neben/iu.test(normal(labelFromRow ?? ""))) {
+        const kindSource = kindValue || labelFromRow || "";
+        if (!kindSource) throw new Error("income type is empty");
+        if (/sonstig|other|bonus|neben/iu.test(normal(kindSource))) kind = "other";
+        else if (!/gehalt|salary|lohn|netto/iu.test(normal(kindSource))) {
+          throw new Error(`unknown income type "${kindSource}"`);
         }
       }
       incomes.push({
-        memberName: name,
-        label: row[labelIndex >= 0 ? labelIndex : 2] || "Einnahmen",
+        memberName,
+        label: labelFromRow || "Einnahmen",
         kind,
         amountCents,
       });
@@ -328,21 +352,32 @@ function parseOverview(
   const settingsStart = sectionIndex(rows, /^einstellungen$/iu);
   if (settingsStart >= 0) {
     const end = sectionEnd(rows, settingsStart);
+    let fallbackMemberIndex = 0;
     for (let index = settingsStart + 1; index < end; index += 1) {
       const row = rows[index] ?? [];
       if (isIgnorableRow(row)) continue;
-      const member = members.find((candidate) =>
-        row.some((cell) => normal(cell).includes(normal(candidate))),
-      );
-      if (!member) {
-        errors.push(`Übersicht row ${index + 1}: cannot map shared quota to a member.`);
-        continue;
-      }
-      const value = row.find(
-        (cell) => cell !== "" && !normal(cell).includes(normal(member)),
-      );
+      const namedMember = memberMentionedIn(row.join(" "), members);
+      if (row.filter(Boolean).length < 2) continue;
+      const value = namedMember
+        ? row.find((cell) => cell !== "" && !normal(cell).includes(normal(namedMember)))
+        : row.slice(1).find(Boolean);
       try {
         if (!value) throw new Error("shared quota is empty");
+        const namedMemberIsUnused =
+          namedMember !== undefined &&
+          !defaultShares.some(
+            (share) => normal(share.memberName) === normal(namedMember),
+          );
+        const member =
+          (namedMemberIsUnused ? namedMember : undefined) ??
+          members.find((candidate, memberIndex) => {
+            if (memberIndex < fallbackMemberIndex) return false;
+            return !defaultShares.some(
+              (share) => normal(share.memberName) === normal(candidate),
+            );
+          });
+        if (!member) throw new Error("cannot map shared quota to a member");
+        fallbackMemberIndex = members.indexOf(member) + 1;
         defaultShares.push({
           memberName: member,
           shareBp: parseBasisPoints(value, `Übersicht row ${index + 1}`),
@@ -391,7 +426,7 @@ function parseFixkosten(
       header = [];
       continue;
     }
-    if (/privat|private/iu.test(normal(title))) {
+    if (/\b(?:privat|private)\b/iu.test(normal(title))) {
       section = "private";
       try {
         sectionMember = memberForSection(title, members, fallbackMember);
@@ -419,7 +454,8 @@ function parseFixkosten(
     const amountIndex = amountColumn(header);
     const label = row[labelIndex] ?? "";
     const categoryName = row[categoryIndex] ?? "";
-    if (TOTAL_LABEL.test(normal(label))) continue;
+    if (TOTAL_LABEL.test(normal(label)) || TOTAL_WORD.test(normal(label))) continue;
+    if (!label && !categoryName && !row[amountIndex]) continue;
     if (!label || !categoryName || !row[amountIndex]) {
       errors.push(`Fixkosten row ${index + 1}: expected label, category, and amount.`);
       continue;
@@ -443,11 +479,10 @@ function parseFixkosten(
       if (section === "shared") {
         const shares = defaultShares.length > 0 ? defaultShares : [];
         const shareColumns = members.map((member) => {
-          const column = row.findIndex(
-            (cell, cellIndex) =>
-              cellIndex > amountIndex &&
-              normal(header[cellIndex] ?? "").includes(normal(member)),
-          );
+          const column = row.findIndex((_, cellIndex) => {
+            if (cellIndex <= amountIndex) return false;
+            return memberMentionedIn(header[cellIndex] ?? "", [member]) !== undefined;
+          });
           return column >= 0 ? { memberName: member, value: row[column] ?? "" } : null;
         });
         if (shareColumns.some((entry) => entry !== null)) {
@@ -496,8 +531,8 @@ function parseSavings(sheet: ExcelJS.Worksheet, members: string[]): ImportSaving
   const rows = rowsOf(sheet);
   const headerIndex = rows.findIndex(
     (row) =>
-      row.some((cell) => /topf|ziel/iu.test(normal(cell))) &&
-      row.some((cell) => /rate/iu.test(normal(cell))),
+      row.some((cell) => /^(?:topf(?:\s*\/\s*ziel)?|ziel)$/iu.test(normal(cell))) &&
+      row.some((cell) => /^(?:rate(?:\s+pro\s+monat)?)$/iu.test(normal(cell))),
   );
   if (headerIndex < 0)
     throw new ImportValidationError([
@@ -522,7 +557,8 @@ function parseSavings(sheet: ExcelJS.Worksheet, members: string[]): ImportSaving
     const row = rows[index] ?? [];
     if (isIgnorableRow(row)) continue;
     const name = row[nameIndex] ?? "";
-    if (!name || TOTAL_LABEL.test(normal(name))) continue;
+    if (!name || TOTAL_LABEL.test(normal(name)) || TOTAL_WORD.test(normal(name)))
+      continue;
     try {
       const ownerCell = row[ownerIndex] ?? "";
       const ownerName =
@@ -538,7 +574,7 @@ function parseSavings(sheet: ExcelJS.Worksheet, members: string[]): ImportSaving
         monthlyRateCents:
           parseMoney(row[rateIndex] ?? "", `Sparen row ${index + 1}`) ?? 0,
         balanceCents:
-          parseMoney(row[balanceIndex] ?? "", `Sparen row ${index + 1}`) ?? 0,
+          parseMoney(row[balanceIndex] ?? "", `Sparen row ${index + 1}`, true) ?? 0,
         targetCents: parseMoney(
           row[targetIndex] ?? "",
           `Sparen row ${index + 1}`,
