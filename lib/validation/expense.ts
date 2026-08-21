@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { FULL_SHARE_BP } from "@/lib/domain/money";
 import { de } from "@/lib/i18n/de";
 
 /** One euro short of ten million, which is well past any household figure. */
@@ -29,3 +30,38 @@ export const privateExpenseInput = z.object({
 });
 
 export type PrivateExpenseInput = z.infer<typeof privateExpenseInput>;
+
+const share = z.object({
+  memberId: z.coerce.number().int().positive(),
+  shareBp: z.coerce.number().int().min(0).max(FULL_SHARE_BP),
+});
+
+export const sharedExpenseInput = z
+  .object({
+    ...base,
+    splitMode: z.enum(["fixed_quota", "income_ratio"], {
+      message: de.validation.splitModeRequired,
+    }),
+    shares: z.array(share).default([]),
+  })
+  .refine(
+    (value) =>
+      value.splitMode !== "fixed_quota" ||
+      value.shares.reduce((total, entry) => total + entry.shareBp, 0) === FULL_SHARE_BP,
+    { message: de.validation.sharesMustSum, path: ["shares"] },
+  );
+
+export type SharedExpenseInput = z.infer<typeof sharedExpenseInput>;
+
+export const defaultSplitInput = z
+  .object({
+    splitMode: z.enum(["fixed_quota", "income_ratio"]),
+    shares: z.array(share).default([]),
+  })
+  .refine(
+    (value) =>
+      value.splitMode !== "fixed_quota" ||
+      value.shares.length === 0 ||
+      value.shares.reduce((total, entry) => total + entry.shareBp, 0) === FULL_SHARE_BP,
+    { message: de.validation.sharesMustSum, path: ["shares"] },
+  );

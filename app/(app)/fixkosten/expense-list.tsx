@@ -70,7 +70,11 @@ export function MemberExpenseCard({
                 <div className="min-w-0">
                   {/* Wraps rather than truncates: on a phone a long label is exactly the
                       one people cannot guess from context. */}
-                  <p className="line-clamp-2 text-sm font-medium">{expense.label}</p>
+                  {/* break-words as well as wrapping: "Hausratversicherung" is one word
+                      and would otherwise be cut off mid-letter on a phone. */}
+                  <p className="line-clamp-2 text-sm font-medium break-words">
+                    {expense.label}
+                  </p>
                   {/* Only worth saying when it is not the monthly default. */}
                   {expense.intervalMonths !== 1 ? (
                     <p className="text-ink-muted text-xs">

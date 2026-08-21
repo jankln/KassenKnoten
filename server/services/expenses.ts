@@ -3,6 +3,12 @@ import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { monthlyCents } from "@/lib/domain/interval";
+import {
+  splitExpense,
+  type MemberShare,
+  type SplitContext,
+  type SplitMode,
+} from "@/lib/domain/split";
 
 /**
  * Fixed costs.
@@ -162,5 +168,128 @@ export function restoreExpense(id: number, db: Db = getDb()): void {
   db.update(schema.expense)
     .set({ active: true, updatedAt: new Date() })
     .where(eq(schema.expense.id, id))
+    .run();
+}
+
+/* ------------------------------------------------------------------------- *
+ * Shared expenses
+ * ------------------------------------------------------------------------- */
+
+export interface SharedExpenseRow extends ExpenseRow {
+  splitMode: SplitMode;
+  /** The quota stored with this expense, empty when it splits by income. */
+  shares: { memberId: number; shareBp: number }[];
+  /** What each person actually pays this month, to the cent. */
+  perMember: MemberShare[];
+}
+
+/**
+ * Shared costs with their split already resolved.
+ *
+ * The split is computed by `splitExpense` from `lib/domain` — the same pure function the
+ * form previews with, so what the household sees before saving is what gets stored.
+ */
+export function listSharedExpenses(
+  context: SplitContext,
+  db: Db = getDb(),
+): SharedExpenseRow[] {
+  const rows = selectExpenses(db, "shared");
+  const shares = db.select().from(schema.expenseShare).all();
+
+  return rows.map((row) => {
+    const own = shares
+      .filter((share) => share.expenseId === row.id)
+      .map((share) => ({ memberId: share.memberId, shareBp: share.shareBp }));
+    const splitMode = row.splitMode ?? "fixed_quota";
+
+    const result = splitExpense(
+      {
+        amountCents: row.amountCents,
+        intervalMonths: row.intervalMonths,
+        splitMode,
+        ...(own.length > 0 ? { shares: own } : {}),
+      },
+      context,
+    );
+
+    return {
+      ...toRow(row),
+      splitMode,
+      shares: own,
+      perMember: result.perMember,
+    };
+  });
+}
+
+export interface SharedExpenseWrite {
+  label: string;
+  amountCents: number;
+  intervalMonths: number;
+  categoryId?: number | null;
+  splitMode: SplitMode;
+  /** Required for a fixed quota, ignored when splitting by income. */
+  shares?: { memberId: number; shareBp: number }[];
+}
+
+/**
+ * Write a shared expense and its quota in one transaction.
+ *
+ * The quota is stored even when it matches the household default: the household decided
+ * it for *this* expense, and changing the default later must not silently re-split
+ * everything that came before.
+ */
+export function createSharedExpense(
+  input: SharedExpenseWrite,
+  db: Db = getDb(),
+): number {
+  return db.transaction((tx) => {
+    const id = tx
+      .insert(schema.expense)
+      .values({
+        scope: "shared",
+        memberId: null,
+        label: input.label,
+        amountCents: input.amountCents,
+        intervalMonths: input.intervalMonths,
+        categoryId: input.categoryId ?? null,
+        splitMode: input.splitMode,
+      })
+      .returning({ id: schema.expense.id })
+      .get().id;
+
+    writeShares(tx as unknown as Db, id, input);
+    return id;
+  });
+}
+
+export function updateSharedExpense(
+  id: number,
+  input: SharedExpenseWrite,
+  db: Db = getDb(),
+): void {
+  db.transaction((tx) => {
+    tx.update(schema.expense)
+      .set({
+        label: input.label,
+        amountCents: input.amountCents,
+        intervalMonths: input.intervalMonths,
+        categoryId: input.categoryId ?? null,
+        splitMode: input.splitMode,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.expense.id, id))
+      .run();
+
+    tx.delete(schema.expenseShare).where(eq(schema.expenseShare.expenseId, id)).run();
+    writeShares(tx as unknown as Db, id, input);
+  });
+}
+
+function writeShares(db: Db, expenseId: number, input: SharedExpenseWrite): void {
+  if (input.splitMode !== "fixed_quota" || !input.shares?.length) {
+    return;
+  }
+  db.insert(schema.expenseShare)
+    .values(input.shares.map((share) => ({ ...share, expenseId })))
     .run();
 }

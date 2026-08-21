@@ -19,11 +19,14 @@ export function MoneyInput({
   id,
   defaultCents,
   required,
+  onTextChange,
 }: {
   name: string;
   id: string;
   defaultCents?: number;
   required?: boolean;
+  /** Lets a form react to the amount as it is typed, e.g. for a live split preview. */
+  onTextChange?: (value: string) => void;
 }) {
   const [text, setText] = useState(
     defaultCents === undefined ? "" : (defaultCents / 100).toFixed(2).replace(".", ","),
@@ -41,7 +44,10 @@ export function MoneyInput({
           placeholder="0,00"
           value={text}
           required={required}
-          onChange={(event) => setText(event.target.value)}
+          onChange={(event) => {
+            setText(event.target.value);
+            onTextChange?.(event.target.value);
+          }}
           className="tabular font-ledger pr-9"
           aria-describedby={hiddenId}
         />

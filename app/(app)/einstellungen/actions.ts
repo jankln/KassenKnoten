@@ -4,12 +4,14 @@ import { refresh } from "next/cache";
 import { requireSession } from "@/lib/auth/current-session";
 import { de } from "@/lib/i18n/de";
 import { categoryInput } from "@/lib/validation/category";
+import { defaultSplitInput } from "@/lib/validation/expense";
 import {
   categoryNameTaken,
   createCategory,
   deleteCategory,
   updateCategory,
 } from "@/server/services/categories";
+import { setDefaultSplit } from "@/server/services/household";
 
 export interface ActionResult {
   error?: string;
@@ -67,6 +69,34 @@ export async function removeCategory(id: number): Promise<ActionResult> {
   if (!deleteCategory(id)) {
     return { error: de.validation.failed };
   }
+  refresh();
+  return {};
+}
+
+/**
+ * The default split pre-fills the form for new shared costs. It deliberately does not
+ * touch existing expenses: those carry the split the household decided for them.
+ */
+export async function saveDefaultSplit(formData: FormData): Promise<ActionResult> {
+  await requireSession();
+
+  const shares: { memberId: number; shareBp: number }[] = [];
+  for (const [key, value] of formData.entries()) {
+    const match = /^share-(\d+)$/.exec(key);
+    if (match?.[1]) {
+      shares.push({ memberId: Number(match[1]), shareBp: Number(value) });
+    }
+  }
+
+  const parsed = defaultSplitInput.safeParse({
+    splitMode: formData.get("splitMode"),
+    shares,
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+  }
+
+  setDefaultSplit(parsed.data);
   refresh();
   return {};
 }

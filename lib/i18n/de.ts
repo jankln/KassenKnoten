@@ -30,6 +30,7 @@ export const de = {
     delete: "Löschen",
     undo: "Rückgängig",
     signOut: "Abmelden",
+    saved: "Gespeichert.",
     back: "Zurück",
   },
 
@@ -110,6 +111,25 @@ export const de = {
       removeExpense: "Fixkosten entfernen",
       expenseRemoved: "Eintrag entfernt.",
       privateTotal: "Private Fixkosten gesamt",
+      sharedTotal: "Gemeinsame Fixkosten gesamt",
+      grandTotal: "Fixkosten gesamt",
+      addShared: "Gemeinsame Kosten hinzufügen",
+      newShared: "Neue gemeinsame Kosten",
+      editShared: "Gemeinsame Kosten bearbeiten",
+      sharedEmpty: {
+        title: "Noch keine gemeinsamen Kosten",
+        body: "Miete, Strom, Internet: alles, was ihr zusammen tragt. Bei jedem Posten legst du fest, wie geteilt wird.",
+        action: "Gemeinsame Kosten hinzufügen",
+      },
+      split: "Aufteilung",
+      splitFixed: "Feste Quote",
+      splitIncome: "Nach Einkommen",
+      splitIncomeHint: "Wird laufend aus den Einkommen berechnet.",
+      splitNoIncomeHint: "Ohne Einkommen wird gleichmäßig geteilt.",
+      splitPreview: "So wird geteilt",
+      defaultSplit: "Standard-Aufteilung",
+      defaultSplitHint:
+        "Vorbelegung für neue gemeinsame Kosten. Bestehende Posten bleiben, wie sie sind.",
     },
     savings: {
       title: "Sparen",
@@ -165,6 +185,8 @@ export const de = {
     amountTooLarge: "Der Betrag ist zu groß.",
     iconInvalid: "Bitte ein Symbol auswählen.",
     nameTaken: "Diesen Namen gibt es schon.",
+    splitModeRequired: "Bitte auswählen, wie geteilt wird.",
+    sharesMustSum: "Die Anteile müssen zusammen 100 % ergeben.",
     failed: "Das hat nicht geklappt. Bitte noch einmal versuchen.",
   },
 
