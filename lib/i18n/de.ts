@@ -22,6 +22,33 @@ export const de = {
     menu: "Navigation",
   },
 
+  onboarding: {
+    title: "Willkommen bei KassenKnoten",
+    subtitle: "Richte deinen Haushalt in wenigen Schritten ein.",
+    steps: ["Start", "Haushalt", "Einnahmen"] as const,
+    introTitle: "Dein Haushaltsplan beginnt hier",
+    introBody:
+      "KassenKnoten hilft dir, Einnahmen, Fixkosten und Rücklagen übersichtlich zu planen. Du kannst später jederzeit weitere Details ergänzen.",
+    membersTitle: "Wer gehört zu deinem Haushalt?",
+    membersBody:
+      "Lege mindestens eine Person an. Die Farben helfen dir später, die Aufteilung auf einen Blick zu erkennen.",
+    memberName: "Name",
+    memberNamePlaceholder: "z. B. Alex",
+    addSecondMember: "Weitere Person hinzufügen",
+    removeSecondMember: "Zweite Person entfernen",
+    incomeTitle: "Einnahmen ergänzen",
+    incomeBody:
+      "Dieser Schritt ist optional. Du kannst Einnahmen jetzt eintragen oder später im Haushalt ergänzen.",
+    incomeFor: (name: string) => `Einnahmen für ${name}`,
+    incomeLabelPlaceholder: "z. B. Gehalt",
+    saving: "Wird gespeichert …",
+    skipIncome: "Überspringen",
+    finish: "Haushalt anlegen",
+    next: "Weiter",
+    back: "Zurück",
+    stepLabel: (current: number, total: number) => `Schritt ${current} von ${total}`,
+  },
+
   actions: {
     add: "Hinzufügen",
     save: "Speichern",
@@ -47,7 +74,7 @@ export const de = {
       subtitle: "Der laufende Monat auf einen Blick.",
       empty: {
         title: "Noch nichts zu rechnen",
-        body: "Sobald Personen, Einnahmen und Fixkosten eingetragen sind, steht hier der Monat.",
+        body: "Lege Personen an und ergänze danach Einnahmen oder Fixkosten. Dann siehst du hier sofort, was im Monat übrig bleibt.",
         action: "Haushalt einrichten",
       },
       kpi: {
@@ -104,7 +131,7 @@ export const de = {
       subtitle: "Wer gehört dazu und wer verdient was.",
       empty: {
         title: "Noch niemand angelegt",
-        body: "Trage die Personen ein, die zum Haushalt gehören. Einnahmen kommen direkt danach dazu.",
+        body: "Starte mit den Personen, die zum Haushalt gehören. Danach kannst du direkt Einnahmen ergänzen und den Monatsplan aufbauen.",
         action: "Person hinzufügen",
       },
       total: "Einnahmen gesamt",
@@ -138,7 +165,7 @@ export const de = {
       shared: "Gemeinsam",
       empty: {
         title: "Noch keine Fixkosten",
-        body: "Miete, Strom, Abos: alles, was regelmäßig abgebucht wird, gehört hierher.",
+        body: "Miete, Strom, Abos: alles, was regelmäßig abgebucht wird, gehört hierher. Starte mit einem Eintrag pro Person.",
         action: "Fixkosten hinzufügen",
       },
       noMembers: {
@@ -146,7 +173,7 @@ export const de = {
         body: "Fixkosten gehören immer zu jemandem. Lege zuerst die Personen im Haushalt an.",
         action: "Zum Haushalt",
       },
-      noneForMember: "Noch keine Fixkosten",
+      noneForMember: "Noch keine Fixkosten — füge den ersten Eintrag hinzu.",
       addExpense: "Fixkosten hinzufügen",
       addShort: "Hinzufügen",
       editExpense: "Fixkosten bearbeiten",
@@ -184,7 +211,7 @@ export const de = {
       subtitle: "Spartöpfe, Raten und Rücklagen.",
       empty: {
         title: "Noch keine Spartöpfe",
-        body: "Notgroschen, Urlaub, ETF: leg einen Topf an und trage die monatliche Rate ein.",
+        body: "Notgroschen, Urlaub, ETF: Leg einen Topf an und trage die monatliche Rate ein, damit du dein Sparziel im Blick behältst.",
         action: "Spartopf anlegen",
       },
       addPot: "Spartopf anlegen",

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, max } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
@@ -6,6 +6,19 @@ import { FULL_SHARE_BP, allocate } from "@/lib/domain/money";
 import type { SplitContext, SplitMode } from "@/lib/domain/split";
 import { incomeByMember } from "@/lib/domain/summary";
 import { listMembersWithIncome } from "./members";
+
+export interface OnboardingIncomeInput {
+  label: string;
+  kind: "salary" | "other";
+  amountCents: number;
+  intervalMonths: number;
+}
+
+export interface OnboardingMemberInput {
+  name: string;
+  colorIndex: number;
+  income?: OnboardingIncomeInput;
+}
 
 /**
  * Household-level settings and the context every split needs.
@@ -18,6 +31,70 @@ export interface HouseholdSettings {
   name: string;
   defaultSplitMode: SplitMode;
   defaultShares: { memberId: number; shareBp: number }[];
+}
+
+export function isOnboardingDone(db: Db = getDb()): boolean {
+  return (
+    db
+      .select({ onboardingDone: schema.household.onboardingDone })
+      .from(schema.household)
+      .where(eq(schema.household.id, 1))
+      .get()?.onboardingDone ?? false
+  );
+}
+
+/**
+ * Create the initial household records in one transaction. Keeping this as a service
+ * makes the wizard use the same persistence rules as the regular member and income CRUD.
+ */
+export function completeOnboarding(
+  members: OnboardingMemberInput[],
+  db: Db = getDb(),
+): number[] {
+  if (members.length === 0) {
+    throw new Error("Onboarding requires at least one member.");
+  }
+
+  return db.transaction((tx) => {
+    let sortOrder =
+      tx
+        .select({ value: max(schema.member.sortOrder) })
+        .from(schema.member)
+        .get()?.value ?? 0;
+    const memberIds: number[] = [];
+
+    for (const input of members) {
+      const memberId = tx
+        .insert(schema.member)
+        .values({
+          name: input.name,
+          colorIndex: input.colorIndex,
+          sortOrder: ++sortOrder,
+        })
+        .returning({ id: schema.member.id })
+        .get().id;
+      memberIds.push(memberId);
+
+      if (input.income) {
+        tx.insert(schema.income)
+          .values({
+            memberId,
+            label: input.income.label,
+            kind: input.income.kind,
+            amountCents: input.income.amountCents,
+            intervalMonths: input.income.intervalMonths,
+          })
+          .run();
+      }
+    }
+
+    tx.update(schema.household)
+      .set({ onboardingDone: true, updatedAt: new Date() })
+      .where(eq(schema.household.id, 1))
+      .run();
+
+    return memberIds;
+  });
 }
 
 export function getHouseholdSettings(db: Db = getDb()): HouseholdSettings {

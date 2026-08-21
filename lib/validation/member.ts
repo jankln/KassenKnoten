@@ -10,7 +10,7 @@ import { de } from "@/lib/i18n/de";
 export const MAX_COLOR_INDEX = 5;
 
 /** One euro short of ten million, which is well past any household figure. */
-const MAX_AMOUNT_CENTS = 999_999_999;
+export const MAX_AMOUNT_CENTS = 999_999_999;
 
 export const memberInput = z.object({
   name: z

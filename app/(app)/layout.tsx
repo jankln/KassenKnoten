@@ -4,6 +4,8 @@ import { BottomNav } from "@/components/navigation/bottom-nav";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { requireSession } from "@/lib/auth/current-session";
+import { redirect } from "next/navigation";
+import { isOnboardingDone } from "@/server/services/household";
 import { ensurePreviousMonthSnapshot } from "@/server/services/snapshots";
 
 /**
@@ -16,6 +18,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // makes this segment dynamic, so pages read the database per request instead of being
   // prerendered once at build time.
   await requireSession();
+  if (!isOnboardingDone()) {
+    redirect("/willkommen");
+  }
   try {
     ensurePreviousMonthSnapshot();
   } catch (error) {
