@@ -13,8 +13,9 @@
  *   node scripts/screenshot.mjs http://localhost:3000/fixkosten shot.png 375 820 light \
  *     "kk_session=$(node scripts/dev-session.mjs)"
  *
- * Set MEASURE to a JS expression to print a value from the page as well — useful for
- * asserting that nothing overflows:
+ * Set MEASURE to a JS expression to print a value from the page, or to interact with it
+ * (a `.click()` works) before the shot is taken — useful for asserting that nothing
+ * overflows, and for capturing a dialog:
  *   MEASURE='document.documentElement.scrollWidth' node scripts/screenshot.mjs ...
  */
 import { spawn } from "node:child_process";
@@ -117,10 +118,15 @@ if (process.env.MEASURE) {
     {
       expression: process.env.MEASURE,
       returnByValue: true,
+      // Without this a promise-returning expression resolves to `{}`, which reads as a
+      // real result and quietly invalidates whatever it was measuring.
+      awaitPromise: true,
     },
     s,
   );
   console.log(JSON.stringify(result.result?.value, null, 1));
+  // The expression may have opened something; give it time to finish animating.
+  await wait(600);
 }
 
 const { result: shot } = await send("Page.captureScreenshot", { format: "png" }, s);

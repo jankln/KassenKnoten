@@ -2,12 +2,20 @@ import type { ReactNode } from "react";
 import { AppHeader } from "@/components/navigation/app-header";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { Sidebar } from "@/components/navigation/sidebar";
+import { Toaster } from "@/components/ui/toaster";
+import { requireSession } from "@/lib/auth/current-session";
 
 /**
  * The authenticated frame. Sidebar on wide screens, bottom bar on narrow ones — the same
  * four destinations either way, so the app has one mental model rather than two.
  */
-export default function AppLayout({ children }: { children: ReactNode }) {
+export default async function AppLayout({ children }: { children: ReactNode }) {
+  // A second gate behind the proxy: a server action or a mistyped matcher must never be
+  // the only thing standing between a stranger and the household's finances. It also
+  // makes this segment dynamic, so pages read the database per request instead of being
+  // prerendered once at build time.
+  await requireSession();
+
   return (
     <div className="flex min-h-full flex-1">
       <Sidebar />
@@ -21,6 +29,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </div>
 
       <BottomNav />
+      <Toaster />
     </div>
   );
 }
