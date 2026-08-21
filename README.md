@@ -34,6 +34,21 @@ npm run dev
 Behind a reverse proxy, forward `X-Forwarded-For` so login throttling can tell clients
 apart, and serve the app over HTTPS so the session cookie is set with `Secure`.
 
+## Importing the legacy workbook
+
+The one-off importer reads the documented `Übersicht`, `Fixkosten`, and `Sparen & Rücklagen`
+sheets from an operator-supplied `Finanzplan.xlsx`. It validates all rows, keeps money as
+integer cents, and is a dry run unless `--apply` is supplied:
+
+```bash
+npm run import:excel -- --input Finanzplan.xlsx
+npm run import:excel -- --input Finanzplan.xlsx --apply
+```
+
+The importer refuses to write into a household that already has active data. Use
+`--allow-existing` only after taking a database backup. The workbook is gitignored and must
+never be copied into the repository.
+
 ## Status
 
 In development. Milestone A (foundation) is complete: database, calculation engine and

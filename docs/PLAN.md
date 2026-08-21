@@ -273,7 +273,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F08 Private fixed costs: list, create, edit, delete-with-undo, interval handling
 - [x] F09 Shared fixed costs: same plus mandatory per-item split mode with live share preview
 - [x] F10 Savings pots: rate, balance, target, progress
-- [ ] F11 Excel import: one-off seed script from `Finanzplan.xlsx`
+- [x] F11 Excel import: one-off seed script from `Finanzplan.xlsx`
 
 **Milestone C — Beyond the spreadsheet**
 
