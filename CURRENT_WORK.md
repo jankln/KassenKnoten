@@ -1,45 +1,18 @@
 # Current work
 
-**Feature:** F18 – Public README, product description, first beta release
-**Status:** in progress
-**Started:** 2026-08-22
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **F18 – Public README, product description and the first beta release**.
+The README is now a product page with screenshots taken from a container running the
+documented example household, `package.json` carries a real description and
+`1.0.0-beta.1`, and the release is tagged.
 
-The README stops being an internal project log and starts being the front door: someone
-who has never heard of this understands in fifteen seconds what it does, sees it, and
-knows how to run it. The project ships its first tagged beta.
+Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request and the
+only unticked roadmap item.
 
-## Scope
+The repository is still private. Publishing it is a separate, deliberate decision — the
+history was checked and is clean (no `.xlsx`, `.db` or `.env` was ever committed, and the
+only figures in the documentation belong to the fictional example household), but making
+it public cannot be undone.
 
-- In: README rewritten as a product page, screenshots, `package.json` description and
-  version, the GitHub repository description, an annotated `v1.0.0-beta.1` tag and
-  release.
-- Out: making the repository public. That publishes the whole history irreversibly, so
-  it is the maintainer's call, not a side effect of a documentation commit.
-
-## Plan
-
-- [ ] Seed the running container with the documented example household and capture
-      screenshots from it
-- [ ] Rewrite README: what it does, why it exists, how to run it — no workflow, no
-      spreadsheet origin story
-- [ ] `package.json`: description and version `1.0.0-beta.1`
-- [ ] GitHub repository description
-- [ ] Tag and release
-
-## Notes / decisions
-
-- Screenshots come from the Docker container, whose database is empty, seeded with the
-  Alex/Robin example household from `docs/WORKFLOW.md`. Screenshotting the development
-  instance would risk putting real figures into a repository that may go public.
-- Version `1.0.0-beta.1`: everything the plan scoped for v1 works, and the beta label
-  carries the one gap that remains, OIDC.
-- The README stays English. The product is German, the documentation is not — see the
-  language rule in `AGENTS.md`.
-
-## Resume here
-
-The history was checked before any of this: no `.xlsx`, `.db` or `.env` has ever been
-committed, and the only figures in the documentation are the fictional example
-household. Publishing is safe from a data standpoint.
+See `docs/WORKFLOW.md` for how this file is used.
