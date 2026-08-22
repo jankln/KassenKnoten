@@ -11,10 +11,10 @@ Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request
 only unticked item. The README documents what Authentik will need and states plainly
 that the mode does not exist yet.
 
-Known caveat from F17: the Docker daemon was unavailable in the environment where the
-image was written, so `docker build` itself has never been executed. Everything the
-image depends on was verified by running the standalone output directly — a cold start
-against an empty database, migrations reaching the runtime, better-sqlite3 loading, the
-headers, and every page interactive under the CSP.
+The F17 caveat is resolved: the image has now been built and run. `docker compose up`
+produced a 412 MB image, the container reports healthy on its own health check and runs
+as uid 1000, a cold start created and migrated the database on the volume (1 migration,
+12 seeded categories), signing in works, and every security header is present with no
+CSP violations in the browser.
 
 See `docs/WORKFLOW.md` for how this file is used.
