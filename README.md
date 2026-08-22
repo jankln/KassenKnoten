@@ -10,7 +10,7 @@ A self-hosted household finance planner for people who share costs unevenly —
 and want the maths to be exactly right.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.0.0--beta.1-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases)
+[![Release](https://img.shields.io/badge/release-v1.0.0--beta.2-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases)
 [![Self-hosted](https://img.shields.io/badge/self--hosted-Docker-b6498d?style=flat-square)](#run-it)
 [![UI](https://img.shields.io/badge/UI-Deutsch-008aa3?style=flat-square)](#a-note-on-language)
 
@@ -42,6 +42,12 @@ item, never assumed. The household default only pre-fills the form.
 points, and splits use the largest-remainder method — so 39,99 € at 50/50 becomes
 20,00 € and 19,99 €, never 39,98 € or 40,00 €. No floating point touches money anywhere
 in the codebase, and the calculation engine is a pure, unit-tested module.
+
+**Keep the past honest.** Every income and fixed cost carries the months it applies to.
+Giving someone a raise in September leaves August reporting August, and the dashboard
+steps back through the months to show what each one actually was. When an amount changes
+the app asks what that means — a new figure from a month on, or a correction to what was
+always true — and shows the resulting rows before saving.
 
 **Normalise every interval.** A 132,00 € yearly insurance shows up as 11,00 € a month
 next to everything else, without anyone dividing by twelve in their head.
