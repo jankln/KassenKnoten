@@ -37,7 +37,7 @@ transaction bookkeeping, tax features, mobile native apps.
 | Data           | SQLite via Drizzle ORM, file on a mounted volume                                                                                                                          |
 | Auth           | OIDC (Authentik) as primary, optional local password fallback                                                                                                             |
 | Authorization  | E-mail allowlist inside the app                                                                                                                                           |
-| Time dimension | Current plan + automatic monthly snapshots for history                                                                                                                    |
+| Time dimension | Incomes and fixed costs are valid for a range of months; every month is computed from what applied in it. Snapshots remain only for savings balances                      |
 | Split modes    | Fixed quota (default 50/50, configurable) and income-proportional; **the split mode is chosen explicitly per shared item**, the household default only pre-fills the form |
 | UI language    | German. Code and docs: English                                                                                                                                            |
 
@@ -308,6 +308,11 @@ Each item is one feature and one commit on `main`, preceded by a committed
 
 - [x] F16 Mobile polish, animation pass, accessibility audit
 - [x] F17 Docker image, compose file, `.env.example`, health check, README with setup and Authentik instructions
+
+**Milestone E — Beyond v1**
+
+- [x] F18 Public README, product description, first tagged beta
+- [x] F19 Effective-dated incomes and fixed costs, month navigation on the dashboard
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: plan-vs-actual bookkeeping, recurring irregular expenses,
