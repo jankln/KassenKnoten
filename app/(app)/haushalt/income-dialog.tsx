@@ -12,6 +12,7 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
 import { ValidityFields } from "@/components/patterns/validity-fields";
 import { periodFromDate } from "@/lib/domain/period";
+import { parseAmountToCents } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
 import { formatInterval } from "@/lib/format";
 import { addIncome, editIncome } from "./actions";
@@ -39,6 +40,9 @@ export function IncomeDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
+  const [amountText, setAmountText] = useState(
+    income === undefined ? "" : (income.amountCents / 100).toFixed(2).replace(".", ","),
+  );
   const [pending, startTransition] = useTransition();
 
   function submit(formData: FormData) {
@@ -80,6 +84,7 @@ export function IncomeDialog({
             <MoneyInput
               id="income-amount"
               name="amountCents"
+              onTextChange={setAmountText}
               defaultCents={income?.amountCents}
               required
             />
@@ -118,6 +123,8 @@ export function IncomeDialog({
             defaultUntil={income?.validUntil}
 
             currentFrom={income?.validFrom}
+            currentAmountCents={income?.amountCents}
+            amountCents={parseAmountToCents(amountText)}
           />
 
           <div className="flex justify-end gap-2 pt-1">

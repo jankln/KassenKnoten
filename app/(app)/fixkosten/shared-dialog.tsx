@@ -149,6 +149,8 @@ export function SharedExpenseDialog({
             defaultUntil={expense?.validUntil}
 
             currentFrom={expense?.validFrom}
+            currentAmountCents={expense?.amountCents}
+            amountCents={parseAmountToCents(amountText)}
           />
 
           <div className="flex justify-end gap-2 pt-1">

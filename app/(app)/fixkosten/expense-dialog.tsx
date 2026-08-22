@@ -13,6 +13,7 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { formatInterval } from "@/lib/format";
 import { ValidityFields } from "@/components/patterns/validity-fields";
 import { periodFromDate } from "@/lib/domain/period";
+import { parseAmountToCents } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { ExpenseRow } from "@/server/services/expenses";
@@ -37,6 +38,11 @@ export function ExpenseDialog({
 }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
+  const [amountText, setAmountText] = useState(
+    expense === undefined
+      ? ""
+      : (expense.amountCents / 100).toFixed(2).replace(".", ","),
+  );
   const [pending, startTransition] = useTransition();
 
   function submit(formData: FormData) {
@@ -78,6 +84,7 @@ export function ExpenseDialog({
             <MoneyInput
               id="expense-amount"
               name="amountCents"
+              onTextChange={setAmountText}
               defaultCents={expense?.amountCents}
               required
             />
@@ -130,6 +137,8 @@ export function ExpenseDialog({
             defaultUntil={expense?.validUntil}
 
             currentFrom={expense?.validFrom}
+            currentAmountCents={expense?.amountCents}
+            amountCents={parseAmountToCents(amountText)}
           />
 
           <div className="flex justify-end gap-2 pt-1">

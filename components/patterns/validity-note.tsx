@@ -23,7 +23,12 @@ export function ValidityNote({
   const notStarted = validFrom > currentPeriod;
   const ended = validUntil !== null && validUntil < currentPeriod;
 
-  if (!notStarted && validUntil === null) {
+  // An entry that has run for a while and has no end needs no line: that is the ordinary
+  // case, and repeating it on every row would bury the rows that differ. One that starts
+  // this month or later does need it — after a raise the list shows the old figure with
+  // its closed range and the new one right below, and without a start month the reader
+  // cannot tell when the second takes over.
+  if (validUntil === null && validFrom < currentPeriod) {
     return null;
   }
 

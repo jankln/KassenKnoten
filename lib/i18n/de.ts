@@ -77,6 +77,20 @@ export const de = {
     range: (from: string, until: string) => `${from} – ${until}`,
     splitHint:
       "Änderst du den Betrag mit einem späteren Monat, bleibt der bisherige Eintrag für die Monate davor bestehen.",
+
+    /* Shown once the amount differs from the stored one, so the choice between "this is
+       new from now on" and "this was always wrong" is made deliberately. */
+    changeTitle: "Was hat sich geändert?",
+    modeChange: "Neuer Betrag ab",
+    modeCorrect: "War schon immer so",
+    modeChangeHint: "Der bisherige Betrag bleibt für die Monate davor gespeichert.",
+    modeCorrectHint:
+      "Überschreibt den Eintrag rückwirkend, auch für Monate, die schon abgerechnet sind.",
+    previewTitle: "So wird gespeichert",
+    previewUntil: (month: string) => `bis ${month}`,
+    previewFrom: (month: string) => `ab ${month}`,
+    previewOld: "bisher",
+    previewNew: "neu",
     endedBefore: "Vor diesem Monat beendet",
     startsLater: "Beginnt später",
   },

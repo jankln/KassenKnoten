@@ -2,22 +2,16 @@
 
 **Status:** idle — nothing in flight.
 
-Last finished: **F19 – Effective-dated incomes and fixed costs, month navigation**. Every
-income and fixed cost carries the months it applies to, the dashboard steps through
-months with arrows, and each month is computed from what was valid in it. Editing an
-entry with a later start splits it, so a raise in September leaves August alone.
+Last finished: **F20 – Making a raise an explicit choice**. When the amount of an existing
+income or fixed cost changes, the dialog asks what the change means instead of inferring
+it from whether a date field was touched. "Neuer Betrag ab" keeps the old value for the
+months before and is preselected; "War schon immer so" overwrites the entry retroactively.
+A preview shows the rows that will exist after saving.
 
 Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request.
 
-Notes for whoever comes next:
-
-- Savings pots are deliberately not dated. A pot has a balance, which is a value as of
-  now, not something valid for a range. Because of that a month with no incomes and no
-  fixed costs renders an empty state instead of KPIs — otherwise it would report an
-  undated savings rate against no income and warn about a shortfall that never happened.
-- Snapshots still exist but no longer feed the trend, which is computed. They record
-  savings balances, which nothing else does.
-- Backup format is at version 2. Version 1 files still restore; their entries are dated
-  to the creation month of the household in the same file.
+Note for whoever comes next: the server logic is unchanged from F19 — it already splits an
+entry whose start moves forward. F20 is entirely about making the safe outcome the one
+that happens by default rather than the one that requires knowing about it.
 
 See `docs/WORKFLOW.md` for how this file is used.
