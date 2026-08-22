@@ -8,6 +8,13 @@
       "when": 1787311492661,
       "tag": "0000_initial_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1787415359012,
+      "tag": "0001_quiet_stellaris",
+      "breakpoints": true
     }
   ]
 }

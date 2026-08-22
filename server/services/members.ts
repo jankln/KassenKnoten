@@ -3,6 +3,7 @@ import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { sumMonthlyCents } from "@/lib/domain/interval";
+import { comparePeriods, previousPeriod, type Period } from "@/lib/domain/period";
 import {
   MAX_COLOR_INDEX,
   type IncomeInput,
@@ -18,6 +19,8 @@ import {
 
 export interface IncomeRow {
   id: number;
+  validFrom: Period;
+  validUntil: Period | null;
   label: string;
   kind: "salary" | "other";
   amountCents: number;
@@ -60,6 +63,8 @@ export async function listMembersWithIncome(
         kind: entry.kind,
         amountCents: entry.amountCents,
         intervalMonths: entry.intervalMonths,
+        validFrom: entry.validFrom,
+        validUntil: entry.validUntil,
         monthlyCents: sumMonthlyCents([entry]),
       }));
 
@@ -139,11 +144,64 @@ export function createIncome(input: IncomeInput, db: Db = getDb()): number {
     .get().id;
 }
 
-export function updateIncome(id: number, input: IncomeInput, db: Db = getDb()): void {
-  db.update(schema.income)
-    .set({ ...input, updatedAt: new Date() })
-    .where(eq(schema.income.id, id))
-    .run();
+/**
+ * Save an income, splitting it in two when it starts applying later than it used to.
+ *
+ * A raise is not a correction. Moving `validFrom` forward means "this is what it is from
+ * then on", so the existing row keeps its amount and is closed at the preceding month,
+ * and the new figure starts a row of its own. January keeps reporting January.
+ *
+ * Leaving `validFrom` where it was is the other intent — a typo, a wrong interval — and
+ * rewrites the row in place, including for the months it already covered.
+ *
+ * Returns the id of the row that now carries `input`, which is a new one after a split.
+ */
+export function updateIncome(id: number, input: IncomeInput, db: Db = getDb()): number {
+  return db.transaction((tx) => {
+    const existing = tx
+      .select({
+        validFrom: schema.income.validFrom,
+        validUntil: schema.income.validUntil,
+      })
+      .from(schema.income)
+      .where(eq(schema.income.id, id))
+      .get();
+
+    if (existing && comparePeriods(input.validFrom, existing.validFrom) > 0) {
+      const closeAt = previousPeriod(input.validFrom);
+      tx.update(schema.income)
+        .set({ validUntil: closeAt, updatedAt: new Date() })
+        .where(eq(schema.income.id, id))
+        .run();
+
+      return tx
+        .insert(schema.income)
+        .values({
+          ...input,
+          // A range the old row already ended before would be invisible in every month.
+          validUntil: keepLaterEnd(existing.validUntil, input.validUntil),
+        })
+        .returning({ id: schema.income.id })
+        .get().id;
+    }
+
+    tx.update(schema.income)
+      .set({ ...input, updatedAt: new Date() })
+      .where(eq(schema.income.id, id))
+      .run();
+    return id;
+  });
+}
+
+/**
+ * The end date a split-off row should carry.
+ *
+ * The form's value wins when it has one. Otherwise the old row's end carries over: an
+ * entry that was already planned to stop in June does not become open-ended just because
+ * its amount changed in March.
+ */
+function keepLaterEnd(previous: Period | null, next: Period | null): Period | null {
+  return next ?? previous;
 }
 
 export function removeIncome(id: number, db: Db = getDb()): void {

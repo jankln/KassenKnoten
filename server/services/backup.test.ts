@@ -39,6 +39,7 @@ function seedHouseholdData() {
       label: "Gehalt",
       amountCents: 205000,
       intervalMonths: 1,
+      validFrom: "2026-01",
     })
     .returning({ id: schema.income.id })
     .get().id;
@@ -51,6 +52,7 @@ function seedHouseholdData() {
       amountCents: 118235,
       intervalMonths: 1,
       splitMode: "fixed_quota",
+      validFrom: "2026-01",
     })
     .returning({ id: schema.expense.id })
     .get().id;
@@ -144,6 +146,34 @@ describe("backup", () => {
       RestoreValidationError,
     );
     expect(handle.db.select().from(schema.member).all()).toHaveLength(2);
+  });
+
+  // Version 1 predates effective dating. Such a file must still restore, with its
+  // entries dated to the earliest month the household in that same file can describe.
+  it("restores a version 1 backup by backfilling the validity", () => {
+    seedHouseholdData();
+    const exported = exportBackup(handle.db);
+    const legacy = structuredClone(exported) as Record<string, unknown> & {
+      incomes: Record<string, unknown>[];
+      expenses: Record<string, unknown>[];
+    };
+    legacy.version = 1;
+    for (const row of [...legacy.incomes, ...legacy.expenses]) {
+      delete row.validFrom;
+      delete row.validUntil;
+    }
+
+    restoreBackup(parseBackup(legacy), handle.db);
+
+    const expected = exported.household.createdAt.slice(0, 7);
+    const incomes = handle.db.select().from(schema.income).all();
+    const expenses = handle.db.select().from(schema.expense).all();
+    expect(incomes.length).toBeGreaterThan(0);
+    expect(expenses.length).toBeGreaterThan(0);
+    for (const row of [...incomes, ...expenses]) {
+      expect(row.validFrom).toBe(expected);
+      expect(row.validUntil).toBeNull();
+    }
   });
 
   it("keeps seeded system categories and exports useful active planning rows as CSV", () => {

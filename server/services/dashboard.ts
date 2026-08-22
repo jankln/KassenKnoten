@@ -1,8 +1,9 @@
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNull, lte, or, gte } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { monthlyCents } from "@/lib/domain/interval";
+import { addMonths, periodFromDate, type Period } from "@/lib/domain/period";
 import {
   summariseHousehold,
   type HouseholdSummary,
@@ -24,11 +25,35 @@ export type DashboardMember = HouseholdSummary["members"][number] & {
 };
 
 export interface DashboardData {
+  /** The month these figures describe. */
+  period: Period;
+  /**
+   * Whether any income or fixed cost was valid in this month.
+   *
+   * Separate from `hasData`, which asks whether the household has been set up at all.
+   * Savings pots carry a balance rather than a validity, so a month before anything was
+   * entered would otherwise report a savings rate against no income and warn about a
+   * shortfall that never existed.
+   */
+  hasEntriesInPeriod: boolean;
   summary: HouseholdSummary;
   members: DashboardMember[];
   categories: DashboardCategory[];
   savingsPots: SavingsPotRow[];
   hasData: boolean;
+}
+
+/**
+ * Rows that applied in `period`: started on or before it, and either open-ended or not
+ * yet finished. Periods are `YYYY-MM`, so a plain string comparison orders them
+ * correctly and the database can use the index instead of loading every row.
+ */
+function appliesIn(
+  period: Period,
+  validFrom: typeof schema.income.validFrom | typeof schema.expense.validFrom,
+  validUntil: typeof schema.income.validUntil | typeof schema.expense.validUntil,
+) {
+  return and(lte(validFrom, period), or(isNull(validUntil), gte(validUntil, period)));
 }
 
 /**
@@ -39,7 +64,10 @@ export interface DashboardData {
  * for the dashboard's presentation. All household money calculations happen in
  * `summariseHousehold`.
  */
-export function getDashboardData(db: Db = getDb()): DashboardData {
+export function getDashboardData(
+  period: Period = periodFromDate(new Date()),
+  db: Db = getDb(),
+): DashboardData {
   const members = db
     .select({
       id: schema.member.id,
@@ -59,7 +87,12 @@ export function getDashboardData(db: Db = getDb()): DashboardData {
       intervalMonths: schema.income.intervalMonths,
     })
     .from(schema.income)
-    .where(eq(schema.income.active, true))
+    .where(
+      and(
+        eq(schema.income.active, true),
+        appliesIn(period, schema.income.validFrom, schema.income.validUntil),
+      ),
+    )
     .all()
     .filter((income) => memberIds.has(income.memberId));
 
@@ -78,7 +111,12 @@ export function getDashboardData(db: Db = getDb()): DashboardData {
     })
     .from(schema.expense)
     .leftJoin(schema.category, eq(schema.expense.categoryId, schema.category.id))
-    .where(eq(schema.expense.active, true))
+    .where(
+      and(
+        eq(schema.expense.active, true),
+        appliesIn(period, schema.expense.validFrom, schema.expense.validUntil),
+      ),
+    )
     .orderBy(asc(schema.expense.sortOrder), asc(schema.expense.id))
     .all()
     .filter(
@@ -161,6 +199,8 @@ export function getDashboardData(db: Db = getDb()): DashboardData {
   );
 
   return {
+    period,
+    hasEntriesInPeriod: incomes.length > 0 || expenseRows.length > 0,
     summary,
     members: summaryMembers,
     categories,
@@ -169,4 +209,40 @@ export function getDashboardData(db: Db = getDb()): DashboardData {
       members.length > 0 &&
       (incomes.length > 0 || expenseRows.length > 0 || savingsPots.length > 0),
   };
+}
+
+export interface TrendPoint {
+  period: Period;
+  incomeCents: number;
+  fixedCostsCents: number;
+  savingsRateCents: number;
+  freeCashCents: number;
+}
+
+/**
+ * The last `months` months, oldest first, each computed from the entries that were valid
+ * in it.
+ *
+ * This used to read frozen snapshots. Now that entries carry their own validity the past
+ * is derivable, which means a correction entered late also fixes the months it belongs
+ * to — a snapshot could never do that. It costs one pass per month, which for a dozen
+ * months of a single household is nothing.
+ */
+export function getTrend(
+  endPeriod: Period = periodFromDate(new Date()),
+  months = 12,
+  db: Db = getDb(),
+): TrendPoint[] {
+  const span = Math.max(1, Math.floor(months));
+  return Array.from({ length: span }, (_, index) => {
+    const period = addMonths(endPeriod, index - span + 1);
+    const { summary } = getDashboardData(period, db);
+    return {
+      period,
+      incomeCents: summary.incomeCents,
+      fixedCostsCents: summary.fixedTotalCents,
+      savingsRateCents: summary.savingsRateCents,
+      freeCashCents: summary.freeCashCents,
+    };
+  });
 }

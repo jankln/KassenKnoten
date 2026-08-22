@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/ui/category-icon";
+import { ValidityNote } from "@/components/patterns/validity-note";
+import { periodFromDate } from "@/lib/domain/period";
 import { formatCents, formatInterval } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
@@ -24,6 +26,7 @@ export function MemberExpenseCard({
 }) {
   const [, startTransition] = useTransition();
   const copy = de.sections.fixedCosts;
+  const currentPeriod = periodFromDate(new Date());
 
   function drop(id: number) {
     startTransition(async () => {
@@ -76,12 +79,19 @@ export function MemberExpenseCard({
                     {expense.label}
                   </p>
                   {/* Only worth saying when it is not the monthly default. */}
-                  {expense.intervalMonths !== 1 ? (
-                    <p className="text-ink-muted text-xs">
-                      {formatCents(expense.amountCents)} ·{" "}
-                      {formatInterval(expense.intervalMonths)}
-                    </p>
-                  ) : null}
+                  <p className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    {expense.intervalMonths !== 1 ? (
+                      <span>
+                        {formatCents(expense.amountCents)} ·{" "}
+                        {formatInterval(expense.intervalMonths)}
+                      </span>
+                    ) : null}
+                    <ValidityNote
+                      validFrom={expense.validFrom}
+                      validUntil={expense.validUntil}
+                      currentPeriod={currentPeriod}
+                    />
+                  </p>
                 </div>
 
                 <span className="font-ledger tabular ml-auto text-sm">

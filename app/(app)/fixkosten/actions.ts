@@ -24,6 +24,8 @@ function parse(formData: FormData) {
     amountCents: formData.get("amountCents"),
     intervalMonths: formData.get("intervalMonths"),
     categoryId: formData.get("categoryId"),
+    validFrom: formData.get("validFrom"),
+    validUntil: formData.get("validUntil") ?? "",
   });
 }
 
@@ -95,6 +97,8 @@ function parseShared(formData: FormData) {
     amountCents: formData.get("amountCents"),
     intervalMonths: formData.get("intervalMonths"),
     categoryId: formData.get("categoryId"),
+    validFrom: formData.get("validFrom"),
+    validUntil: formData.get("validUntil") ?? "",
     splitMode: formData.get("splitMode"),
     shares: readShares(formData),
   });

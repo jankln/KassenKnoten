@@ -5,6 +5,8 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ValidityNote } from "@/components/patterns/validity-note";
+import { periodFromDate } from "@/lib/domain/period";
 import { formatCents, formatInterval } from "@/lib/format";
 import { de } from "@/lib/i18n/de";
 import type { MemberWithIncome } from "@/server/services/members";
@@ -20,6 +22,7 @@ import { MemberDialog } from "./member-dialog";
 export function MemberCard({ member }: { member: MemberWithIncome }) {
   const [, startTransition] = useTransition();
   const copy = de.sections.household;
+  const currentPeriod = periodFromDate(new Date());
 
   /**
    * Removal happens immediately and offers an undo, rather than asking "are you sure?"
@@ -97,12 +100,19 @@ export function MemberCard({ member }: { member: MemberWithIncome }) {
               >
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{entry.label}</p>
-                  {entry.intervalMonths !== 1 ? (
-                    <p className="text-ink-muted text-xs">
-                      {formatCents(entry.amountCents)} ·{" "}
-                      {formatInterval(entry.intervalMonths)}
-                    </p>
-                  ) : null}
+                  <p className="text-ink-muted flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                    {entry.intervalMonths !== 1 ? (
+                      <span>
+                        {formatCents(entry.amountCents)} ·{" "}
+                        {formatInterval(entry.intervalMonths)}
+                      </span>
+                    ) : null}
+                    <ValidityNote
+                      validFrom={entry.validFrom}
+                      validUntil={entry.validUntil}
+                      currentPeriod={currentPeriod}
+                    />
+                  </p>
                 </div>
 
                 <span className="font-ledger tabular ml-auto text-sm">

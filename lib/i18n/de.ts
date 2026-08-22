@@ -65,6 +65,29 @@ export const de = {
     back: "Zurück",
   },
 
+  /** The months an entry applies to — shown in every income and fixed-cost form. */
+  validity: {
+    from: "Gültig ab",
+    until: "Gültig bis",
+    untilHint: "Leer lassen, wenn es weiterläuft.",
+    fromHint: "Ab diesem Monat zählt der Eintrag.",
+    open: "läuft weiter",
+    since: (month: string) => `ab ${month}`,
+    until_: (month: string) => `bis ${month}`,
+    range: (from: string, until: string) => `${from} – ${until}`,
+    splitHint:
+      "Änderst du den Betrag mit einem späteren Monat, bleibt der bisherige Eintrag für die Monate davor bestehen.",
+    endedBefore: "Vor diesem Monat beendet",
+    startsLater: "Beginnt später",
+  },
+
+  months: {
+    previous: "Vorheriger Monat",
+    next: "Nächster Monat",
+    today: "Heute",
+    current: "Aktueller Monat",
+  },
+
   theme: {
     label: "Darstellung",
     light: "Hell",
@@ -76,6 +99,10 @@ export const de = {
     overview: {
       title: "Übersicht",
       subtitle: "Der laufende Monat auf einen Blick.",
+      emptyMonth: {
+        title: "Für diesen Monat ist nichts hinterlegt",
+        body: "Einnahmen und Fixkosten gelten ab dem Monat, den du bei ihnen eingetragen hast. Für frühere Monate gibt es deshalb nichts zu rechnen.",
+      },
       empty: {
         title: "Noch nichts zu rechnen",
         body: "Lege Personen an und ergänze danach Einnahmen oder Fixkosten. Dann siehst du hier sofort, was im Monat übrig bleibt.",
@@ -327,6 +354,8 @@ export const de = {
     nameTaken: "Diesen Namen gibt es schon.",
     splitModeRequired: "Bitte auswählen, wie geteilt wird.",
     sharesMustSum: "Die Anteile müssen zusammen 100 % ergeben.",
+    periodInvalid: "Bitte einen gültigen Monat angeben.",
+    periodEndBeforeStart: "Das Ende darf nicht vor dem Beginn liegen.",
     amountNotUnderstood: "Kein gültiger Betrag",
     failed: "Das hat nicht geklappt. Bitte noch einmal versuchen.",
   },

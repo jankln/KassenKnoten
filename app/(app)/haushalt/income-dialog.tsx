@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Field, Input, Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
+import { ValidityFields } from "@/components/patterns/validity-fields";
+import { periodFromDate } from "@/lib/domain/period";
 import { de } from "@/lib/i18n/de";
 import { formatInterval } from "@/lib/format";
 import { addIncome, editIncome } from "./actions";
@@ -31,6 +33,8 @@ export function IncomeDialog({
     kind: "salary" | "other";
     amountCents: number;
     intervalMonths: number;
+    validFrom: string;
+    validUntil: string | null;
   };
 }) {
   const [open, setOpen] = useState(false);
@@ -107,6 +111,14 @@ export function IncomeDialog({
               </Select>
             </Field>
           </div>
+
+          <ValidityFields
+            defaultFrom={income?.validFrom ?? periodFromDate(new Date())}
+
+            defaultUntil={income?.validUntil}
+
+            currentFrom={income?.validFrom}
+          />
 
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>

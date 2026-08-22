@@ -2,13 +2,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import {
-  dateFromPeriod,
   ensurePreviousMonthSnapshot,
   ensureSnapshotForPeriod,
   getSnapshotMembers,
   getSnapshotTrend,
-  isSnapshotPeriod,
-  periodFromDate,
   previousCalendarMonthPeriod,
 } from "./snapshots";
 
@@ -28,12 +25,8 @@ describe("snapshot periods", () => {
   it("handles calendar boundaries explicitly", () => {
     const date = new Date(2026, 0, 15);
 
-    expect(periodFromDate(date)).toBe("2026-01");
     expect(previousCalendarMonthPeriod(date)).toBe("2025-12");
-    expect(dateFromPeriod("2026-02")).toEqual(new Date(2026, 1, 1));
-    expect(isSnapshotPeriod("2026-02")).toBe(true);
-    expect(isSnapshotPeriod("2026-13")).toBe(false);
-    expect(isSnapshotPeriod("not-a-period")).toBe(false);
+    expect(previousCalendarMonthPeriod(new Date(2026, 0, 1))).toBe("2025-12");
   });
 });
 
@@ -53,8 +46,13 @@ describe("snapshot creation", () => {
     handle.db
       .insert(schema.income)
       .values([
-        { memberId: alex, label: "Gehalt", amountCents: 205_000 },
-        { memberId: robin, label: "Gehalt", amountCents: 231_000 },
+        { memberId: alex, label: "Gehalt", amountCents: 205_000, validFrom: "2026-01" },
+        {
+          memberId: robin,
+          label: "Gehalt",
+          amountCents: 231_000,
+          validFrom: "2026-01",
+        },
       ])
       .run();
     handle.db
@@ -64,6 +62,7 @@ describe("snapshot creation", () => {
         splitMode: "fixed_quota",
         label: "Gemeinsame Kosten",
         amountCents: 118_235,
+        validFrom: "2026-01",
       })
       .returning({ id: schema.expense.id })
       .get();

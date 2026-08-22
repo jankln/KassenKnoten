@@ -4,10 +4,16 @@ import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { monthlyCents } from "@/lib/domain/interval";
+import { isPeriod, periodFromDate } from "@/lib/domain/period";
 import { de } from "@/lib/i18n/de";
 
 export const BACKUP_FORMAT = "kassenknoten-backup";
-export const BACKUP_VERSION = 1;
+/**
+ * Version 2 added `validFrom` / `validUntil` to incomes and expenses. Version 1 files are
+ * still accepted: their entries never had an end and are backfilled to the month the
+ * household in that same file was created, which is the earliest month it can describe.
+ */
+export const BACKUP_VERSION = 2;
 
 export class RestoreValidationError extends Error {
   constructor(message: string) {
@@ -53,6 +59,12 @@ const memberSchema = z
   })
   .strict();
 
+/** Absent in a version 1 file, present in every version 2 one. */
+const optionalValidity = {
+  validFrom: z.string().refine(isPeriod).optional(),
+  validUntil: z.string().refine(isPeriod).nullable().optional(),
+};
+
 const incomeSchema = z
   .object({
     id: z.number().int().positive(),
@@ -62,6 +74,7 @@ const incomeSchema = z
     amountCents: nonNegativeInteger,
     intervalMonths: z.number().int().positive(),
     active: z.boolean(),
+    ...optionalValidity,
     ...timestamped,
   })
   .strict();
@@ -91,6 +104,7 @@ const expenseSchema = z
     note: z.string().nullable(),
     sortOrder: integer,
     active: z.boolean(),
+    ...optionalValidity,
     ...timestamped,
   })
   .strict();
@@ -162,7 +176,7 @@ const appSettingSchema = z
 const backupSchema = z
   .object({
     format: z.literal(BACKUP_FORMAT),
-    version: z.literal(BACKUP_VERSION),
+    version: z.union([z.literal(1), z.literal(2)]),
     exportedAt: dateString,
     household: householdSchema,
     members: z.array(memberSchema),
@@ -558,11 +572,15 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
         )
         .run();
     }
+    // A version 1 file has no validity at all; everything in it was simply current.
+    const fallbackFrom = periodFromDate(date(validated.household.createdAt));
     if (validated.incomes.length > 0) {
       tx.insert(schema.income)
         .values(
           validated.incomes.map((row) => ({
             ...row,
+            validFrom: row.validFrom ?? fallbackFrom,
+            validUntil: row.validUntil ?? null,
             createdAt: date(row.createdAt),
             updatedAt: date(row.updatedAt),
           })),
@@ -574,6 +592,8 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
         .values(
           validated.expenses.map((row) => ({
             ...row,
+            validFrom: row.validFrom ?? fallbackFrom,
+            validUntil: row.validUntil ?? null,
             createdAt: date(row.createdAt),
             updatedAt: date(row.updatedAt),
           })),

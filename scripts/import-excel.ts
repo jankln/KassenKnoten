@@ -11,6 +11,7 @@ import ExcelJS from "exceljs";
 import { eq } from "drizzle-orm";
 import { createDb, type Db } from "../db/client.ts";
 import * as schema from "../db/schema.ts";
+import { periodFromDate } from "../lib/domain/period.ts";
 
 const DEFAULT_INPUT = "Finanzplan.xlsx";
 const TOTAL_LABEL =
@@ -727,6 +728,9 @@ export function importIntoDatabase(
         throw new Error(`Unknown quota member "${share.memberName}".`);
       return { memberId, shareBp: share.shareBp };
     });
+    // The workbook is a snapshot of a plan with no history of its own, so everything it
+    // brings starts in the month it is imported.
+    const importPeriod = periodFromDate(new Date());
     tx.delete(schema.defaultShare).run();
     if (shares.length > 0) tx.insert(schema.defaultShare).values(shares).run();
     for (const income of importData.incomes) {
@@ -739,6 +743,7 @@ export function importIntoDatabase(
           label: income.label,
           kind: income.kind,
           amountCents: income.amountCents,
+          validFrom: importPeriod,
         })
         .run();
     }
@@ -760,6 +765,7 @@ export function importIntoDatabase(
             categoryId,
             amountCents: expense.amountCents,
             intervalMonths: 1,
+            validFrom: importPeriod,
           })
           .run();
       } else {
@@ -773,6 +779,7 @@ export function importIntoDatabase(
             amountCents: expense.amountCents,
             intervalMonths: 1,
             splitMode: "fixed_quota",
+            validFrom: importPeriod,
           })
           .returning({ id: schema.expense.id })
           .get().id;

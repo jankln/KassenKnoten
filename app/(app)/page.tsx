@@ -1,29 +1,47 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { PageHeader } from "@/components/patterns/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { buttonStyles } from "@/components/ui/button";
 import { formatCents, formatPeriod, formatRatio } from "@/lib/format";
+import {
+  isPeriod,
+  nextPeriod,
+  periodFromDate,
+  previousPeriod,
+  type Period,
+} from "@/lib/domain/period";
 import { de } from "@/lib/i18n/de";
-import type { DashboardCategory, DashboardData } from "@/server/services/dashboard";
-import { getDashboardData } from "@/server/services/dashboard";
-import { getSnapshotTrend, type SnapshotTrendPoint } from "@/server/services/snapshots";
+import type {
+  DashboardCategory,
+  DashboardData,
+  TrendPoint,
+} from "@/server/services/dashboard";
+import { getDashboardData, getTrend } from "@/server/services/dashboard";
 
 export const metadata: Metadata = { title: de.sections.overview.title };
 
-export default function OverviewPage() {
+export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const copy = de.sections.overview;
-  const dashboard = getDashboardData();
-  const trend = getSnapshotTrend();
+  const today = periodFromDate(new Date());
+  // A malformed month in the URL falls back to today rather than erroring: the address
+  // bar is user input, and there is a perfectly good month to show.
+  const requested = (await searchParams).monat;
+  const period =
+    typeof requested === "string" && isPeriod(requested) ? requested : today;
+
+  const dashboard = getDashboardData(period);
+  const trend = getTrend(period);
 
   if (!dashboard.hasData) {
     return (
       <>
         <PageHeader title={copy.title} subtitle={copy.subtitle} />
+        <MonthNav period={period} today={today} />
         <EmptyState
           title={copy.empty.title}
           body={copy.empty.body}
@@ -38,9 +56,22 @@ export default function OverviewPage() {
     );
   }
 
+  // A month before anything was entered has no plan to report. Showing zeros next to a
+  // savings rate that is not dated would warn about a shortfall that never happened.
+  if (!dashboard.hasEntriesInPeriod) {
+    return (
+      <>
+        <PageHeader title={copy.title} subtitle={copy.subtitle} />
+        <MonthNav period={period} today={today} />
+        <EmptyState title={copy.emptyMonth.title} body={copy.emptyMonth.body} />
+      </>
+    );
+  }
+
   return (
     <>
       <PageHeader title={copy.title} subtitle={copy.subtitle} />
+      <MonthNav period={period} today={today} />
       <Warnings dashboard={dashboard} />
 
       <section aria-labelledby="dashboard-kpis">
@@ -91,6 +122,50 @@ export default function OverviewPage() {
       <SavingsSection dashboard={dashboard} />
       <TrendSection trend={trend} />
     </>
+  );
+}
+
+/**
+ * Step through the months.
+ *
+ * Plain links, so the month survives a reload, can be shared, and works before any
+ * JavaScript arrives. Both directions stay open: the future is worth looking at when a
+ * raise or a contract has already been entered with a later start.
+ */
+function MonthNav({ period, today }: { period: Period; today: Period }) {
+  const copy = de.months;
+  return (
+    <nav
+      aria-label={copy.current}
+      className="border-line bg-surface rounded-card mb-6 flex items-center justify-between gap-2 border p-1.5"
+    >
+      <Link
+        href={`/?monat=${previousPeriod(period)}`}
+        aria-label={copy.previous}
+        className={buttonStyles({ variant: "ghost", size: "icon" })}
+      >
+        <ChevronLeft className="size-5" aria-hidden />
+      </Link>
+
+      <p className="font-display min-w-0 truncate text-center text-base font-semibold">
+        {formatPeriod(period)}
+      </p>
+
+      <div className="flex items-center gap-1">
+        {period === today ? null : (
+          <Link href="/" className={buttonStyles({ variant: "ghost", size: "sm" })}>
+            {copy.today}
+          </Link>
+        )}
+        <Link
+          href={`/?monat=${nextPeriod(period)}`}
+          aria-label={copy.next}
+          className={buttonStyles({ variant: "ghost", size: "icon" })}
+        >
+          <ChevronRight className="size-5" aria-hidden />
+        </Link>
+      </div>
+    </nav>
   );
 }
 
@@ -383,7 +458,7 @@ const trendLines = [
   },
 ] as const;
 
-function TrendSection({ trend }: { trend: SnapshotTrendPoint[] }) {
+function TrendSection({ trend }: { trend: TrendPoint[] }) {
   const copy = de.sections.overview.trend;
   return (
     <section aria-labelledby="dashboard-trend" className="mt-6">
@@ -443,7 +518,7 @@ function TrendSection({ trend }: { trend: SnapshotTrendPoint[] }) {
   );
 }
 
-function TrendChart({ trend }: { trend: SnapshotTrendPoint[] }) {
+function TrendChart({ trend }: { trend: TrendPoint[] }) {
   const values = trend.flatMap((point) => trendLines.map((line) => point[line.key]));
   const min = Math.min(0, ...values);
   const max = Math.max(0, ...values);

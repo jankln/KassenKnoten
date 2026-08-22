@@ -2,12 +2,16 @@ import { asc, desc, eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
+import {
+  isPeriod,
+  periodFromDate,
+  previousPeriod,
+  type Period,
+} from "@/lib/domain/period";
 import { getDashboardData } from "./dashboard";
 
-const PERIOD_PATTERN = /^(\d{4})-(\d{2})$/;
-
 export interface SnapshotTrendPoint {
-  period: string;
+  period: Period;
   incomeCents: number;
   fixedPrivateCents: number;
   fixedSharedCents: number;
@@ -17,45 +21,18 @@ export interface SnapshotTrendPoint {
   freeCashCents: number;
 }
 
-/** Return the local calendar period represented by a date. */
-export function periodFromDate(date: Date): string {
+/**
+ * Snapshots keep the one thing effective dating cannot reconstruct: what a savings pot
+ * held at the end of a month. Incomes and fixed costs carry their own validity now, so
+ * every other figure for a past month is computed rather than read from here.
+ */
+
+/** The previous calendar month for a request date. */
+export function previousCalendarMonthPeriod(date: Date): Period {
   if (Number.isNaN(date.getTime())) {
     throw new Error("Cannot create a period from an invalid date.");
   }
-  return `${String(date.getFullYear()).padStart(4, "0")}-${String(
-    date.getMonth() + 1,
-  ).padStart(2, "0")}`;
-}
-
-/** Return the first day of a calendar period in the local timezone. */
-export function dateFromPeriod(period: string): Date {
-  const match = PERIOD_PATTERN.exec(period);
-  const year = Number(match?.[1]);
-  const month = Number(match?.[2]);
-  if (!match || year < 1 || month < 1 || month > 12) {
-    throw new Error(`Invalid snapshot period: ${period}`);
-  }
-  const date = new Date(0);
-  date.setHours(0, 0, 0, 0);
-  date.setFullYear(year, month - 1, 1);
-  return date;
-}
-
-export function isSnapshotPeriod(period: string): boolean {
-  try {
-    dateFromPeriod(period);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** Return the previous calendar month for a request date. */
-export function previousCalendarMonthPeriod(date: Date): string {
-  if (Number.isNaN(date.getTime())) {
-    throw new Error("Cannot create a period from an invalid date.");
-  }
-  return periodFromDate(new Date(date.getFullYear(), date.getMonth() - 1, 1));
+  return previousPeriod(periodFromDate(date));
 }
 
 /**
@@ -70,7 +47,9 @@ export function ensureSnapshotForPeriod(
   db: Db = getDb(),
   takenAt: Date = new Date(),
 ): schema.Snapshot {
-  dateFromPeriod(period);
+  if (!isPeriod(period)) {
+    throw new Error(`Invalid snapshot period: ${period}`);
+  }
   if (Number.isNaN(takenAt.getTime())) {
     throw new Error("Cannot take a snapshot at an invalid date.");
   }
@@ -85,7 +64,8 @@ export function ensureSnapshotForPeriod(
       return existing;
     }
 
-    const dashboard = getDashboardData(tx as unknown as Db);
+    // The snapshot for a month is computed for that month, not for today.
+    const dashboard = getDashboardData(period, tx as unknown as Db);
     const inserted = tx
       .insert(schema.snapshot)
       .values({

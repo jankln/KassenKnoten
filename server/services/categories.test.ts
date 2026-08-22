@@ -73,6 +73,7 @@ describe("categories", () => {
         categoryId,
         label: "Futter",
         amountCents: 3500,
+        validFrom: "2026-01",
       })
       .run();
 

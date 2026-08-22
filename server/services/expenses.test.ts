@@ -41,11 +41,25 @@ function db() {
 describe("private expenses", () => {
   it("groups costs under the person who pays them", () => {
     createPrivateExpense(
-      { memberId: alex, label: "Sportverein", amountCents: 4500, intervalMonths: 1 },
+      {
+        memberId: alex,
+        label: "Sportverein",
+        amountCents: 4500,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
     createPrivateExpense(
-      { memberId: robin, label: "Musik-Abo", amountCents: 1200, intervalMonths: 1 },
+      {
+        memberId: robin,
+        label: "Musik-Abo",
+        amountCents: 1200,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
@@ -57,12 +71,26 @@ describe("private expenses", () => {
 
   it("totals each person in monthly terms", () => {
     createPrivateExpense(
-      { memberId: alex, label: "Sportverein", amountCents: 4500, intervalMonths: 1 },
+      {
+        memberId: alex,
+        label: "Sportverein",
+        amountCents: 4500,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
     // 36 € a year is 3 € a month — the division the spreadsheet left to the user.
     createPrivateExpense(
-      { memberId: alex, label: "Versicherung", amountCents: 3600, intervalMonths: 12 },
+      {
+        memberId: alex,
+        label: "Versicherung",
+        amountCents: 3600,
+        intervalMonths: 12,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
@@ -76,6 +104,8 @@ describe("private expenses", () => {
     const categoryId = createCategory({ name: "Vereinssport", icon: "dumbbell" }, db());
     createPrivateExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         memberId: alex,
         label: "Sportverein",
         amountCents: 4500,
@@ -85,7 +115,14 @@ describe("private expenses", () => {
       db(),
     );
     createPrivateExpense(
-      { memberId: alex, label: "Ohne Kategorie", amountCents: 900, intervalMonths: 1 },
+      {
+        memberId: alex,
+        label: "Ohne Kategorie",
+        amountCents: 900,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
@@ -106,13 +143,27 @@ describe("private expenses", () => {
 
   it("edits an entry, including moving it to the other person", () => {
     const id = createPrivateExpense(
-      { memberId: alex, label: "Sportverein", amountCents: 4500, intervalMonths: 1 },
+      {
+        memberId: alex,
+        label: "Sportverein",
+        amountCents: 4500,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
     updatePrivateExpense(
       id,
-      { memberId: robin, label: "Sportverein", amountCents: 5000, intervalMonths: 1 },
+      {
+        memberId: robin,
+        label: "Sportverein",
+        amountCents: 5000,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
@@ -123,7 +174,14 @@ describe("private expenses", () => {
 
   it("retires an entry undoably", () => {
     const id = createPrivateExpense(
-      { memberId: alex, label: "Sportverein", amountCents: 4500, intervalMonths: 1 },
+      {
+        memberId: alex,
+        label: "Sportverein",
+        amountCents: 4500,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
@@ -136,7 +194,14 @@ describe("private expenses", () => {
 
   it("drops a retired member's costs from the list with them", () => {
     createPrivateExpense(
-      { memberId: alex, label: "Sportverein", amountCents: 4500, intervalMonths: 1 },
+      {
+        memberId: alex,
+        label: "Sportverein",
+        amountCents: 4500,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: null,
+      },
       db(),
     );
 
@@ -167,6 +232,8 @@ describe("shared expenses", () => {
   it("splits by the quota stored with the expense", () => {
     createSharedExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Miete",
         amountCents: 98_000,
         intervalMonths: 1,
@@ -186,6 +253,8 @@ describe("shared expenses", () => {
   it("splits by income when that is the mode, without storing a quota", () => {
     createSharedExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Strom",
         amountCents: 98_000,
         intervalMonths: 1,
@@ -205,6 +274,8 @@ describe("shared expenses", () => {
   it("keeps a stored quota when the household default changes afterwards", () => {
     createSharedExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Miete",
         amountCents: 98_000,
         intervalMonths: 1,
@@ -233,6 +304,8 @@ describe("shared expenses", () => {
   it("normalises a yearly amount before splitting it", () => {
     createSharedExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Versicherung",
         amountCents: 3600,
         intervalMonths: 12,
@@ -253,6 +326,8 @@ describe("shared expenses", () => {
   it("never loses a cent on an amount that cannot be halved", () => {
     createSharedExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Internet",
         amountCents: 3999,
         intervalMonths: 1,
@@ -273,6 +348,8 @@ describe("shared expenses", () => {
   it("replaces the quota when the expense is edited, leaving no stale rows", () => {
     const id = createSharedExpense(
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Miete",
         amountCents: 98_000,
         intervalMonths: 1,
@@ -288,6 +365,8 @@ describe("shared expenses", () => {
     updateSharedExpense(
       id,
       {
+        validFrom: "2026-01",
+        validUntil: null,
         label: "Miete",
         amountCents: 98_000,
         intervalMonths: 1,

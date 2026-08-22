@@ -7,6 +7,7 @@ import {
   sqliteTable,
   text,
   uniqueIndex,
+  type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
 
 /**
@@ -28,6 +29,27 @@ const timestamps = {
     .notNull()
     .default(sql`(unixepoch())`),
 };
+
+/**
+ * The months an entry is valid for. `valid_until` is inclusive and nullable, because a
+ * salary or a rent normally has no planned end.
+ *
+ * This is what makes the history real: raising a salary in March closes the old row at
+ * February and opens a new one, so February keeps reporting what February actually was.
+ */
+const validity = {
+  validFrom: text("valid_from").notNull(),
+  validUntil: text("valid_until"),
+};
+
+const validityChecks = (t: {
+  validFrom: AnySQLiteColumn;
+  validUntil: AnySQLiteColumn;
+}) =>
+  [
+    sql`${t.validFrom} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]'`,
+    sql`${t.validUntil} is null or (${t.validUntil} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]' and ${t.validUntil} >= ${t.validFrom})`,
+  ] as const;
 
 export const SPLIT_MODES = ["fixed_quota", "income_ratio"] as const;
 export type SplitMode = (typeof SPLIT_MODES)[number];
@@ -100,12 +122,16 @@ export const income = sqliteTable(
     amountCents: integer("amount_cents").notNull().default(0),
     intervalMonths: integer("interval_months").notNull().default(1),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    ...validity,
     ...timestamps,
   },
   (t) => [
     index("income_member_idx").on(t.memberId),
+    index("income_validity_idx").on(t.validFrom, t.validUntil),
     check("income_amount_nonnegative", sql`${t.amountCents} >= 0`),
     check("income_interval_positive", sql`${t.intervalMonths} > 0`),
+    check("income_valid_from_format", validityChecks(t)[0]),
+    check("income_valid_until_range", validityChecks(t)[1]),
   ],
 );
 
@@ -148,11 +174,15 @@ export const expense = sqliteTable(
     note: text("note"),
     sortOrder: integer("sort_order").notNull().default(0),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    ...validity,
     ...timestamps,
   },
   (t) => [
     index("expense_scope_idx").on(t.scope, t.active),
     index("expense_member_idx").on(t.memberId),
+    index("expense_validity_idx").on(t.validFrom, t.validUntil),
+    check("expense_valid_from_format", validityChecks(t)[0]),
+    check("expense_valid_until_range", validityChecks(t)[1]),
     check("expense_amount_nonnegative", sql`${t.amountCents} >= 0`),
     check("expense_interval_positive", sql`${t.intervalMonths} > 0`),
     check(

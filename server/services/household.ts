@@ -4,6 +4,7 @@ import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { FULL_SHARE_BP, allocate } from "@/lib/domain/money";
 import type { SplitContext, SplitMode } from "@/lib/domain/split";
+import { periodFromDate } from "@/lib/domain/period";
 import { incomeByMember } from "@/lib/domain/summary";
 import { listMembersWithIncome } from "./members";
 
@@ -55,6 +56,8 @@ export function completeOnboarding(
     throw new Error("Onboarding requires at least one member.");
   }
 
+  const startPeriod = periodFromDate(new Date());
+
   return db.transaction((tx) => {
     let sortOrder =
       tx
@@ -83,6 +86,8 @@ export function completeOnboarding(
             kind: income.kind,
             amountCents: income.amountCents,
             intervalMonths: income.intervalMonths,
+            // A household that is being set up starts this month.
+            validFrom: startPeriod,
           })
           .run();
       }

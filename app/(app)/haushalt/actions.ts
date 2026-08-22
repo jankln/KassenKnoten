@@ -96,6 +96,8 @@ export async function addIncome(
     kind: formData.get("kind"),
     amountCents: formData.get("amountCents"),
     intervalMonths: formData.get("intervalMonths"),
+    validFrom: formData.get("validFrom"),
+    validUntil: formData.get("validUntil") ?? "",
   });
   if (!parsed.success) {
     return fail(parsed.error.issues[0]?.message);
@@ -122,6 +124,8 @@ export async function editIncome(
     kind: formData.get("kind"),
     amountCents: formData.get("amountCents"),
     intervalMonths: formData.get("intervalMonths"),
+    validFrom: formData.get("validFrom"),
+    validUntil: formData.get("validUntil") ?? "",
   });
   if (!parsed.success) {
     return fail(parsed.error.issues[0]?.message);

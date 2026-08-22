@@ -13,6 +13,8 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
 import type { SplitMode } from "@/lib/domain/split";
 import { formatInterval, parseAmountToCents } from "@/lib/format";
+import { ValidityFields } from "@/components/patterns/validity-fields";
+import { periodFromDate } from "@/lib/domain/period";
 import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { SharedExpenseRow } from "@/server/services/expenses";
@@ -139,6 +141,14 @@ export function SharedExpenseDialog({
             defaultMode={expense?.splitMode ?? defaultMode}
             defaultShares={expense?.shares.length ? expense.shares : defaultShares}
             error={error}
+          />
+
+          <ValidityFields
+            defaultFrom={expense?.validFrom ?? periodFromDate(new Date())}
+
+            defaultUntil={expense?.validUntil}
+
+            currentFrom={expense?.validFrom}
           />
 
           <div className="flex justify-end gap-2 pt-1">

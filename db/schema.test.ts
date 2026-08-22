@@ -67,6 +67,7 @@ describe("expense shape constraints", () => {
         memberId: member.id,
         label: "Sportverein",
         amountCents: 4500,
+        validFrom: "2026-01",
       })
       .run();
 
@@ -79,7 +80,12 @@ describe("expense shape constraints", () => {
     expect(() =>
       handle.db
         .insert(schema.expense)
-        .values({ scope: "private", label: "Sportverein", amountCents: 4500 })
+        .values({
+          scope: "private",
+          label: "Sportverein",
+          amountCents: 4500,
+          validFrom: "2026-01",
+        })
         .run(),
     ).toThrow();
   });
@@ -88,7 +94,12 @@ describe("expense shape constraints", () => {
     expect(() =>
       handle.db
         .insert(schema.expense)
-        .values({ scope: "shared", label: "Miete", amountCents: 98000 })
+        .values({
+          scope: "shared",
+          label: "Miete",
+          amountCents: 98000,
+          validFrom: "2026-01",
+        })
         .run(),
     ).toThrow();
   });
@@ -104,6 +115,7 @@ describe("expense shape constraints", () => {
           splitMode: "fixed_quota",
           label: "Miete",
           amountCents: 98000,
+          validFrom: "2026-01",
         })
         .run(),
     ).toThrow();
@@ -119,6 +131,7 @@ describe("expense shape constraints", () => {
           memberId: member.id,
           label: "Fehler",
           amountCents: -1,
+          validFrom: "2026-01",
         })
         .run(),
     ).toThrow();
@@ -130,6 +143,7 @@ describe("expense shape constraints", () => {
           memberId: member.id,
           label: "Fehler",
           intervalMonths: 0,
+          validFrom: "2026-01",
         })
         .run(),
     ).toThrow();
@@ -141,7 +155,12 @@ describe("referential integrity", () => {
     const member = addMember("Robin");
     handle.db
       .insert(schema.income)
-      .values({ memberId: member.id, label: "Gehalt", amountCents: 231000 })
+      .values({
+        memberId: member.id,
+        label: "Gehalt",
+        amountCents: 231000,
+        validFrom: "2026-01",
+      })
       .run();
     const shared = handle.db
       .insert(schema.expense)
@@ -150,6 +169,7 @@ describe("referential integrity", () => {
         splitMode: "fixed_quota",
         label: "Miete",
         amountCents: 98000,
+        validFrom: "2026-01",
       })
       .returning({ id: schema.expense.id })
       .get();
@@ -181,6 +201,7 @@ describe("referential integrity", () => {
         categoryId: category.id,
         label: "Musik-Abo",
         amountCents: 999,
+        validFrom: "2026-01",
       })
       .run();
 
@@ -199,6 +220,7 @@ describe("referential integrity", () => {
         splitMode: "income_ratio",
         label: "Strom",
         amountCents: 7000,
+        validFrom: "2026-01",
       })
       .returning({ id: schema.expense.id })
       .get();

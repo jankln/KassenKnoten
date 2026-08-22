@@ -2,6 +2,7 @@ import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
+import { comparePeriods, previousPeriod, type Period } from "@/lib/domain/period";
 import { monthlyCents } from "@/lib/domain/interval";
 import {
   splitExpense,
@@ -18,7 +19,7 @@ import {
  * merge them back together.
  */
 
-export interface ExpenseRow {
+export interface ExpenseRow extends Validity {
   id: number;
   label: string;
   amountCents: number;
@@ -47,6 +48,8 @@ function selectExpenses(db: Db, scope: "private" | "shared") {
       label: schema.expense.label,
       amountCents: schema.expense.amountCents,
       intervalMonths: schema.expense.intervalMonths,
+      validFrom: schema.expense.validFrom,
+      validUntil: schema.expense.validUntil,
       splitMode: schema.expense.splitMode,
       categoryId: schema.category.id,
       categoryName: schema.category.name,
@@ -68,12 +71,16 @@ function toRow(entry: {
   categoryId: number | null;
   categoryName: string | null;
   categoryIcon: string | null;
+  validFrom: string;
+  validUntil: string | null;
 }): ExpenseRow {
   return {
     id: entry.id,
     label: entry.label,
     amountCents: entry.amountCents,
     intervalMonths: entry.intervalMonths,
+    validFrom: entry.validFrom,
+    validUntil: entry.validUntil,
     monthlyCents: monthlyCents(entry.amountCents, entry.intervalMonths),
     categoryId: entry.categoryId,
     categoryName: entry.categoryName,
@@ -108,14 +115,34 @@ export function listPrivateExpenses(db: Db = getDb()): MemberExpenses[] {
   });
 }
 
+/** The months an entry applies to, carried by every write. */
+export interface Validity {
+  validFrom: Period;
+  validUntil: Period | null;
+}
+
+/**
+ * Whether saving `next` over a row that currently starts at `current` means "from now
+ * on" rather than "this was always wrong".
+ *
+ * Moving the start forward is a change of plan — a rent increase, a subscription that got
+ * more expensive — and must leave the earlier months reporting what they reported. Leaving
+ * it alone is a correction and rewrites the row in place.
+ */
+function startsLater(current: Period, next: Period): boolean {
+  return comparePeriods(next, current) > 0;
+}
+
+export interface PrivateExpenseWrite extends Validity {
+  memberId: number;
+  label: string;
+  amountCents: number;
+  intervalMonths: number;
+  categoryId?: number | null;
+}
+
 export function createPrivateExpense(
-  input: {
-    memberId: number;
-    label: string;
-    amountCents: number;
-    intervalMonths: number;
-    categoryId?: number | null;
-  },
+  input: PrivateExpenseWrite,
   db: Db = getDb(),
 ): number {
   return db
@@ -127,31 +154,71 @@ export function createPrivateExpense(
       amountCents: input.amountCents,
       intervalMonths: input.intervalMonths,
       categoryId: input.categoryId ?? null,
+      validFrom: input.validFrom,
+      validUntil: input.validUntil,
     })
     .returning({ id: schema.expense.id })
     .get().id;
 }
 
+/** Splits the row when it starts applying later — see `startsLater`. */
 export function updatePrivateExpense(
   id: number,
-  input: {
-    memberId: number;
-    label: string;
-    amountCents: number;
-    intervalMonths: number;
-    categoryId?: number | null;
-  },
+  input: PrivateExpenseWrite,
   db: Db = getDb(),
-): void {
-  db.update(schema.expense)
-    .set({
-      memberId: input.memberId,
-      label: input.label,
-      amountCents: input.amountCents,
-      intervalMonths: input.intervalMonths,
-      categoryId: input.categoryId ?? null,
-      updatedAt: new Date(),
+): number {
+  return db.transaction((tx) => {
+    const existing = readValidity(tx as unknown as Db, id);
+
+    if (existing && startsLater(existing.validFrom, input.validFrom)) {
+      closeAt(tx as unknown as Db, id, previousPeriod(input.validFrom));
+      return tx
+        .insert(schema.expense)
+        .values({
+          scope: "private",
+          memberId: input.memberId,
+          label: input.label,
+          amountCents: input.amountCents,
+          intervalMonths: input.intervalMonths,
+          categoryId: input.categoryId ?? null,
+          validFrom: input.validFrom,
+          validUntil: input.validUntil ?? existing.validUntil,
+        })
+        .returning({ id: schema.expense.id })
+        .get().id;
+    }
+
+    tx.update(schema.expense)
+      .set({
+        memberId: input.memberId,
+        label: input.label,
+        amountCents: input.amountCents,
+        intervalMonths: input.intervalMonths,
+        categoryId: input.categoryId ?? null,
+        validFrom: input.validFrom,
+        validUntil: input.validUntil,
+        updatedAt: new Date(),
+      })
+      .where(eq(schema.expense.id, id))
+      .run();
+    return id;
+  });
+}
+
+function readValidity(db: Db, id: number): Validity | undefined {
+  return db
+    .select({
+      validFrom: schema.expense.validFrom,
+      validUntil: schema.expense.validUntil,
     })
+    .from(schema.expense)
+    .where(eq(schema.expense.id, id))
+    .get();
+}
+
+function closeAt(db: Db, id: number, period: Period): void {
+  db.update(schema.expense)
+    .set({ validUntil: period, updatedAt: new Date() })
     .where(eq(schema.expense.id, id))
     .run();
 }
@@ -221,7 +288,7 @@ export function listSharedExpenses(
   });
 }
 
-export interface SharedExpenseWrite {
+export interface SharedExpenseWrite extends Validity {
   label: string;
   amountCents: number;
   intervalMonths: number;
@@ -253,6 +320,8 @@ export function createSharedExpense(
         intervalMonths: input.intervalMonths,
         categoryId: input.categoryId ?? null,
         splitMode: input.splitMode,
+        validFrom: input.validFrom,
+        validUntil: input.validUntil,
       })
       .returning({ id: schema.expense.id })
       .get().id;
@@ -262,12 +331,37 @@ export function createSharedExpense(
   });
 }
 
+/** Splits the row when it starts applying later — see `startsLater`. */
 export function updateSharedExpense(
   id: number,
   input: SharedExpenseWrite,
   db: Db = getDb(),
-): void {
-  db.transaction((tx) => {
+): number {
+  return db.transaction((tx) => {
+    const existing = readValidity(tx as unknown as Db, id);
+
+    if (existing && startsLater(existing.validFrom, input.validFrom)) {
+      closeAt(tx as unknown as Db, id, previousPeriod(input.validFrom));
+      const created = tx
+        .insert(schema.expense)
+        .values({
+          scope: "shared",
+          memberId: null,
+          label: input.label,
+          amountCents: input.amountCents,
+          intervalMonths: input.intervalMonths,
+          categoryId: input.categoryId ?? null,
+          splitMode: input.splitMode,
+          validFrom: input.validFrom,
+          validUntil: input.validUntil ?? existing.validUntil,
+        })
+        .returning({ id: schema.expense.id })
+        .get().id;
+      // The quota belongs to the new row; the closed one keeps the one it was split by.
+      writeShares(tx as unknown as Db, created, input);
+      return created;
+    }
+
     tx.update(schema.expense)
       .set({
         label: input.label,
@@ -275,6 +369,8 @@ export function updateSharedExpense(
         intervalMonths: input.intervalMonths,
         categoryId: input.categoryId ?? null,
         splitMode: input.splitMode,
+        validFrom: input.validFrom,
+        validUntil: input.validUntil,
         updatedAt: new Date(),
       })
       .where(eq(schema.expense.id, id))
@@ -282,6 +378,7 @@ export function updateSharedExpense(
 
     tx.delete(schema.expenseShare).where(eq(schema.expenseShare.expenseId, id)).run();
     writeShares(tx as unknown as Db, id, input);
+    return id;
   });
 }
 

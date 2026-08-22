@@ -11,6 +11,8 @@ import {
 import { Field, Input, Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
 import { formatInterval } from "@/lib/format";
+import { ValidityFields } from "@/components/patterns/validity-fields";
+import { periodFromDate } from "@/lib/domain/period";
 import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { ExpenseRow } from "@/server/services/expenses";
@@ -121,6 +123,14 @@ export function ExpenseDialog({
               ))}
             </Select>
           </Field>
+
+          <ValidityFields
+            defaultFrom={expense?.validFrom ?? periodFromDate(new Date())}
+
+            defaultUntil={expense?.validUntil}
+
+            currentFrom={expense?.validFrom}
+          />
 
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>
