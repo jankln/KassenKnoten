@@ -1,38 +1,20 @@
 # Current work
 
-**Feature:** Fix #2 – Release 1.2.0, so the published image has the extensions screen
-**Status:** in progress
-**Started:** 2026-08-25
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **1.2.0, released**. `ghcr.io/jankln/kassenknoten:latest` is the manifest
+`sha256:ca1f1bd0…` for amd64 and arm64, and its settings screen has Extensions on it. The
+release carries `docker-compose.yml` and `env.example`; both documented curls were run
+from an empty directory and serve 1.2.0.
 
-Somebody who pulls `ghcr.io/jankln/kassenknoten:latest` gets the settings screen that has
-Extensions on it, and an interface that speaks their language.
+The three reported issues are closed: the income total counts the current month only (#1),
+the image is current (#2), and the README links the extension guide and the example (#3).
 
-## Scope
+Note for whoever comes next: `listPrivateExpenses` in `server/services/expenses.ts` sums
+every row regardless of validity, so a fixed cost that ended in June still shows up in the
+private total on the fixed-costs screen. It is the same flaw #1 fixed for income, on a
+different screen, and it wants the same fix in a commit of its own.
 
-- In: the version bump — `package.json`, the pinned tag in `docker-compose.yml`, the
-  badge and the status line in the README.
-- In: tag `v1.2.0` so the image workflow republishes `latest` for both architectures, and
-  a GitHub release carrying `docker-compose.yml` and `env.example`, because the documented
-  curl reads them from `releases/latest/download`.
-- Out: anything new. This release is what is already on `main`.
+Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request.
 
-## Notes / decisions
-
-- Nothing was wrong with the extensions code. `latest` follows tags only (see
-  `.github/workflows/image.yml`), and F26–F28 landed after `v1.1.0`, so the image everyone
-  is running is a month of work behind `main`. The fix for the report is a release.
-- Minor, not patch: extensions and a second interface language are features.
-
-## Plan
-
-- [ ] Bump 1.1.0 → 1.2.0 in package.json, docker-compose.yml, README
-- [ ] `npm run check`
-- [ ] Tag and push `v1.2.0`, watch the image workflow
-- [ ] Publish the release with both assets, verify the pull from a clean directory
-
-## Resume here
-
-If the tag is pushed but the release is missing, the curl in the README still serves the
-1.1.0 assets. Finish by creating the release.
+See `docs/WORKFLOW.md` for how this file is used.
