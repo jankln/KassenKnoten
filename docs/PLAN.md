@@ -368,6 +368,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F21 Installable as an app: manifest, icons, service worker, per-browser install advice
 - [x] F22 Variable costs: budgets in plan or itemised mode, own screen, on the dashboard
 - [x] F23 Two-factor sign-in: TOTP as an optional second factor on the household password
+- [x] F24 Landing page in `site/`, published to GitHub Pages, and a README that leads with
+      what the software does
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

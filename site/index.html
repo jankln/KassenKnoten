@@ -1,0 +1,944 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KassenKnoten — Haushaltsfinanzen, auf den Cent geteilt</title>
+    <meta
+      name="description"
+      content="Selbst gehosteter Haushaltsplaner für zwei Einkommen: jede Ausgabe nach eigener Regel geteilt, auf den Cent genau. Fixkosten, variable Budgets, Rücklagen — ein Docker-Container, deine Daten."
+    />
+    <link rel="icon" href="media/logo.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="KassenKnoten" />
+    <meta
+      property="og:description"
+      content="Zwei Einkommen, ein Haushalt, ein klarer Plan. Selbst gehostet, auf den Cent genau."
+    />
+    <meta property="og:image" content="media/dashboard.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Manrope:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /*
+       * "Papier & Tinte" — the same tokens the application uses, written out as plain
+       * hex so this page needs no build step and no framework. A landing page that
+       * depends on `npm run build` is a landing page that breaks silently six months
+       * after anyone last touched it.
+       */
+      :root {
+        --canvas: #f6f3ee;
+        --surface: #fefdfb;
+        --surface-muted: #efebe3;
+        --ink: #1a1e27;
+        --ink-muted: #5c6270;
+        --line: #e0dcd3;
+        --rule: rgba(0, 0, 0, 0.045);
+        --brass: #e4a249;
+        --brass-ink: #40290b;
+        --positive: #1e8f6a;
+        --member-1: #008aa3;
+        --member-2: #b6498d;
+        --shadow: 0 1px 2px rgba(26, 30, 39, 0.04), 0 12px 32px rgba(26, 30, 39, 0.06);
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --canvas: #16181d;
+          --surface: #1e2128;
+          --surface-muted: #262a32;
+          --ink: #f2efe9;
+          --ink-muted: #a2a8b4;
+          --line: #333843;
+          --rule: rgba(255, 255, 255, 0.035);
+          --brass: #edb765;
+          --brass-ink: #2a1c07;
+          --positive: #4cc39a;
+          --member-1: #2ab3cc;
+          --member-2: #d874ae;
+          --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+          color-scheme: dark;
+        }
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family:
+          "Manrope",
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          sans-serif;
+        font-size: 17px;
+        line-height: 1.65;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family:
+          "Bricolage Grotesque", "Manrope", ui-sans-serif, system-ui, sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin: 0;
+        text-wrap: balance;
+      }
+
+      p {
+        margin: 0;
+        text-wrap: pretty;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      /* Money is set in a monospaced face with tabular figures, exactly as in the app. */
+      .num {
+        font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+        font-variant-numeric: tabular-nums;
+        font-weight: 500;
+      }
+
+      .wrap {
+        width: min(100% - 2.5rem, 1140px);
+        margin-inline: auto;
+      }
+
+      section {
+        padding-block: clamp(3.5rem, 9vw, 7rem);
+      }
+
+      .eyebrow {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-muted);
+        margin-bottom: 0.875rem;
+      }
+
+      .lede {
+        color: var(--ink-muted);
+        font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+        max-width: 62ch;
+      }
+
+      /* ---------------------------------------------------------------- hero */
+
+      .hero {
+        position: relative;
+        overflow: hidden;
+        padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 3rem);
+      }
+
+      /*
+       * The one texture the design allows: a faint hairline rule, masked to fade at the
+       * edges. It appears behind full-page moments in the app, and this is one.
+       */
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image: repeating-linear-gradient(
+          to bottom,
+          var(--rule) 0 1px,
+          transparent 1px 2.25rem
+        );
+        -webkit-mask-image: radial-gradient(
+          ellipse 80% 70% at 50% 30%,
+          #000 40%,
+          transparent 100%
+        );
+        mask-image: radial-gradient(
+          ellipse 80% 70% at 50% 30%,
+          #000 40%,
+          transparent 100%
+        );
+        pointer-events: none;
+      }
+
+      .hero .wrap {
+        position: relative;
+      }
+
+      .hero-mark {
+        width: 76px;
+        height: 76px;
+        display: block;
+      }
+
+      .hero h1 {
+        font-size: clamp(2.75rem, 7.5vw, 4.75rem);
+        margin-top: 1.75rem;
+      }
+
+      .hero .claim {
+        font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+        font-size: clamp(1.25rem, 3vw, 1.75rem);
+        font-weight: 600;
+        letter-spacing: -0.015em;
+        margin-top: 1rem;
+        max-width: 24ch;
+      }
+
+      .hero .lede {
+        margin-top: 1.25rem;
+        font-size: clamp(1.0625rem, 1.8vw, 1.25rem);
+      }
+
+      .cta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 2rem;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-height: 3rem;
+        padding-inline: 1.375rem;
+        border-radius: 0.875rem;
+        border: 1px solid transparent;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition:
+          transform 0.15s ease,
+          opacity 0.15s ease,
+          background-color 0.15s ease;
+      }
+
+      .button:active {
+        transform: scale(0.99);
+      }
+
+      .button--primary {
+        background: var(--brass);
+        color: var(--brass-ink);
+      }
+
+      .button--primary:hover {
+        opacity: 0.9;
+      }
+
+      .button--ghost {
+        background: var(--surface);
+        border-color: var(--line);
+        color: var(--ink);
+      }
+
+      .button--ghost:hover {
+        background: var(--surface-muted);
+      }
+
+      /* ------------------------------------------------------------- facts */
+
+      .facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem 2.25rem;
+        margin-top: 2.5rem;
+        padding-top: 1.75rem;
+        border-top: 1px solid var(--line);
+        color: var(--ink-muted);
+        font-size: 0.9375rem;
+      }
+
+      .facts strong {
+        color: var(--ink);
+        font-weight: 600;
+      }
+
+      /* ------------------------------------------------------------ shots */
+
+      figure {
+        margin: 0;
+      }
+
+      .shot {
+        display: block;
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+        background: var(--surface);
+      }
+
+      .shot--hero {
+        margin-top: clamp(2.5rem, 6vw, 4rem);
+        border-radius: 1.25rem;
+      }
+
+      figcaption {
+        color: var(--ink-muted);
+        font-size: 0.875rem;
+        margin-top: 0.875rem;
+      }
+
+      /* ---------------------------------------------------------- features */
+
+      .grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        margin-top: 2.75rem;
+      }
+
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        padding: 1.5rem;
+      }
+
+      .card h3 {
+        font-size: 1.0625rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .card p {
+        color: var(--ink-muted);
+        font-size: 0.9375rem;
+        line-height: 1.6;
+      }
+
+      .card .icon {
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 0.625rem;
+        background: var(--surface-muted);
+        margin-bottom: 1rem;
+      }
+
+      /* Four cards read better as a square than as three-and-one. */
+      .grid--pairs {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+      }
+
+      .card .icon svg {
+        width: 1.125rem;
+        height: 1.125rem;
+        stroke: var(--brass);
+        fill: none;
+        stroke-width: 1.9;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      /* --------------------------------------------------------- split rows */
+
+      .row {
+        display: grid;
+        gap: clamp(2rem, 5vw, 3.5rem);
+        align-items: center;
+        grid-template-columns: 1fr;
+      }
+
+      @media (min-width: 900px) {
+        .row {
+          grid-template-columns: 5fr 7fr;
+        }
+        .row--flip .row__text {
+          order: 2;
+        }
+      }
+
+      .row + .row {
+        margin-top: clamp(3rem, 7vw, 5rem);
+      }
+
+      .row h2 {
+        font-size: clamp(1.75rem, 3.4vw, 2.375rem);
+      }
+
+      .row p {
+        color: var(--ink-muted);
+        margin-top: 1rem;
+      }
+
+      .row ul {
+        margin: 1.25rem 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 0.625rem;
+      }
+
+      .row li {
+        position: relative;
+        padding-left: 1.5rem;
+        color: var(--ink-muted);
+        font-size: 0.9375rem;
+      }
+
+      .row li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.6em;
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: var(--brass);
+      }
+
+      /* ------------------------------------------------------------ mobile */
+
+      .phones {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 240px));
+        gap: 1.5rem;
+        justify-content: start;
+      }
+
+      .phones img {
+        width: 100%;
+        height: auto;
+        border: 1px solid var(--line);
+        border-radius: 1.5rem;
+        box-shadow: var(--shadow);
+      }
+
+      /* ------------------------------------------------------------- setup */
+
+      .setup {
+        background: var(--surface);
+        border-block: 1px solid var(--line);
+      }
+
+      pre {
+        margin: 2rem 0 0;
+        padding: 1.5rem;
+        background: var(--canvas);
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        overflow-x: auto;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 0.875rem;
+        line-height: 1.85;
+        color: var(--ink);
+      }
+
+      pre .c {
+        color: var(--ink-muted);
+      }
+
+      /* ------------------------------------------------------------ footer */
+
+      footer {
+        border-top: 1px solid var(--line);
+        padding-block: 3rem;
+        color: var(--ink-muted);
+        font-size: 0.9375rem;
+      }
+
+      footer .wrap {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 2rem;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      footer a {
+        text-decoration-color: var(--line);
+        text-underline-offset: 0.25em;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <header class="hero">
+      <div class="wrap">
+        <svg
+          class="hero-mark"
+          viewBox="0 0 64 64"
+          fill="none"
+          role="img"
+          aria-label="KassenKnoten"
+        >
+          <title>KassenKnoten</title>
+          <defs>
+            <mask id="over-top">
+              <rect width="64" height="64" fill="#fff" />
+              <circle cx="32" cy="20.51" r="5.6" fill="#000" />
+            </mask>
+            <mask id="over-bottom">
+              <rect width="64" height="64" fill="#fff" />
+              <circle cx="32" cy="43.49" r="4.4" fill="#000" />
+            </mask>
+          </defs>
+          <circle cx="24" cy="32" r="14" stroke="var(--member-1)" stroke-width="8" />
+          <circle
+            cx="40"
+            cy="32"
+            r="14"
+            stroke="var(--member-2)"
+            stroke-width="6"
+            mask="url(#over-top)"
+          />
+          <circle
+            cx="24"
+            cy="32"
+            r="14"
+            stroke="var(--member-1)"
+            stroke-width="8"
+            mask="url(#over-bottom)"
+          />
+        </svg>
+
+        <h1>KassenKnoten</h1>
+        <p class="claim">Zwei Einkommen, ein Haushalt, ein klarer Plan.</p>
+        <p class="lede">
+          Der Haushaltsplaner für alle, die Kosten ungleich teilen — und wollen, dass
+          die Rechnung stimmt. Miete nach Einkommen, Strom halbe-halbe, das
+          Fitnessstudio zahlt nur einer. Jeder Posten bekommt seine eigene Regel, und
+          beide sehen sofort, was er sie kostet.
+        </p>
+
+        <div class="cta">
+          <a
+            class="button button--primary"
+            href="https://github.com/jankln/KassenKnoten"
+          >
+            Auf GitHub ansehen
+          </a>
+          <a class="button button--ghost" href="#selbst-hosten"
+            >In zwei Minuten starten</a
+          >
+        </div>
+
+        <div class="facts">
+          <span
+            ><strong>Auf den Cent</strong> — kein Float berührt je einen Betrag</span
+          >
+          <span><strong>Ein Container</strong>, eine SQLite-Datei</span>
+          <span><strong>Keine Telemetrie</strong>, keine externen Aufrufe</span>
+          <span><strong>MIT-Lizenz</strong></span>
+        </div>
+
+        <figure>
+          <img
+            class="shot shot--hero"
+            src="media/dashboard.png"
+            width="2160"
+            height="1500"
+            alt="Die Übersicht: Einnahmen, Fixkosten, variable Kosten, Sparrate und freies Geld als Kennzahlen, darunter die Aufschlüsselung pro Person und die Kosten nach Kategorie."
+          />
+          <figcaption>
+            Die Übersicht für den laufenden Monat — und für jeden anderen, denn jeder
+            Eintrag weiß, ab wann er gilt.
+          </figcaption>
+        </figure>
+      </div>
+    </header>
+
+    <section>
+      <div class="wrap">
+        <p class="eyebrow">Das Problem</p>
+        <h2 style="font-size: clamp(1.875rem, 4vw, 2.75rem); max-width: 20ch">
+          Jedes Werkzeug bekommt das halb hin.
+        </h2>
+        <p class="lede" style="margin-top: 1.25rem">
+          Aufteilungs-Apps kennen genau eine Regel für alles. Tabellen können es
+          ausdrücken — bis eine Zelle verrutscht und die Formel monatelang still falsch
+          rechnet. KassenKnoten macht die Aufteilung zur
+          <strong>bewussten Entscheidung pro Posten</strong>, rechnet sie auf den Cent
+          und zeigt beim Tippen, was dabei herauskommt.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 6h18M3 12h18M3 18h18" />
+              </svg>
+            </span>
+            <h3>Jede Ausgabe nach eigener Regel</h3>
+            <p>
+              Feste Quote oder nach Einkommen — pro Posten gewählt, nie angenommen. Die
+              Standard-Aufteilung füllt nur das Formular vor.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3v18M8 7h6.5a2.5 2.5 0 0 1 0 5H9a2.5 2.5 0 0 0 0 5h7" />
+              </svg>
+            </span>
+            <h3>Auf den Cent</h3>
+            <p>
+              Beträge sind ganze Cent, Anteile Basispunkte. 39,99 € halbe-halbe werden
+              20,00 € und 19,99 € — nie 39,98 €. Die Rechen-Engine ist ein reines,
+              getestetes Modul.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 8v4l3 2" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </span>
+            <h3>Die Vergangenheit bleibt ehrlich</h3>
+            <p>
+              Jeder Eintrag trägt die Monate, für die er gilt. Eine Gehaltserhöhung im
+              September lässt den August August bleiben — und die App fragt nach, ob
+              eine Änderung neu gilt oder schon immer galt.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 19V9m5 10V5m5 14v-7m5 7V8" />
+              </svg>
+            </span>
+            <h3>Variable Kosten, zwei Wege</h3>
+            <p>
+              Lebensmittel, Tanken, Ausgehen: entweder zählt der Plan — oder jede
+              Rechnung mit Datum, und der Plan wird zum Budget, gegen das gemessen wird.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 12h4l3 8 4-16 3 8h4" />
+              </svg>
+            </span>
+            <h3>Jeder Rhythmus wird monatlich</h3>
+            <p>
+              Eine Versicherung für 132,00 € im Jahr steht als 11,00 € im Monat neben
+              allem anderen. Niemand teilt mehr im Kopf durch zwölf.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 21s-7-4.35-7-10a7 7 0 0 1 14 0c0 5.65-7 10-7 10Z" />
+                <circle cx="12" cy="11" r="2.5" />
+              </svg>
+            </span>
+            <h3>Sparen mit Absicht</h3>
+            <p>
+              Spartöpfe mit monatlicher Rate, Stand und optionalem Ziel — einer Person
+              zugeordnet oder dem Haushalt.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 9v4m0 4h.01" />
+                <path
+                  d="M10.3 3.9 2.4 17a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"
+                />
+              </svg>
+            </span>
+            <h3>Ruhige Warnungen</h3>
+            <p>
+              Negatives freies Geld, eine Sparrate über den Einnahmen, ein
+              überschrittenes Budget — als Hinweis, nicht als Modal. Löschen zeigt
+              „Rückgängig“ statt „Bist du sicher?“.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <rect x="6" y="2" width="12" height="20" rx="3" />
+                <path d="M11 18.5h2" />
+              </svg>
+            </span>
+            <h3>Als App installierbar</h3>
+            <p>
+              Eigenes Symbol auf dem Home-Bildschirm, Start ohne Adressleiste. Browser,
+              die das nicht können, bekommen den Weg durch ihr eigenes Menü genannt.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M21 12a9 9 0 1 1-9-9" />
+                <path d="M8 12l3 3 8-8" />
+              </svg>
+            </span>
+            <h3>Deine Daten bleiben deine</h3>
+            <p>
+              Eine SQLite-Datei auf einem Volume, das dir gehört. Versionierte
+              JSON-Sicherungen und CSV-Export; die Wiederherstellung läuft in einer
+              einzigen Transaktion.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: var(--surface); border-block: 1px solid var(--line)">
+      <div class="wrap">
+        <div class="row">
+          <div class="row__text">
+            <p class="eyebrow">Gemeinsame Fixkosten</p>
+            <h2>Wer zahlt was — und warum.</h2>
+            <p>
+              Jeder gemeinsame Posten zeigt beide Anteile in Euro und Prozent, und
+              welche Regel sie erzeugt hat. Die Aufteilung wird beim Tippen
+              vorgerechnet, mit derselben Funktion, die später auch speichert — eine
+              Vorschau, die anders rechnet als das Ergebnis, ist keine.
+            </p>
+            <ul>
+              <li>Feste Quote oder nach Einkommen, pro Posten entschieden</li>
+              <li>Größte-Reste-Verfahren: die Anteile ergeben immer die Summe</li>
+              <li>Privat und gemeinsam sauber getrennt</li>
+            </ul>
+          </div>
+          <figure>
+            <img
+              class="shot"
+              loading="lazy"
+              src="media/shared-costs.png"
+              width="2160"
+              height="1500"
+              alt="Gemeinsame Fixkosten: jede Zeile zeigt beide Anteile in Euro und Prozent sowie die verwendete Aufteilungsregel."
+            />
+          </figure>
+        </div>
+
+        <div class="row row--flip">
+          <div class="row__text">
+            <p class="eyebrow">Variable Kosten</p>
+            <h2>Plan oder Kassenbon.</h2>
+            <p>
+              Was nicht jeden Monat gleich ist, bekommt ein Budget — und du entscheidest
+              pro Budget, wie es geführt wird. <strong>Plan</strong> zählt den geplanten
+              Betrag und fragt nichts weiter. <strong>Detailliert</strong> zählt, was
+              tatsächlich gebucht ist, jede Ausgabe mit Datum.
+            </p>
+            <ul>
+              <li>Der Modus steht als Badge auf der Karte, nicht in einem Dialog</li>
+              <li>Gebucht gegen geplant, immer nebeneinander</li>
+              <li>Wird wie Fixkosten zwischen euch aufgeteilt</li>
+            </ul>
+          </div>
+          <figure>
+            <img
+              class="shot"
+              loading="lazy"
+              src="media/variable-costs.png"
+              width="2160"
+              height="1500"
+              alt="Variable Kosten: ein gemeinsames Budget im Detail-Modus mit Fortschrittsbalken, den Anteilen beider Personen und den einzelnen Ausgaben mit Datum."
+            />
+          </figure>
+        </div>
+
+        <div class="row">
+          <div class="row__text">
+            <p class="eyebrow">Rücklagen</p>
+            <h2>Sparen, das man sieht.</h2>
+            <p>
+              Spartöpfe mit Rate, Stand und optionalem Ziel. Der Fortschritt ist ein
+              Balken, kein Kopfrechnen — und wenn ein Topf sein Ziel überschreitet, sagt
+              die Übersicht es freundlich.
+            </p>
+          </div>
+          <figure>
+            <img
+              class="shot"
+              loading="lazy"
+              src="media/savings.png"
+              width="2160"
+              height="1500"
+              alt="Spartöpfe mit monatlicher Rate, aktuellem Stand, Ziel und Fortschrittsbalken."
+            />
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="row">
+          <div class="row__text">
+            <p class="eyebrow">Am Handy</p>
+            <h2>Für 375 px entworfen, nicht dafür geschrumpft.</h2>
+            <p>
+              Der Haushaltsplan wird in der Küche geöffnet, nicht am Schreibtisch.
+              Gleiche Funktionen, Navigation in Daumenreichweite, ein Zahlenfeld, das
+              den Ziffernblock aufruft, und ein Design, das dem Systemthema folgt.
+            </p>
+            <ul>
+              <li>Helles und dunkles Thema, systemabhängig</li>
+              <li>Installierbar als App, mit eigenem Symbol</li>
+              <li>
+                Ohne Verbindung sagt die App, dass sie offline ist — statt alte Zahlen
+                zu zeigen
+              </li>
+            </ul>
+          </div>
+          <div class="phones">
+            <img
+              loading="lazy"
+              src="media/mobile-dark.png"
+              width="780"
+              height="1688"
+              alt="Die Übersicht auf einem Telefon im dunklen Thema."
+            />
+            <img
+              loading="lazy"
+              src="media/login.png"
+              width="860"
+              height="1800"
+              alt="Der Anmeldebildschirm mit Haushalts-Passwort und dem Feld für den Bestätigungscode."
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background: var(--surface); border-block: 1px solid var(--line)">
+      <div class="wrap">
+        <p class="eyebrow">Sicherheit</p>
+        <h2 style="font-size: clamp(1.75rem, 3.4vw, 2.375rem)">
+          Es sind eure Zahlen. Sie werden auch so behandelt.
+        </h2>
+
+        <div class="grid--pairs grid">
+          <article class="card">
+            <h3>Passwort und zweiter Faktor</h3>
+            <p>
+              Ein Haushalts-Passwort, mit argon2id gehasht und aus der Umgebung gelesen
+              — eine Kopie der Datenbank ist keine Kopie des Passworts. Optional dazu
+              ein Code aus jeder Authenticator-App (TOTP nach RFC 6238). Ein benutzter
+              Code wird abgelehnt.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Verschlüsselte Sitzung</h3>
+            <p>
+              Das Sitzungs-Cookie ist verschlüsselt, nicht bloß signiert (JWE, A256GCM),
+              <span class="num">httpOnly</span>,
+              <span class="num">SameSite=Lax</span> und
+              <span class="num">Secure</span> über HTTPS.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Alles zu, außer was offen sein muss</h3>
+            <p>
+              Jede Route außer Anmeldung und Health-Check verlangt eine Sitzung — deny
+              by default, damit eine neue Seite nicht versehentlich öffentlich ist.
+              Server Actions prüfen zusätzlich selbst.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Nichts von außen</h3>
+            <p>
+              Content-Security-Policy mit Nonce pro Anfrage, Schriften selbst gehostet,
+              keine CDNs, keine Telemetrie. Der Container läuft als unprivilegierter
+              Benutzer.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="setup" id="selbst-hosten">
+      <div class="wrap">
+        <p class="eyebrow">Selbst hosten</p>
+        <h2 style="font-size: clamp(1.75rem, 3.4vw, 2.375rem)">
+          Docker und zwei Minuten.
+        </h2>
+        <p class="lede" style="margin-top: 1.25rem">
+          Ein Container, eine Datei auf einem Volume. Die Datenbank wird beim ersten
+          Start angelegt und migriert — es gibt keinen separaten Migrationsschritt.
+        </p>
+
+        <pre><code>git clone https://github.com/jankln/KassenKnoten.git
+cd KassenKnoten
+cp .env.example .env
+
+<span class="c"># ein Sitzungsschlüssel</span>
+echo "SESSION_SECRET=$(openssl rand -base64 32)" &gt;&gt; .env
+
+<span class="c"># euer Haushalts-Passwort, gehasht</span>
+npm run auth:hash
+
+<span class="c"># optional: zweiter Faktor, druckt einen QR-Code ins Terminal</span>
+npm run auth:totp
+
+docker compose up -d</code></pre>
+
+        <p style="margin-top: 1.5rem; color: var(--ink-muted); font-size: 0.9375rem">
+          Danach <span class="num">http://127.0.0.1:3000</span> öffnen — ein Assistent
+          in drei Schritten richtet den Haushalt ein. Für den Zugriff von außen gehört
+          ein Reverse Proxy mit TLS davor.
+        </p>
+
+        <div class="cta">
+          <a
+            class="button button--primary"
+            href="https://github.com/jankln/KassenKnoten"
+          >
+            Zum Repository
+          </a>
+          <a
+            class="button button--ghost"
+            href="https://github.com/jankln/KassenKnoten#run-it"
+          >
+            Ausführliche Anleitung
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap">
+        <p>
+          KassenKnoten — selbst gehostet, MIT-Lizenz. Die Oberfläche ist deutsch, Code
+          und Dokumentation sind englisch.
+        </p>
+        <p>
+          <a href="https://github.com/jankln/KassenKnoten">GitHub</a> ·
+          <a href="https://github.com/jankln/KassenKnoten/issues">Issues</a> ·
+          <a href="https://github.com/jankln/KassenKnoten/blob/main/LICENSE">Lizenz</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
