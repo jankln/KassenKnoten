@@ -1,19 +1,58 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** F26 – English, and a language the household chooses
+**Status:** in progress
+**Started:** 2026-08-25
 
-Last finished: **F25 – Install without a toolchain**. A multi-architecture image is
-published to `ghcr.io/jankln/kassenknoten` on every tag, `docker-compose.yml` pulls it, and
-the two setup scripts run inside the image — so installing takes two downloaded files, no
-checkout, no Node and no build. `docker-compose.build.yml` layers the build back on for
-anyone working from source.
+## Goal
 
-Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request.
+The interface speaks English by default and German when asked. The choice is the first
+thing the setup wizard offers and can be changed later in the settings, and it belongs to
+the household rather than to a browser.
 
-Note for whoever comes next: the tags are applied by the merge job to the joined manifest,
-never by the per-architecture builds — those push by digest only. An architecture that
-pushed a tag of its own would be publishing a tag that means "whichever runner finished
-last". And `github.repository` cannot be used as an image name directly: it is
-`jankln/KassenKnoten`, and a registry reference has to be lowercase.
+## Scope
+
+- In: an English message set, a locale on the household, a picker in onboarding and in
+  settings, every screen reading its copy through the active locale, the backup format
+  carrying it, and the project's own language rule rewritten.
+- Out: right-to-left layouts, translated dates beyond what `Intl` already does, a third
+  language, machine translation of anything.
+
+## Decisions
+
+- **English becomes the default.** A fresh instance starts in English, which is what a
+  self-hosted project handed to strangers should do; German is one click away and stays
+  the language the product was designed in.
+- **The locale lives on the household, not in a cookie.** The theme is a per-device
+  preference and is stored per device; the language is not — a household that reads German
+  reads German on the tablet in the kitchen too. It also means the login screen, which
+  nobody has authenticated to yet, can still be in the right language.
+- **The canonical shape comes from `en.ts`, and `de.ts` must satisfy it.** The compiler
+  then refuses a build where a translation is missing a key, which is the only way a
+  second language stays complete past the week it was added.
+- **Client components take a locale string, not the messages.** The message objects hold
+  functions for the strings that interpolate, and functions cannot cross the boundary into
+  a client component. A tiny provider imports both sets and picks one.
+
+## Plan
+
+- [ ] `lib/i18n/en.ts` and an index that exposes both, with `de` checked against `en`
+- [ ] `household.locale` column and migration; default `en`
+- [ ] `getMessages()` for server components, `MessagesProvider` + `useMessages()` for client
+- [ ] Every `de.x` in 57 files becomes the active locale's `x`
+- [ ] Language as the first step of the wizard and a card in the settings
+- [ ] Backup version 4, still reading 1 to 3
+- [ ] `AGENTS.md`, `docs/WORKFLOW.md`, `docs/PLAN.md`, README
+- [ ] `npm run check`, both languages walked through at 375 px
+
+## Notes / decisions
+
+- `docs/WORKFLOW.md` currently makes German UI text a non-negotiable. That rule was right
+  when there was one language; it now becomes "no hardcoded copy in components, every
+  string in the message sets, and both sets complete".
+
+## Resume here
+
+Start with `en.ts` — everything else is mechanical once the shape is fixed.
 
 See `docs/WORKFLOW.md` for how this file is used.
