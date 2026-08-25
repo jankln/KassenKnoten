@@ -520,6 +520,39 @@ export const en = {
     menu: "Open your browser’s menu and choose “Install app”. Many browsers also show an icon for it at the right of the address bar.",
   },
 
+  /**
+   * Extensions run on the server with full access to the household's data. The copy says
+   * so plainly — there is no sandbox here to reassure anybody about.
+   */
+  extensions: {
+    title: "Extensions",
+    hint: "Add your own code to KassenKnoten. Extensions run on your server and contribute cards to the overview.",
+    warning:
+      "An extension runs on your server with full access to your household's data and can change or delete it. Only install code you have read or trust, exactly as you would with any other software on this machine.",
+    none: "No extensions installed.",
+    upload: "Install extension",
+    uploadFile: "Extension file (.mjs)",
+    uploadConfirm: "I understand this code runs with full access to my data.",
+    uploadHint: "A single .mjs file exporting a manifest and a register function.",
+    installed: (version: string) => `Version ${version}`,
+    by: (author: string) => `by ${author}`,
+    enable: "Enable",
+    disable: "Disable",
+    enabled: "Active",
+    disabled: "Inactive",
+    remove: "Remove extension",
+    removed: "Extension removed.",
+    broken: "This extension could not be loaded and contributes nothing.",
+    missingFile: "Please choose an .mjs file first.",
+    notConfirmed: "Please confirm that you understand what an extension may do.",
+    tooLarge: "That file is too large for an extension.",
+    invalid: "That file is not a usable extension.",
+    duplicate: "An extension with that id is already installed.",
+    switchedOff:
+      "Extensions are switched off on this instance (EXTENSIONS_ENABLED=false).",
+    cardsTitle: "From your extensions",
+  },
+
   /** Shown by the service worker when a page cannot be loaded. */
   offline: {
     title: "No connection",

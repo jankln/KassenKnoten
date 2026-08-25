@@ -525,6 +525,40 @@ export const de: Messages = {
     menu: "Öffne das Menü deines Browsers und wähle „App installieren“. Viele Browser zeigen dafür auch ein Symbol rechts in der Adressleiste.",
   },
 
+  /**
+   * Extensions run on the server with full access to the household's data. The copy says
+   * so plainly — there is no sandbox here to reassure anybody about.
+   */
+  extensions: {
+    title: "Erweiterungen",
+    hint: "Ergänze KassenKnoten um eigenen Code. Erweiterungen laufen auf deinem Server und steuern Karten zur Übersicht bei.",
+    warning:
+      "Eine Erweiterung läuft auf deinem Server mit vollem Zugriff auf eure Haushaltsdaten und kann sie ändern oder löschen. Installiere nur Code, den du gelesen hast oder dem du vertraust — genau wie bei jeder anderen Software auf diesem Rechner.",
+    none: "Keine Erweiterungen installiert.",
+    upload: "Erweiterung installieren",
+    uploadFile: "Erweiterungsdatei (.mjs)",
+    uploadConfirm: "Mir ist klar, dass dieser Code vollen Zugriff auf meine Daten hat.",
+    uploadHint:
+      "Eine einzelne .mjs-Datei, die ein manifest und eine register-Funktion exportiert.",
+    installed: (version: string) => `Version ${version}`,
+    by: (author: string) => `von ${author}`,
+    enable: "Aktivieren",
+    disable: "Deaktivieren",
+    enabled: "Aktiv",
+    disabled: "Inaktiv",
+    remove: "Erweiterung entfernen",
+    removed: "Erweiterung entfernt.",
+    broken: "Diese Erweiterung konnte nicht geladen werden und trägt nichts bei.",
+    missingFile: "Bitte zuerst eine .mjs-Datei auswählen.",
+    notConfirmed: "Bitte bestätige, dass dir klar ist, was eine Erweiterung darf.",
+    tooLarge: "Diese Datei ist zu groß für eine Erweiterung.",
+    invalid: "Diese Datei ist keine brauchbare Erweiterung.",
+    duplicate: "Eine Erweiterung mit dieser id ist bereits installiert.",
+    switchedOff:
+      "Erweiterungen sind auf dieser Instanz abgeschaltet (EXTENSIONS_ENABLED=false).",
+    cardsTitle: "Aus deinen Erweiterungen",
+  },
+
   /** Shown by the service worker when a page cannot be loaded. */
   offline: {
     title: "Keine Verbindung",

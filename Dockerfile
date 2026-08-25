@@ -49,7 +49,9 @@ ENV DATABASE_PATH=/data/kassenknoten.db
 
 # The database lives on a volume, owned by the unprivileged user the server runs as.
 # A named volume inherits this ownership; a bind mount does not — see the README.
-RUN mkdir -p /data && chown node:node /data
+# Extensions live in the volume, not in the image: the image is published and immutable,
+# so anything written into it disappears on the next pull.
+RUN mkdir -p /data/extensions && chown -R node:node /data
 
 # The standalone output is a complete server: its own node_modules, the traced
 # db/migrations, and a server.js. Static assets are not included by design and are

@@ -10,7 +10,10 @@ import { DataBackup } from "./data-backup";
 import { DefaultSplitForm } from "./default-split";
 import { InstallApp } from "./install-app";
 import { LanguagePicker } from "./language-picker";
+import { Extensions } from "./extensions";
 import { getLocale, getMessages } from "@/server/i18n";
+import { loadExtensions } from "@/server/extensions/runtime";
+import { extensionsEnabled } from "@/server/extensions/store";
 
 // A page title is copy like any other, so it is resolved per request rather than
 // frozen into a module constant at import time.
@@ -20,6 +23,7 @@ export function generateMetadata(): Metadata {
 }
 
 export default async function SettingsPage() {
+  const extensions = await loadExtensions();
   const t = getMessages();
   const copy = t.sections.settings;
   const categories = listCategories();
@@ -82,6 +86,14 @@ export default async function SettingsPage() {
             <p className="text-ink-muted mt-1 text-sm">{t.install.hint}</p>
           </div>
           <InstallApp />
+        </Card>
+
+        <Card>
+          <div className="mb-4">
+            <CardTitle>{t.extensions.title}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{t.extensions.hint}</p>
+          </div>
+          <Extensions installed={extensions.installed} enabled={extensionsEnabled()} />
         </Card>
 
         <Card>

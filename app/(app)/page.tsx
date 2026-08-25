@@ -16,8 +16,11 @@ import type {
   TrendPoint,
 } from "@/server/services/dashboard";
 import { getDashboardData, getTrend } from "@/server/services/dashboard";
+import { loadExtensions, renderCards } from "@/server/extensions/runtime";
+import { getDb } from "@/db/client";
 import { getMessages } from "@/server/i18n";
 import type { Messages } from "@/lib/i18n";
+import type { CardContent } from "@/server/extensions/types";
 
 // A page title is copy like any other, so it is resolved per request rather than
 // frozen into a module constant at import time.
@@ -39,6 +42,14 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   const dashboard = getDashboardData(period);
   const trend = getTrend(period);
   const monthHref = (target: Period) => `/?monat=${target}`;
+
+  // Extension cards are rendered last and never allowed to fail the page — see
+  // `renderCards`. The month's own figures are correct with or without them.
+  const extensionCards = renderCards(await loadExtensions(), {
+    period,
+    summary: dashboard.summary,
+    db: getDb(),
+  });
 
   if (!dashboard.hasData) {
     return (
@@ -139,6 +150,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
       </div>
 
       <VariableSection dashboard={dashboard} />
+      <ExtensionSection cards={extensionCards} />
       <SavingsSection dashboard={dashboard} />
       <TrendSection trend={trend} />
     </>
@@ -427,6 +439,63 @@ function VariableSection({ dashboard }: { dashboard: DashboardData }) {
           </span>
         </div>
       </Card>
+    </section>
+  );
+}
+
+/**
+ * What the household's own extensions contribute.
+ *
+ * Structured rows rather than markup: a card renders in the app's design language, and an
+ * extension cannot put anything into the page that the rest of the app would not.
+ */
+function ExtensionSection({
+  cards,
+}: {
+  cards: { id: string; title: string; content: CardContent }[];
+}) {
+  const t = getMessages();
+  if (cards.length === 0) {
+    return null;
+  }
+
+  return (
+    <section aria-labelledby="dashboard-extensions" className="mt-6">
+      <CardTitle id="dashboard-extensions" className="mb-3">
+        {t.extensions.cardsTitle}
+      </CardTitle>
+      <div className="grid gap-4 md:grid-cols-2">
+        {cards.map((card) => (
+          <Card key={card.id} className="min-w-0 p-4 sm:p-5">
+            <h3 className="font-display font-semibold break-words">{card.title}</h3>
+            <dl className="mt-4 space-y-2 text-sm">
+              {card.content.rows.map((row, index) => (
+                <div key={index} className="flex items-baseline justify-between gap-3">
+                  <dt className="text-ink-muted min-w-0 break-words">{row.label}</dt>
+                  <dd
+                    className={`font-ledger tabular shrink-0 font-medium ${
+                      row.tone === "positive"
+                        ? "text-positive"
+                        : row.tone === "negative"
+                          ? "text-negative"
+                          : row.tone === "muted"
+                            ? "text-ink-muted"
+                            : ""
+                    }`}
+                  >
+                    {row.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {card.content.note ? (
+              <p className="text-ink-muted border-line mt-4 border-t pt-3 text-xs leading-relaxed">
+                {card.content.note}
+              </p>
+            ) : null}
+          </Card>
+        ))}
+      </div>
     </section>
   );
 }

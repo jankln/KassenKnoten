@@ -212,6 +212,18 @@ Planned: OIDC sign-in against Authentik with an e-mail allowlist. Until it exist
 `AUTH_MODE` refuses the value rather than silently locking a household out of their own
 finances.
 
+## Extensions
+
+You can add your own code. An extension is a single `.mjs` file, installed under
+**Settings → Extensions**, that contributes cards to the overview —
+[`docs/extensions/`](docs/extensions/README.md) has the contract and a working example.
+
+Be clear about what that means: an extension runs **on the server, inside the application
+process, with full access to your household's database**. There is no sandbox. Installing
+one is installing software on your machine, and the upload form says so before it accepts
+a file. `EXTENSIONS_ENABLED=false` loads none of them, which is the way out if one breaks
+the app badly enough that you cannot reach the settings screen.
+
 ## A note on language
 
 The interface speaks **English and German**. A fresh instance starts in English; the setup

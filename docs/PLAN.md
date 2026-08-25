@@ -79,6 +79,23 @@ consequence — free cash starts a month high and falls as receipts arrive — s
 that shows a counted figure also shows booked against planned, and the mode is a badge on
 the card rather than a setting you have to open a dialog to remember.
 
+### Why extensions have no sandbox
+
+The household was offered sandboxed widgets — an uploaded bundle in an isolated frame, fed
+read-only figures through a narrow channel — and chose server-side plugins with full
+access instead. So that is what exists: an extension is a `.mjs` module that runs inside
+the application process with the real database handle.
+
+There is therefore no security boundary to describe, and the product does not imply one.
+The upload form states in a sentence that an extension can read, change and delete
+everything, and asks for that to be confirmed before the file is accepted. What the
+runtime does guarantee is narrower and honest: a failing extension is caught, recorded and
+skipped, and `EXTENSIONS_ENABLED=false` loads none of them — because an extension that
+breaks the app also breaks the screen you would use to remove it.
+
+The card contract is structured rows rather than markup, which is a design decision rather
+than a safety one: a card then renders in the app's own language and cannot look foreign.
+
 ### Why the service worker caches nothing
 
 Installability requires a service worker with a fetch handler, and the usual next step is
@@ -374,6 +391,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F25 Multi-arch image on GHCR; compose pulls instead of builds, and the image carries
       its own setup scripts so installing needs no toolchain
 - [x] F26 English alongside German, chosen at setup and changeable in the settings
+- [x] F27 Extensions: upload your own server-side code, managed in the settings
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,
