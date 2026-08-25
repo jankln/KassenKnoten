@@ -14,7 +14,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE: ${{ github.repository }}
 
 permissions:
   contents: read
@@ -33,6 +32,14 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v5
+
+      # A registry reference has to be lowercase and this repository is not
+      # (jankln/KassenKnoten), so the name is derived rather than interpolated — which
+      # also keeps the workflow correct in a fork with a different owner.
+      - name: Name the image
+        run: echo "IMAGE=${REPO,,}" >> "$GITHUB_ENV"
+        env:
+          REPO: ${{ github.repository }}
 
       - name: Name this architecture
         run: echo "ARCH=${PLATFORM//\//-}" >> "$GITHUB_ENV"
@@ -76,6 +83,14 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # A registry reference has to be lowercase and this repository is not
+      # (jankln/KassenKnoten), so the name is derived rather than interpolated — which
+      # also keeps the workflow correct in a fork with a different owner.
+      - name: Name the image
+        run: echo "IMAGE=${REPO,,}" >> "$GITHUB_ENV"
+        env:
+          REPO: ${{ github.repository }}
+
       - uses: actions/download-artifact@v4
         with:
           path: /tmp/digests
