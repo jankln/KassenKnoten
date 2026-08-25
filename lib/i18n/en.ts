@@ -237,7 +237,7 @@ export const en = {
         body: "Start with the people who live here. After that you can add income and build the monthly plan.",
         action: "Add person",
       },
-      total: "Total income",
+      total: "Income this month",
       addMember: "Add person",
       editMember: "Edit person",
       newMember: "New person",

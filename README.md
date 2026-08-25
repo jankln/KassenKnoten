@@ -14,7 +14,7 @@ and want the maths to be exactly right.
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.1.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
 [![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
-[![Tests](https://img.shields.io/badge/tests-280%20passing-1e8f6a?style=flat-square)](#contributing)
+[![Tests](https://img.shields.io/badge/tests-293%20passing-1e8f6a?style=flat-square)](#contributing)
 [![UI](https://img.shields.io/badge/UI-English%20%C2%B7%20Deutsch-008aa3?style=flat-square)](#a-note-on-language)
 
 </div>
@@ -246,7 +246,7 @@ Issues and pull requests are welcome. `docs/PLAN.md` covers the architecture and
 model, `docs/design.md` the visual direction and the reasoning behind it, and
 `docs/WORKFLOW.md` how changes are made.
 
-`npm run check` — typecheck, lint, format and 280 tests — must pass, and nothing is
+`npm run check` — typecheck, lint, format and 293 tests — must pass, and nothing is
 finished until it works at 375 px.
 
 ## License

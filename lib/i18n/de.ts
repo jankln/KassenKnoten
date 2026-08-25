@@ -238,7 +238,7 @@ export const de: Messages = {
         body: "Starte mit den Personen, die zum Haushalt gehören. Danach kannst du direkt Einnahmen ergänzen und den Monatsplan aufbauen.",
         action: "Person hinzufügen",
       },
-      total: "Einnahmen gesamt",
+      total: "Einnahmen diesen Monat",
       addMember: "Person hinzufügen",
       editMember: "Person bearbeiten",
       newMember: "Neue Person",

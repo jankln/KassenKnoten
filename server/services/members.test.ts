@@ -193,6 +193,83 @@ describe("income", () => {
     expect(member?.monthlyIncomeCents).toBe(0);
     expect(member?.incomes).toEqual([]);
   });
+
+  it("counts only what applies in the month, and still lists the rest", async () => {
+    const id = createMember({ name: "Alex", colorIndex: 1 }, db());
+    // The salary as it was, closed at the end of June.
+    createIncome(
+      {
+        validFrom: "2026-01",
+        validUntil: "2026-06",
+        memberId: id,
+        label: "Gehalt",
+        kind: "salary",
+        amountCents: 184_000,
+        intervalMonths: 1,
+      },
+      db(),
+    );
+    // The raise, agreed now but not paid before September.
+    createIncome(
+      {
+        validFrom: "2026-09",
+        validUntil: null,
+        memberId: id,
+        label: "Gehalt",
+        kind: "salary",
+        amountCents: 205_000,
+        intervalMonths: 1,
+      },
+      db(),
+    );
+
+    const [july] = await listMembersWithIncome(db(), "2026-07");
+    expect(july?.monthlyIncomeCents).toBe(0);
+    // Neither row applies in July, but both are on the screen where they are edited.
+    expect(july?.incomes).toHaveLength(2);
+
+    expect((await listMembersWithIncome(db(), "2026-03"))[0]?.monthlyIncomeCents).toBe(
+      184_000,
+    );
+    expect((await listMembersWithIncome(db(), "2026-09"))[0]?.monthlyIncomeCents).toBe(
+      205_000,
+    );
+  });
+
+  it("counts a yearly entry only in the months its range covers", async () => {
+    const id = createMember({ name: "Robin", colorIndex: 2 }, db());
+    createIncome(
+      {
+        validFrom: "2026-01",
+        validUntil: null,
+        memberId: id,
+        label: "Gehalt",
+        kind: "salary",
+        amountCents: 231_000,
+        intervalMonths: 1,
+      },
+      db(),
+    );
+    createIncome(
+      {
+        validFrom: "2026-10",
+        validUntil: null,
+        memberId: id,
+        label: "Ausschüttung",
+        kind: "other",
+        amountCents: 120_000,
+        intervalMonths: 12,
+      },
+      db(),
+    );
+
+    expect((await listMembersWithIncome(db(), "2026-09"))[0]?.monthlyIncomeCents).toBe(
+      231_000,
+    );
+    expect((await listMembersWithIncome(db(), "2026-10"))[0]?.monthlyIncomeCents).toBe(
+      231_000 + 10_000,
+    );
+  });
 });
 
 describe("editing an income with a later start", () => {

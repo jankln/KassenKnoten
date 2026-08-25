@@ -3,7 +3,13 @@ import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { sumMonthlyCents } from "@/lib/domain/interval";
-import { comparePeriods, previousPeriod, type Period } from "@/lib/domain/period";
+import {
+  comparePeriods,
+  coversPeriod,
+  periodFromDate,
+  previousPeriod,
+  type Period,
+} from "@/lib/domain/period";
 import {
   MAX_COLOR_INDEX,
   type IncomeInput,
@@ -33,12 +39,24 @@ export interface MemberWithIncome {
   id: number;
   name: string;
   colorIndex: number;
+  /** Every income on record, including the ones outside `period`. */
   incomes: IncomeRow[];
+  /** What this person earns in `period`, per month. */
   monthlyIncomeCents: number;
 }
 
+/**
+ * Everyone in the household with their income.
+ *
+ * The rows are complete — a raise that starts in September is listed in August, because
+ * the screen you enter it on is the screen that has to show it back to you — but the
+ * totals count only what actually applies in `period`. A figure that is not being earned
+ * yet must not raise what the household earns today, and it must not shift an
+ * income-ratio split either, since those read `monthlyIncomeCents`.
+ */
 export async function listMembersWithIncome(
   db: Db = getDb(),
+  period: Period = periodFromDate(new Date()),
 ): Promise<MemberWithIncome[]> {
   const members = db
     .select()
@@ -73,7 +91,9 @@ export async function listMembersWithIncome(
       name: member.name,
       colorIndex: member.colorIndex,
       incomes: own,
-      monthlyIncomeCents: sumMonthlyCents(own),
+      monthlyIncomeCents: sumMonthlyCents(
+        own.filter((entry) => coversPeriod(period, entry.validFrom, entry.validUntil)),
+      ),
     };
   });
 }
