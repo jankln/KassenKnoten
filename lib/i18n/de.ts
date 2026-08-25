@@ -374,6 +374,30 @@ export const de = {
     failed: "Das hat nicht geklappt. Bitte noch einmal versuchen.",
   },
 
+  /** Installing the app on the device — one entry per kind of browser advice. */
+  install: {
+    title: "Als App installieren",
+    hint: "Leg KassenKnoten wie eine App auf deinem Gerät ab: eigenes Symbol, eigener Start, ohne Adressleiste.",
+    button: "Jetzt installieren",
+    installing: "Wird installiert …",
+    installed: "KassenKnoten ist auf diesem Gerät bereits installiert.",
+    dismissed: "Die Installation wurde abgebrochen.",
+    failed: "Die Installation ließ sich nicht starten.",
+    ios: "Tippe in Safari unten auf „Teilen“ und dann auf „Zum Home-Bildschirm“.",
+    firefoxMobile:
+      "Öffne in Firefox das Menü und wähle „Zum Startbildschirm hinzufügen“.",
+    firefoxDesktop:
+      "Firefox am Rechner kann Web-Apps nicht installieren. In Chrome, Edge oder Safari klappt es.",
+    menu: "Öffne das Menü deines Browsers und wähle „App installieren“. Viele Browser zeigen dafür auch ein Symbol rechts in der Adressleiste.",
+  },
+
+  /** Shown by the service worker when a page cannot be loaded. */
+  offline: {
+    title: "Keine Verbindung",
+    body: "KassenKnoten erreicht deinen Server gerade nicht. Deine Zahlen liegen dort und werden bewusst nicht auf dem Gerät zwischengespeichert.",
+    retry: "Erneut versuchen",
+  },
+
   underConstruction: {
     title: "Wird gerade gebaut",
     body: "Dieser Bereich kommt als Nächstes.",

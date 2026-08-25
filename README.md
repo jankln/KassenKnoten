@@ -63,6 +63,11 @@ owned by one person or by the household.
 target — surfaced as calm banners, not modal scolding. Deleting shows an "Rückgängig"
 toast instead of asking "are you sure?".
 
+**Install it like an app.** From the settings screen, KassenKnoten adds itself to the
+home screen or the app list with its own icon and opens without an address bar. Browsers
+that cannot install a web app are told where the option lives in their own menu instead.
+Nothing about the household is cached on the device — offline, the app says so.
+
 **Own your data.** One SQLite file on a volume you control. Versioned JSON backups and
 CSV exports from the settings screen; restoring runs in a single transaction and
 validates before it writes anything.

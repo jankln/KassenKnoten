@@ -62,6 +62,17 @@ One household, one writer, tiny dataset, and the whole database is a single file
 user can copy for a backup. Postgres would add a second container for zero benefit here.
 Drizzle keeps the door open — the schema is portable if it ever needs Postgres.
 
+### Why the service worker caches nothing
+
+Installability requires a service worker with a fetch handler, and the usual next step is
+to cache the app shell so it opens offline. Here that would be a mistake twice over. Every
+page is server-rendered money for one household, so a cached page is a balance sitting in
+a store that outlives sign-out and is readable by whoever picks the device up next; and a
+plan that shows last week's figures without saying so is worse than a plan that does not
+open. The worker therefore caches an allowlist of three things — the offline screen, the
+icons, and content-hashed `/_next/static/` assets — and passes every page, action and API
+call straight to the network. Offline, the app says it is offline.
+
 ---
 
 ## 3. Architecture
@@ -313,10 +324,12 @@ Each item is one feature and one commit on `main`, preceded by a committed
 
 - [x] F18 Public README, product description, first tagged beta
 - [x] F19 Effective-dated incomes and fixed costs, month navigation on the dashboard
+- [x] F20 Changing an amount asks what the change means instead of inferring it
+- [x] F21 Installable as an app: manifest, icons, service worker, per-browser install advice
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: plan-vs-actual bookkeeping, recurring irregular expenses,
-budget envelopes for variable spending, PWA install, multi-currency.
+budget envelopes for variable spending, multi-currency.
 
 ---
 

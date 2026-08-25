@@ -9,6 +9,7 @@ import { listMembersWithIncome } from "@/server/services/members";
 import { CategoryList } from "./category-list";
 import { DataBackup } from "./data-backup";
 import { DefaultSplitForm } from "./default-split";
+import { InstallApp } from "./install-app";
 
 export const metadata: Metadata = { title: de.sections.settings.title };
 
@@ -58,6 +59,14 @@ export default async function SettingsPage() {
             <p className="text-ink-muted mt-1 text-sm">{copy.dataHint}</p>
           </div>
           <DataBackup />
+        </Card>
+
+        <Card>
+          <div className="mb-4">
+            <CardTitle>{de.install.title}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{de.install.hint}</p>
+          </div>
+          <InstallApp />
         </Card>
 
         <Card>

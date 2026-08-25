@@ -19,7 +19,22 @@ import {
  * runtime, so the same session code works here and in server actions.
  */
 
-const PUBLIC_PATHS = ["/login", "/api/health"];
+/**
+ * Reachable without a session.
+ *
+ * The installation assets are public because installing has to work before signing in —
+ * a manifest that redirects to the login page is a manifest the browser rejects, and the
+ * app is then simply not installable. None of them contains household data: a name, an
+ * icon, a worker, and a screen that says the server cannot be reached.
+ */
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/health",
+  "/manifest.webmanifest",
+  "/icons",
+  "/sw.js",
+  "/offline",
+];
 
 /**
  * Security headers.
@@ -68,6 +83,11 @@ function contentSecurityPolicy(nonce: string, isHttps: boolean): string {
     // React uses eval in development to rebuild server stacks in the browser.
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
+    // `worker-src` falls back to `script-src`, and that directive carries
+    // `'strict-dynamic'` — which makes browsers ignore its `'self'`. Without this line
+    // the service worker is blocked and the app cannot be installed.
+    "worker-src 'self'",
+    "manifest-src 'self'",
     "img-src 'self' blob: data:",
     "font-src 'self'",
     "connect-src 'self'",
