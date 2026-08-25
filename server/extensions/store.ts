@@ -43,10 +43,19 @@ export function fileNameFor(id: string): string {
   return `${id}.mjs`;
 }
 
+/**
+ * The `turbopackIgnore` comments below are not cosmetic.
+ *
+ * The extensions directory is a runtime path outside the project — `/data/extensions` on
+ * a volume — so the compiler cannot know what is behind it. Left alone it assumes the
+ * worst and traces the entire project into the standalone output, which is the image
+ * every household downloads. Extensions are read at runtime by design; there is nothing
+ * here for the bundler to include.
+ */
 export function listFiles(): string[] {
   try {
-    mkdirSync(extensionsDir(), { recursive: true });
-    return readdirSync(extensionsDir())
+    mkdirSync(/* turbopackIgnore: true */ extensionsDir(), { recursive: true });
+    return readdirSync(/* turbopackIgnore: true */ extensionsDir())
       .filter((name) => name.endsWith(".mjs"))
       .sort();
   } catch {
@@ -55,18 +64,25 @@ export function listFiles(): string[] {
 }
 
 export function readSource(fileName: string): string {
-  return readFileSync(join(extensionsDir(), fileName), "utf8");
+  const path = join(/* turbopackIgnore: true */ extensionsDir(), fileName);
+  return readFileSync(/* turbopackIgnore: true */ path, "utf8");
 }
 
 export function writeSource(id: string, source: string): string {
   const fileName = fileNameFor(id);
-  mkdirSync(extensionsDir(), { recursive: true });
-  writeFileSync(join(extensionsDir(), fileName), source, "utf8");
+  mkdirSync(/* turbopackIgnore: true */ extensionsDir(), { recursive: true });
+  writeFileSync(
+    /* turbopackIgnore: true */ join(extensionsDir(), fileName),
+    source,
+    "utf8",
+  );
   return fileName;
 }
 
 export function deleteSource(id: string): void {
-  rmSync(join(extensionsDir(), fileNameFor(id)), { force: true });
+  rmSync(/* turbopackIgnore: true */ join(extensionsDir(), fileNameFor(id)), {
+    force: true,
+  });
 }
 
 /* ------------------------------------------------------------------------- *

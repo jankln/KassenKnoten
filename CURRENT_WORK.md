@@ -2,9 +2,9 @@
 
 **Status:** idle — nothing in flight.
 
-Last finished: **Fix #3 – extensions findable from the main README**. The header nav and
-the feature table mention them, and the Extensions section links the guide and
-`savings-runway.mjs` as two separate things to read.
+Last finished: **Build hygiene for the extension store**. The four filesystem calls that
+address the extensions volume carry `turbopackIgnore`, so the build no longer traces the
+whole project into the standalone output it puts in the image.
 
 Note for whoever comes next: `listPrivateExpenses` in `server/services/expenses.ts` sums
 every row regardless of validity, so a fixed cost that ended in June still shows up in the
