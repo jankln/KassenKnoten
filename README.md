@@ -129,7 +129,7 @@ published for **amd64 and arm64**, so a Raspberry Pi is as much a target as a NU
 ```bash
 mkdir kassenknoten && cd kassenknoten
 curl -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
-curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/.env.example
+curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/env.example
 
 # a session secret
 echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
