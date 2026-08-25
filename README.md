@@ -116,6 +116,9 @@ echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
 # your household password, hashed — paste the printed line into .env
 npm run auth:hash
 
+# optional: a second factor. Prints a QR code to scan and the line for .env
+npm run auth:totp
+
 docker compose up -d
 ```
 
@@ -132,6 +135,12 @@ before anyone signs in.
 One shared household password, hashed with **argon2id** at OWASP interactive parameters
 and supplied through the environment — a copy of the database is not a copy of the
 password. Sign-in attempts are throttled per client.
+
+Optionally a **second factor**: set `TOTP_SECRET` and the login also asks for a six-digit
+code from any authenticator app (RFC 6238, verified against the RFC's own test vectors).
+A code is refused once it has been used, so one read over your shoulder is not one that
+still works. The secret lives in the environment like the password does, which means
+losing the phone is not a lockout and there are no recovery codes to keep safe.
 
 The session is an **encrypted** cookie (JWE, A256GCM, key derived via HKDF), `httpOnly`,
 `SameSite=Lax`, and `Secure` whenever the request arrived over HTTPS. Every route except

@@ -2,7 +2,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { getEnv, isSecureOrigin, resetEnvCache } from "./env";
+import { getEnv, isSecureOrigin, requiresSecondFactor, resetEnvCache } from "./env";
 
 const VALID_HASH = "$argon2id$v=19$m=19456,t=2,p=1$c2FsdHNhbHQ$aGFzaGhhc2g";
 const original = { ...process.env };
@@ -93,5 +93,49 @@ describe("isSecureOrigin", () => {
     resetEnvCache();
     configure({ APP_URL: "http://localhost:3000" });
     expect(isSecureOrigin(getEnv())).toBe(false);
+  });
+});
+
+describe("second factor", () => {
+  const SECRET = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ";
+
+  it("is off when TOTP_SECRET is absent", () => {
+    configure({});
+    const env = getEnv();
+    expect(env.TOTP_SECRET).toBeUndefined();
+    expect(requiresSecondFactor(env)).toBe(false);
+  });
+
+  /**
+   * The line is in `.env.example` and ships untouched in most `.env` files. Left as
+   * present-but-empty it would make the login screen ask for a code that the sign-in
+   * action does not verify — a form that claims a protection nothing enforces.
+   */
+  it("is off when TOTP_SECRET is present but empty", () => {
+    configure({ TOTP_SECRET: "" });
+    expect(requiresSecondFactor(getEnv())).toBe(false);
+
+    resetEnvCache();
+    configure({ TOTP_SECRET: "   " });
+    expect(requiresSecondFactor(getEnv())).toBe(false);
+  });
+
+  it("is on for a readable base32 secret", () => {
+    configure({ TOTP_SECRET: SECRET });
+    const env = getEnv();
+    expect(env.TOTP_SECRET).toBe(SECRET);
+    expect(requiresSecondFactor(env)).toBe(true);
+  });
+
+  it("tolerates the whitespace around a pasted secret", () => {
+    configure({ TOTP_SECRET: `  ${SECRET}  ` });
+    expect(getEnv().TOTP_SECRET).toBe(SECRET);
+  });
+
+  /** Refused at startup, not at the login screen: silently dropping the second factor
+   *  from an instance whose owner believes it is protected is the worst outcome here. */
+  it("refuses to start on a secret that is not base32", () => {
+    configure({ TOTP_SECRET: "nicht base32!" });
+    expect(() => getEnv()).toThrow(/TOTP_SECRET is not valid base32/);
   });
 });

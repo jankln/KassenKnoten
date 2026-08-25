@@ -13,6 +13,30 @@ export const de = {
     tagline: "Haushaltsfinanzen planen",
   },
 
+  /**
+   * The sign-in screen. Its strings used to sit hardcoded in the form and the server
+   * action — the one place in the app that broke the rule this file exists for.
+   */
+  login: {
+    intro: "Der Haushaltsplan ist mit einem Passwort geschützt.",
+    introWithCode:
+      "Der Haushaltsplan ist mit einem Passwort und einem Bestätigungscode geschützt.",
+    password: "Haushalts-Passwort",
+    code: "Code aus deiner App",
+    codeHint: "Sechs Ziffern, wechselt alle 30 Sekunden.",
+    submit: "Anmelden",
+    pending: "Wird geprüft …",
+    passwordMissing: "Bitte das Haushalts-Passwort eingeben.",
+    codeMissing: "Bitte den sechsstelligen Code aus deiner App eingeben.",
+    // Deliberately vague about which of the two was wrong: naming the factor would tell
+    // someone who is guessing which half they have already got right.
+    failed: "Die Anmeldedaten stimmen nicht.",
+    codeUsed: "Dieser Code wurde schon verwendet. Warte auf den nächsten.",
+    throttled: (duration: string) => `Zu viele Versuche. Weiter in ${duration}.`,
+    oneMinute: "einer Minute",
+    minutes: (count: number) => `${count} Minuten`,
+  },
+
   nav: {
     overview: "Übersicht",
     household: "Haushalt",

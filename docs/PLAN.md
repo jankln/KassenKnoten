@@ -219,6 +219,24 @@ month's computed state is frozen. No cron, no scheduler container.
   HTTPS. It is re-issued once past half its lifetime, so an active household stays signed
   in and an abandoned session still expires.
 
+**Optionally — a second factor** (F23, built)
+
+- TOTP to RFC 6238: HMAC-SHA1, 30-second steps, six digits, one step of tolerance either
+  way for clock drift. Implemented in `lib/auth/totp.ts`, pure and clock-free, and tested
+  against the published RFC vectors — which is what proves it agrees with every
+  authenticator app rather than merely with itself.
+- The secret is an environment variable, never a database row. A copy of the SQLite file
+  must not be a copy of the second factor. It also removes the need for recovery codes:
+  losing the phone is not a lockout, because the secret can be scanned again from `.env`.
+- Both factors are submitted together. With a single shared password there is no "which
+  user is this" step for a two-stage flow to serve, and staging it would need a
+  half-authenticated intermediate token — another cookie, another expiry.
+- A used code is refused, so the ninety seconds a code stays valid are not ninety seconds
+  in which it can be replayed. The guard is in-process, on the same reasoning as the rate
+  limiter.
+- Enabled by the presence of `TOTP_SECRET`. There is deliberately no `AUTH_MODE` value for
+  it: a configuration flag that silently disables a security feature is worse than none.
+
 **Later — OIDC / Authentik** (F04b, deferred by request)
 
 - Authorization Code flow with PKCE, discovery via `OIDC_ISSUER`, ID token verified
@@ -246,6 +264,7 @@ SESSION_SECRET=                 # 32+ random bytes
 AUTH_MODE=local
 LOCAL_PASSWORD_HASH=            # base64 of the argon2id hash, from npm run auth:hash
 LOCAL_PASSWORD_HASH_FILE=       # alternative: read it from a Docker secret
+TOTP_SECRET=                    # optional second factor, from npm run auth:totp
 ```
 
 ---
@@ -348,6 +367,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F20 Changing an amount asks what the change means instead of inferring it
 - [x] F21 Installable as an app: manifest, icons, service worker, per-browser install advice
 - [x] F22 Variable costs: budgets in plan or itemised mode, own screen, on the dashboard
+- [x] F23 Two-factor sign-in: TOTP as an optional second factor on the household password
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,
