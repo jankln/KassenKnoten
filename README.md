@@ -9,7 +9,7 @@
 A self-hosted household finance planner for people who share costs unevenly —
 and want the maths to be exactly right.
 
-**[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Security](#security)
+**[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Security](#security) · [Extensions](#extensions)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.1.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
@@ -52,6 +52,7 @@ the cent, and shows both people what it actually costs them — while they type.
 | **Installable as an app**     | Own icon, no address bar, and an honest offline screen instead of stale figures.                            |
 | **Two-factor sign-in**        | Optional TOTP from any authenticator app, on top of the household password.                                 |
 | **Your data stays yours**     | One SQLite file on your volume, versioned JSON backups, CSV export, restore in one transaction.             |
+| **Extend it yourself**        | A single `.mjs` file, installed from the settings screen, adds your own cards to the overview.              |
 
 <br>
 
@@ -215,8 +216,12 @@ finances.
 ## Extensions
 
 You can add your own code. An extension is a single `.mjs` file, installed under
-**Settings → Extensions**, that contributes cards to the overview —
-[`docs/extensions/`](docs/extensions/README.md) has the contract and a working example.
+**Settings → Extensions**, that contributes cards to the overview. Two things to read:
+
+- **[The extension guide](docs/extensions/README.md)** — the manifest, what `api` hands
+  you, and how a card is drawn in the app's own design language.
+- **[`savings-runway.mjs`](docs/extensions/savings-runway.mjs)** — a working example, and
+  the shortest way to your own: copy it, change the id, upload it.
 
 Be clear about what that means: an extension runs **on the server, inside the application
 process, with full access to your household's database**. There is no sandbox. Installing
@@ -243,8 +248,10 @@ interface in that language.
 ## Contributing
 
 Issues and pull requests are welcome. `docs/PLAN.md` covers the architecture and data
-model, `docs/design.md` the visual direction and the reasoning behind it, and
-`docs/WORKFLOW.md` how changes are made.
+model, `docs/design.md` the visual direction and the reasoning behind it,
+`docs/WORKFLOW.md` how changes are made, and
+[`docs/extensions/`](docs/extensions/README.md) how to add your own code without touching
+this repository at all.
 
 `npm run check` — typecheck, lint, format and 293 tests — must pass, and nothing is
 finished until it works at 375 px.

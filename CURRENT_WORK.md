@@ -1,29 +1,15 @@
 # Current work
 
-**Feature:** Fix #3 – Extensions are findable from the main README
-**Status:** in progress
-**Started:** 2026-08-25
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **Fix #3 – extensions findable from the main README**. The header nav and
+the feature table mention them, and the Extensions section links the guide and
+`savings-runway.mjs` as two separate things to read.
 
-Somebody who lands on the README can see that extensions exist and get to both the
-contract and the working example without knowing that `docs/extensions/` is a folder.
+Note for whoever comes next: `listPrivateExpenses` in `server/services/expenses.ts` sums
+every row regardless of validity, so a fixed cost that ended in June still shows up in the
+private total on the fixed-costs screen. Same fix as #1, separate commit.
 
-## Scope
+Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request.
 
-- In: Extensions in the header nav line and in the "What it does" table, and a direct
-  link to `savings-runway.mjs` next to the link to the guide.
-- In: the same two links from the "Contributing" section, which is where someone who
-  wants to write one actually reads.
-- Out: the landing page. It is marketing copy in two languages and a separate change.
-
-## Plan
-
-- [ ] Header nav gains Extensions
-- [ ] Feature table gains a row
-- [ ] The Extensions section links the guide and the example separately
-- [ ] `npm run check`
-
-## Resume here
-
-`README.md`.
+See `docs/WORKFLOW.md` for how this file is used.
