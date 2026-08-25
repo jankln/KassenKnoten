@@ -1,8 +1,9 @@
 # Publish the landing page in `site/` to GitHub Pages.
 #
 # The images are not duplicated into `site/`: they live once in `docs/media/`, where the
-# README also reads them from, and are copied in as the artifact is assembled. One copy of
-# a screenshot is one screenshot that cannot go out of date on one of two paths.
+# README also reads them from, and are copied in as the artifact is assembled — including
+# `docs/media/en/`, the same screens with the interface in English. One copy of a
+# screenshot is one screenshot that cannot go out of date on one of two paths.
 #
 # Pages has to be enabled for the repository with its build type set to "workflow" — the
 # workflow token is not allowed to do that itself, so it is a one-time setup step:

@@ -1,0 +1,489 @@
+/*
+ * KassenKnoten — the landing page's stylesheet.
+ *
+ * "Papier & Tinte", the same tokens the application uses, written out as plain hex so the
+ * page needs no build step and no framework. Shared by the English and the German page:
+ * two copies of four hundred lines of CSS is two pages that drift apart.
+ */
+/*
+       * "Papier & Tinte" — the same tokens the application uses, written out as plain
+       * hex so this page needs no build step and no framework. A landing page that
+       * depends on `npm run build` is a landing page that breaks silently six months
+       * after anyone last touched it.
+       */
+:root {
+  --canvas: #f6f3ee;
+  --surface: #fefdfb;
+  --surface-muted: #efebe3;
+  --ink: #1a1e27;
+  --ink-muted: #5c6270;
+  --line: #e0dcd3;
+  --rule: rgba(0, 0, 0, 0.045);
+  --brass: #e4a249;
+  --brass-ink: #40290b;
+  --positive: #1e8f6a;
+  --member-1: #008aa3;
+  --member-2: #b6498d;
+  --shadow: 0 1px 2px rgba(26, 30, 39, 0.04), 0 12px 32px rgba(26, 30, 39, 0.06);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #16181d;
+    --surface: #1e2128;
+    --surface-muted: #262a32;
+    --ink: #f2efe9;
+    --ink-muted: #a2a8b4;
+    --line: #333843;
+    --rule: rgba(255, 255, 255, 0.035);
+    --brass: #edb765;
+    --brass-ink: #2a1c07;
+    --positive: #4cc39a;
+    --member-1: #2ab3cc;
+    --member-2: #d874ae;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font-family:
+    "Manrope",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Bricolage Grotesque", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+}
+
+p {
+  margin: 0;
+  text-wrap: pretty;
+}
+
+a {
+  color: inherit;
+}
+
+/* Money is set in a monospaced face with tabular figures, exactly as in the app. */
+.num {
+  font-family: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.wrap {
+  width: min(100% - 2.5rem, 1140px);
+  margin-inline: auto;
+}
+
+section {
+  padding-block: clamp(3.5rem, 9vw, 7rem);
+}
+
+.eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: 0.875rem;
+}
+
+.lede {
+  color: var(--ink-muted);
+  font-size: clamp(1.0625rem, 1.6vw, 1.1875rem);
+  max-width: 62ch;
+}
+
+/* ---------------------------------------------------------------- hero */
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 3rem);
+}
+
+/*
+       * The one texture the design allows: a faint hairline rule, masked to fade at the
+       * edges. It appears behind full-page moments in the app, and this is one.
+       */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    var(--rule) 0 1px,
+    transparent 1px 2.25rem
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 70% at 50% 30%,
+    #000 40%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 40%, transparent 100%);
+  pointer-events: none;
+}
+
+.hero .wrap {
+  position: relative;
+}
+
+.hero-mark {
+  width: 76px;
+  height: 76px;
+  display: block;
+}
+
+.hero h1 {
+  font-size: clamp(2.75rem, 7.5vw, 4.75rem);
+  margin-top: 1.75rem;
+}
+
+.hero .claim {
+  font-family: "Bricolage Grotesque", "Manrope", sans-serif;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 1rem;
+  max-width: 24ch;
+}
+
+.hero .lede {
+  margin-top: 1.25rem;
+  font-size: clamp(1.0625rem, 1.8vw, 1.25rem);
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding-inline: 1.375rem;
+  border-radius: 0.875rem;
+  border: 1px solid transparent;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.button:active {
+  transform: scale(0.99);
+}
+
+.button--primary {
+  background: var(--brass);
+  color: var(--brass-ink);
+}
+
+.button--primary:hover {
+  opacity: 0.9;
+}
+
+.button--ghost {
+  background: var(--surface);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.button--ghost:hover {
+  background: var(--surface-muted);
+}
+
+/* ------------------------------------------------------------- facts */
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2.25rem;
+  margin-top: 2.5rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--line);
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+.facts strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------ shots */
+
+figure {
+  margin: 0;
+}
+
+.shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  background: var(--surface);
+}
+
+.shot--hero {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+  border-radius: 1.25rem;
+}
+
+figcaption {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+  margin-top: 0.875rem;
+}
+
+/* ---------------------------------------------------------- features */
+
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  margin-top: 2.75rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.card h3 {
+  font-size: 1.0625rem;
+  margin-bottom: 0.5rem;
+}
+
+.card p {
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.card .icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
+  background: var(--surface-muted);
+  margin-bottom: 1rem;
+}
+
+/* Four cards read better as a square than as three-and-one. */
+.grid--pairs {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+}
+
+.card .icon svg {
+  width: 1.125rem;
+  height: 1.125rem;
+  stroke: var(--brass);
+  fill: none;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --------------------------------------------------------- split rows */
+
+.row {
+  display: grid;
+  gap: clamp(2rem, 5vw, 3.5rem);
+  align-items: center;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .row {
+    grid-template-columns: 5fr 7fr;
+  }
+  .row--flip .row__text {
+    order: 2;
+  }
+}
+
+.row + .row {
+  margin-top: clamp(3rem, 7vw, 5rem);
+}
+
+.row h2 {
+  font-size: clamp(1.75rem, 3.4vw, 2.375rem);
+}
+
+.row p {
+  color: var(--ink-muted);
+  margin-top: 1rem;
+}
+
+.row ul {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.625rem;
+}
+
+.row li {
+  position: relative;
+  padding-left: 1.5rem;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+.row li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--brass);
+}
+
+/* ------------------------------------------------------------ mobile */
+
+.phones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 240px));
+  gap: 1.5rem;
+  justify-content: start;
+}
+
+.phones img {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 1.5rem;
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------------------------------------------- setup */
+
+.setup {
+  background: var(--surface);
+  border-block: 1px solid var(--line);
+}
+
+pre {
+  margin: 2rem 0 0;
+  padding: 1.5rem;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  overflow-x: auto;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.875rem;
+  line-height: 1.85;
+  color: var(--ink);
+}
+
+pre .c {
+  color: var(--ink-muted);
+}
+
+/* ------------------------------------------------------------ footer */
+
+footer {
+  border-top: 1px solid var(--line);
+  padding-block: 3rem;
+  color: var(--ink-muted);
+  font-size: 0.9375rem;
+}
+
+footer .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+footer a {
+  text-decoration-color: var(--line);
+  text-underline-offset: 0.25em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* --------------------------------------------------------- language */
+
+.langbar {
+  position: absolute;
+  top: 1.25rem;
+  right: 0;
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.langbar a,
+.langbar span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.25rem;
+  padding-inline: 0.75rem;
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.langbar span[aria-current] {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.langbar a {
+  color: var(--ink-muted);
+  border: 1px solid transparent;
+}
+
+.langbar a:hover {
+  color: var(--ink);
+  background: var(--surface-muted);
+}

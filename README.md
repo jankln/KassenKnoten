@@ -236,7 +236,9 @@ typed against it, so the build fails if a translation falls behind. There is no
 "I will translate it later".
 
 The code, the documentation and this README are English, so anyone can run and modify it.
-The [landing page](https://jankln.github.io/KassenKnoten/) is still German only.
+The landing page comes in both: [English](https://jankln.github.io/KassenKnoten/) and
+[Deutsch](https://jankln.github.io/KassenKnoten/de/), each showing screenshots of the
+interface in that language.
 
 ## Contributing
 

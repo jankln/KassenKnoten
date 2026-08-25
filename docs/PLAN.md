@@ -392,6 +392,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
       its own setup scripts so installing needs no toolchain
 - [x] F26 English alongside German, chosen at setup and changeable in the settings
 - [x] F27 Extensions: upload your own server-side code, managed in the settings
+- [x] F28 Landing page in English and German, one stylesheet, screenshots per language
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

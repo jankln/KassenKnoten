@@ -1,20 +1,20 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>KassenKnoten — household finances, split to the cent</title>
+    <title>KassenKnoten — Haushaltsfinanzen, auf den Cent geteilt</title>
     <meta
       name="description"
-      content="Self-hosted household finance planner for two incomes: every cost split by its own rule, exact to the cent. Fixed costs, variable budgets, savings — one Docker container, your data."
+      content="Selbst gehosteter Haushaltsplaner für zwei Einkommen: jede Ausgabe nach eigener Regel geteilt, auf den Cent genau. Fixkosten, variable Budgets, Rücklagen — ein Docker-Container, deine Daten."
     />
-    <link rel="icon" href="media/logo.svg" type="image/svg+xml" />
+    <link rel="icon" href="../media/logo.svg" type="image/svg+xml" />
 
     <meta property="og:type" content="website" />
     <meta property="og:title" content="KassenKnoten" />
     <meta
       property="og:description"
-      content="Two incomes, one household, one clear plan. Self-hosted, exact to the cent."
+      content="Zwei Einkommen, ein Haushalt, ein klarer Plan. Selbst gehostet, auf den Cent genau."
     />
     <meta
       property="og:image"
@@ -28,7 +28,7 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@500&family=Manrope:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../style.css" />
     <link rel="alternate" hreflang="en" href="https://jankln.github.io/KassenKnoten/" />
     <link
       rel="alternate"
@@ -40,15 +40,15 @@
       hreflang="x-default"
       href="https://jankln.github.io/KassenKnoten/"
     />
-    <meta property="og:locale" content="en_GB" />
+    <meta property="og:locale" content="de_DE" />
   </head>
 
   <body>
     <header class="hero">
       <div class="wrap">
-        <nav class="langbar" aria-label="Language">
-          <span aria-current="true">English</span>
-          <a href="de/" hreflang="de">Deutsch</a>
+        <nav class="langbar" aria-label="Sprache">
+          <a href="../" hreflang="en">English</a>
+          <span aria-current="true">Deutsch</span>
         </nav>
 
         <svg
@@ -89,12 +89,12 @@
         </svg>
 
         <h1>KassenKnoten</h1>
-        <p class="claim">Two incomes, one household, one clear plan.</p>
+        <p class="claim">Zwei Einkommen, ein Haushalt, ein klarer Plan.</p>
         <p class="lede">
-          The household planner for people who share costs unevenly — and want the maths
-          to be right. Rent by income, electricity down the middle, the gym only one of
-          you uses. Every item gets its own rule, and both of you see what it costs
-          while you type.
+          Der Haushaltsplaner für alle, die Kosten ungleich teilen — und wollen, dass
+          die Rechnung stimmt. Miete nach Einkommen, Strom halbe-halbe, das
+          Fitnessstudio zahlt nur einer. Jeder Posten bekommt seine eigene Regel, und
+          beide sehen sofort, was er sie kostet.
         </p>
 
         <div class="cta">
@@ -102,31 +102,33 @@
             class="button button--primary"
             href="https://github.com/jankln/KassenKnoten"
           >
-            See it on GitHub
+            Auf GitHub ansehen
           </a>
-          <a class="button button--ghost" href="#self-hosting"
-            >Running in two minutes</a
+          <a class="button button--ghost" href="#selbst-hosten"
+            >In zwei Minuten starten</a
           >
         </div>
 
         <div class="facts">
-          <span><strong>Exact to the cent</strong> — no float ever touches money</span>
-          <span><strong>One container</strong> for amd64 and arm64</span>
-          <span><strong>No telemetry</strong>, no external calls</span>
-          <span><strong>MIT licence</strong></span>
+          <span
+            ><strong>Auf den Cent</strong> — kein Float berührt je einen Betrag</span
+          >
+          <span><strong>Ein Container</strong> für amd64 und arm64</span>
+          <span><strong>Keine Telemetrie</strong>, keine externen Aufrufe</span>
+          <span><strong>MIT-Lizenz</strong></span>
         </div>
 
         <figure>
           <img
             class="shot shot--hero"
-            src="media/en/dashboard.png"
+            src="../media/dashboard.png"
             width="2160"
             height="1500"
-            alt="The overview: income, fixed costs, variable costs, savings rate and free cash as headline figures, with the per-person breakdown and costs by category beneath."
+            alt="Die Übersicht: Einnahmen, Fixkosten, variable Kosten, Sparrate und freies Geld als Kennzahlen, darunter die Aufschlüsselung pro Person und die Kosten nach Kategorie."
           />
           <figcaption>
-            The current month at a glance — and any other month, because every entry
-            knows which months it applies to.
+            Die Übersicht für den laufenden Monat — und für jeden anderen, denn jeder
+            Eintrag weiß, ab wann er gilt.
           </figcaption>
         </figure>
       </div>
@@ -134,15 +136,16 @@
 
     <section>
       <div class="wrap">
-        <p class="eyebrow">The problem</p>
+        <p class="eyebrow">Das Problem</p>
         <h2 style="font-size: clamp(1.875rem, 4vw, 2.75rem); max-width: 20ch">
-          Every tool gets this half right.
+          Jedes Werkzeug bekommt das halb hin.
         </h2>
         <p class="lede" style="margin-top: 1.25rem">
-          Splitting apps assume one rule for everything. Spreadsheets can express it —
-          until one cell slips and the formula is quietly wrong for months. KassenKnoten
-          makes the split <strong>a deliberate choice per item</strong>, computes it to
-          the cent, and shows you the result while you type.
+          Aufteilungs-Apps kennen genau eine Regel für alles. Tabellen können es
+          ausdrücken — bis eine Zelle verrutscht und die Formel monatelang still falsch
+          rechnet. KassenKnoten macht die Aufteilung zur
+          <strong>bewussten Entscheidung pro Posten</strong>, rechnet sie auf den Cent
+          und zeigt beim Tippen, was dabei herauskommt.
         </p>
 
         <div class="grid">
@@ -152,10 +155,10 @@
                 <path d="M3 6h18M3 12h18M3 18h18" />
               </svg>
             </span>
-            <h3>Every cost its own rule</h3>
+            <h3>Jede Ausgabe nach eigener Regel</h3>
             <p>
-              Fixed quota or proportional to income — chosen per item, never assumed.
-              The household default only pre-fills the form.
+              Feste Quote oder nach Einkommen — pro Posten gewählt, nie angenommen. Die
+              Standard-Aufteilung füllt nur das Formular vor.
             </p>
           </article>
 
@@ -165,11 +168,11 @@
                 <path d="M12 3v18M8 7h6.5a2.5 2.5 0 0 1 0 5H9a2.5 2.5 0 0 0 0 5h7" />
               </svg>
             </span>
-            <h3>Exact to the cent</h3>
+            <h3>Auf den Cent</h3>
             <p>
-              Amounts are whole cents, shares are basis points. 39,99 € down the middle
-              becomes 20,00 € and 19,99 € — never 39,98 €. The calculation engine is a
-              pure, tested module.
+              Beträge sind ganze Cent, Anteile Basispunkte. 39,99 € halbe-halbe werden
+              20,00 € und 19,99 € — nie 39,98 €. Die Rechen-Engine ist ein reines,
+              getestetes Modul.
             </p>
           </article>
 
@@ -180,11 +183,11 @@
                 <circle cx="12" cy="12" r="9" />
               </svg>
             </span>
-            <h3>The past stays honest</h3>
+            <h3>Die Vergangenheit bleibt ehrlich</h3>
             <p>
-              Every entry carries the months it applies to. A raise in September leaves
-              August reporting August — and the app asks whether a change is new from
-              now on or was always true.
+              Jeder Eintrag trägt die Monate, für die er gilt. Eine Gehaltserhöhung im
+              September lässt den August August bleiben — und die App fragt nach, ob
+              eine Änderung neu gilt oder schon immer galt.
             </p>
           </article>
 
@@ -194,10 +197,10 @@
                 <path d="M4 19V9m5 10V5m5 14v-7m5 7V8" />
               </svg>
             </span>
-            <h3>Variable costs, two ways</h3>
+            <h3>Variable Kosten, zwei Wege</h3>
             <p>
-              Groceries, fuel, going out: either the plan counts — or every receipt with
-              its date, and the plan becomes the budget you measure against.
+              Lebensmittel, Tanken, Ausgehen: entweder zählt der Plan — oder jede
+              Rechnung mit Datum, und der Plan wird zum Budget, gegen das gemessen wird.
             </p>
           </article>
 
@@ -207,10 +210,10 @@
                 <path d="M3 12h4l3 8 4-16 3 8h4" />
               </svg>
             </span>
-            <h3>Every rhythm normalised</h3>
+            <h3>Jeder Rhythmus wird monatlich</h3>
             <p>
-              A 132,00 € yearly insurance sits next to everything else as 11,00 € a
-              month. Nobody divides by twelve in their head again.
+              Eine Versicherung für 132,00 € im Jahr steht als 11,00 € im Monat neben
+              allem anderen. Niemand teilt mehr im Kopf durch zwölf.
             </p>
           </article>
 
@@ -221,10 +224,10 @@
                 <circle cx="12" cy="11" r="2.5" />
               </svg>
             </span>
-            <h3>Save on purpose</h3>
+            <h3>Sparen mit Absicht</h3>
             <p>
-              Savings pots with a monthly rate, a balance and an optional target — owned
-              by one person or by the household.
+              Spartöpfe mit monatlicher Rate, Stand und optionalem Ziel — einer Person
+              zugeordnet oder dem Haushalt.
             </p>
           </article>
 
@@ -237,11 +240,11 @@
                 />
               </svg>
             </span>
-            <h3>Calm warnings</h3>
+            <h3>Ruhige Warnungen</h3>
             <p>
-              Negative free cash, a savings rate above income, an overspent budget — as
-              a calm banner, not a modal. Deleting offers “Undo” instead of asking “are
-              you sure?”.
+              Negatives freies Geld, eine Sparrate über den Einnahmen, ein
+              überschrittenes Budget — als Hinweis, nicht als Modal. Löschen zeigt
+              „Rückgängig“ statt „Bist du sicher?“.
             </p>
           </article>
 
@@ -252,11 +255,10 @@
                 <path d="M11 18.5h2" />
               </svg>
             </span>
-            <h3>Installable as an app</h3>
+            <h3>Als App installierbar</h3>
             <p>
-              Own icon on the home screen, opens without an address bar. Browsers that
-              cannot install a web app are told where the option lives in their own
-              menu.
+              Eigenes Symbol auf dem Home-Bildschirm, Start ohne Adressleiste. Browser,
+              die das nicht können, bekommen den Weg durch ihr eigenes Menü genannt.
             </p>
           </article>
 
@@ -267,11 +269,11 @@
                 <path d="M17 15l3 4 3-4" />
               </svg>
             </span>
-            <h3>English or German</h3>
+            <h3>Englisch oder Deutsch</h3>
             <p>
-              Chosen when you set up and changed whenever you like. The language belongs
-              to the household, not to a browser — the tablet in the kitchen speaks the
-              same one as the laptop.
+              Die Sprache wählst du beim Einrichten und änderst sie jederzeit. Sie
+              gehört dem Haushalt, nicht dem Browser — das Küchen-Tablet spricht
+              dieselbe wie der Rechner.
             </p>
           </article>
 
@@ -282,11 +284,11 @@
                 <path d="M10 10h4" />
               </svg>
             </span>
-            <h3>Extend it with your own code</h3>
+            <h3>Erweiterbar mit eigenem Code</h3>
             <p>
-              Upload an extension and it contributes cards to the overview. It runs on
-              your server with full access — install only what you have read, or what
-              comes from someone you trust.
+              Lade eine eigene Erweiterung hoch, und sie steuert Karten zur Übersicht
+              bei. Sie läuft auf deinem Server mit vollem Zugriff — installiere nur, was
+              du gelesen hast oder wem du vertraust.
             </p>
           </article>
 
@@ -297,10 +299,11 @@
                 <path d="M8 12l3 3 8-8" />
               </svg>
             </span>
-            <h3>Your data stays yours</h3>
+            <h3>Deine Daten bleiben deine</h3>
             <p>
-              One SQLite file on a volume you control. Versioned JSON backups and CSV
-              export; restoring runs in a single transaction.
+              Eine SQLite-Datei auf einem Volume, das dir gehört. Versionierte
+              JSON-Sicherungen und CSV-Export; die Wiederherstellung läuft in einer
+              einzigen Transaktion.
             </p>
           </article>
         </div>
@@ -311,78 +314,78 @@
       <div class="wrap">
         <div class="row">
           <div class="row__text">
-            <p class="eyebrow">Shared fixed costs</p>
-            <h2>Who pays what — and why.</h2>
+            <p class="eyebrow">Gemeinsame Fixkosten</p>
+            <h2>Wer zahlt was — und warum.</h2>
             <p>
-              Every shared item shows both shares in euros and percent, and which rule
-              produced them. The split is previewed as you type, by the same function
-              that later saves it — a preview that calculates a second way is a preview
-              that can disagree with the result.
+              Jeder gemeinsame Posten zeigt beide Anteile in Euro und Prozent, und
+              welche Regel sie erzeugt hat. Die Aufteilung wird beim Tippen
+              vorgerechnet, mit derselben Funktion, die später auch speichert — eine
+              Vorschau, die anders rechnet als das Ergebnis, ist keine.
             </p>
             <ul>
-              <li>Fixed quota or by income, decided per item</li>
-              <li>Largest remainder: the shares always add back up to the total</li>
-              <li>Private and shared kept cleanly apart</li>
+              <li>Feste Quote oder nach Einkommen, pro Posten entschieden</li>
+              <li>Größte-Reste-Verfahren: die Anteile ergeben immer die Summe</li>
+              <li>Privat und gemeinsam sauber getrennt</li>
             </ul>
           </div>
           <figure>
             <img
               class="shot"
               loading="lazy"
-              src="media/en/shared-costs.png"
+              src="../media/shared-costs.png"
               width="2160"
               height="1500"
-              alt="Shared fixed costs: every row shows both members' shares in euros and percent, and the split rule that produced them."
+              alt="Gemeinsame Fixkosten: jede Zeile zeigt beide Anteile in Euro und Prozent sowie die verwendete Aufteilungsregel."
             />
           </figure>
         </div>
 
         <div class="row row--flip">
           <div class="row__text">
-            <p class="eyebrow">Variable costs</p>
-            <h2>A plan, or every receipt.</h2>
+            <p class="eyebrow">Variable Kosten</p>
+            <h2>Plan oder Kassenbon.</h2>
             <p>
-              Anything that is not the same every month gets a budget — and you decide
-              per budget how it is kept. <strong>Plan</strong> counts the figure you set
-              and asks nothing more. <strong>Detailed</strong> counts what was actually
-              booked, every expense with its date.
+              Was nicht jeden Monat gleich ist, bekommt ein Budget — und du entscheidest
+              pro Budget, wie es geführt wird. <strong>Plan</strong> zählt den geplanten
+              Betrag und fragt nichts weiter. <strong>Detailliert</strong> zählt, was
+              tatsächlich gebucht ist, jede Ausgabe mit Datum.
             </p>
             <ul>
-              <li>The mode is a badge on the card, not a setting in a dialog</li>
-              <li>Booked against planned, always side by side</li>
-              <li>Split between you exactly like a fixed cost</li>
+              <li>Der Modus steht als Badge auf der Karte, nicht in einem Dialog</li>
+              <li>Gebucht gegen geplant, immer nebeneinander</li>
+              <li>Wird wie Fixkosten zwischen euch aufgeteilt</li>
             </ul>
           </div>
           <figure>
             <img
               class="shot"
               loading="lazy"
-              src="media/en/variable-costs.png"
+              src="../media/variable-costs.png"
               width="2160"
               height="1500"
-              alt="Variable costs: a shared budget in detailed mode with a progress bar, both members' shares, and the individual expenses with their dates."
+              alt="Variable Kosten: ein gemeinsames Budget im Detail-Modus mit Fortschrittsbalken, den Anteilen beider Personen und den einzelnen Ausgaben mit Datum."
             />
           </figure>
         </div>
 
         <div class="row">
           <div class="row__text">
-            <p class="eyebrow">Savings</p>
-            <h2>Saving you can see.</h2>
+            <p class="eyebrow">Rücklagen</p>
+            <h2>Sparen, das man sieht.</h2>
             <p>
-              Pots with a rate, a balance and an optional target. Progress is a bar
-              rather than mental arithmetic — and when a pot passes its target, the
-              overview says so kindly.
+              Spartöpfe mit Rate, Stand und optionalem Ziel. Der Fortschritt ist ein
+              Balken, kein Kopfrechnen — und wenn ein Topf sein Ziel überschreitet, sagt
+              die Übersicht es freundlich.
             </p>
           </div>
           <figure>
             <img
               class="shot"
               loading="lazy"
-              src="media/en/savings.png"
+              src="../media/savings.png"
               width="2160"
               height="1500"
-              alt="Savings pots with a monthly rate, current balance, target and a progress bar."
+              alt="Spartöpfe mit monatlicher Rate, aktuellem Stand, Ziel und Fortschrittsbalken."
             />
           </figure>
         </div>
@@ -393,33 +396,36 @@
       <div class="wrap">
         <div class="row">
           <div class="row__text">
-            <p class="eyebrow">On a phone</p>
-            <h2>Designed at 375 px, not shrunk to it.</h2>
+            <p class="eyebrow">Am Handy</p>
+            <h2>Für 375 px entworfen, nicht dafür geschrumpft.</h2>
             <p>
-              A household plan gets opened in the kitchen, not at a desk. Same features,
-              navigation within thumb reach, an amount field that brings up the number
-              pad, and a design that follows the system theme.
+              Der Haushaltsplan wird in der Küche geöffnet, nicht am Schreibtisch.
+              Gleiche Funktionen, Navigation in Daumenreichweite, ein Zahlenfeld, das
+              den Ziffernblock aufruft, und ein Design, das dem Systemthema folgt.
             </p>
             <ul>
-              <li>Light and dark, following the system</li>
-              <li>Installable as an app, with its own icon</li>
-              <li>Offline it says so, instead of showing yesterday's figures</li>
+              <li>Helles und dunkles Thema, systemabhängig</li>
+              <li>Installierbar als App, mit eigenem Symbol</li>
+              <li>
+                Ohne Verbindung sagt die App, dass sie offline ist — statt alte Zahlen
+                zu zeigen
+              </li>
             </ul>
           </div>
           <div class="phones">
             <img
               loading="lazy"
-              src="media/en/mobile-dark.png"
+              src="../media/mobile-dark.png"
               width="780"
               height="1688"
-              alt="The overview on a phone in dark mode."
+              alt="Die Übersicht auf einem Telefon im dunklen Thema."
             />
             <img
               loading="lazy"
-              src="media/en/login.png"
+              src="../media/login.png"
               width="860"
               height="1800"
-              alt="The sign-in screen with the household password and the field for the one-time code."
+              alt="Der Anmeldebildschirm mit Haushalts-Passwort und dem Feld für den Bestätigungscode."
             />
           </div>
         </div>
@@ -428,83 +434,85 @@
 
     <section style="background: var(--surface); border-block: 1px solid var(--line)">
       <div class="wrap">
-        <p class="eyebrow">Security</p>
+        <p class="eyebrow">Sicherheit</p>
         <h2 style="font-size: clamp(1.75rem, 3.4vw, 2.375rem)">
-          They are your figures. They are treated that way.
+          Es sind eure Zahlen. Sie werden auch so behandelt.
         </h2>
 
         <div class="grid--pairs grid">
           <article class="card">
-            <h3>Password and a second factor</h3>
+            <h3>Passwort und zweiter Faktor</h3>
             <p>
-              One household password, hashed with argon2id and read from the environment
-              — a copy of the database is not a copy of the password. Optionally a code
-              from any authenticator app (TOTP, RFC 6238). A code that has been used is
-              refused.
+              Ein Haushalts-Passwort, mit argon2id gehasht und aus der Umgebung gelesen
+              — eine Kopie der Datenbank ist keine Kopie des Passworts. Optional dazu
+              ein Code aus jeder Authenticator-App (TOTP nach RFC 6238). Ein benutzter
+              Code wird abgelehnt.
             </p>
           </article>
           <article class="card">
-            <h3>Encrypted session</h3>
+            <h3>Verschlüsselte Sitzung</h3>
             <p>
-              The session cookie is encrypted, not merely signed (JWE, A256GCM),
+              Das Sitzungs-Cookie ist verschlüsselt, nicht bloß signiert (JWE, A256GCM),
               <span class="num">httpOnly</span>,
               <span class="num">SameSite=Lax</span> und
-              <span class="num">Secure</span> over HTTPS.
+              <span class="num">Secure</span> über HTTPS.
             </p>
           </article>
           <article class="card">
-            <h3>Everything closed but what must be open</h3>
+            <h3>Alles zu, außer was offen sein muss</h3>
             <p>
-              Every route but the login and the health check requires a session — deny
-              by default, so a new page cannot accidentally be public. Server actions
-              check again themselves.
+              Jede Route außer Anmeldung und Health-Check verlangt eine Sitzung — deny
+              by default, damit eine neue Seite nicht versehentlich öffentlich ist.
+              Server Actions prüfen zusätzlich selbst.
             </p>
           </article>
           <article class="card">
-            <h3>Nothing from outside</h3>
+            <h3>Nichts von außen</h3>
             <p>
-              A Content-Security-Policy with a per-request nonce, self-hosted fonts, no
-              CDNs, no telemetry. The container runs as an unprivileged user.
+              Content-Security-Policy mit Nonce pro Anfrage, Schriften selbst gehostet,
+              keine CDNs, keine Telemetrie. Der Container läuft als unprivilegierter
+              Benutzer.
             </p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="setup" id="self-hosting">
+    <section class="setup" id="selbst-hosten">
       <div class="wrap">
-        <p class="eyebrow">Self-hosting</p>
+        <p class="eyebrow">Selbst hosten</p>
         <h2 style="font-size: clamp(1.75rem, 3.4vw, 2.375rem)">
-          Docker and two minutes.
+          Docker und zwei Minuten.
         </h2>
         <p class="lede" style="margin-top: 1.25rem">
-          No checkout, no Node, no build: the image is published for amd64 and arm64, so
-          a Raspberry Pi is as much a target as a NUC. Download two files, generate two
-          secrets — the scripts for that run inside the image — and start. The database
-          is created and migrated on first use.
+          Kein Quellcode, kein Node, kein Build: das Image ist für amd64 und arm64
+          veröffentlicht, ein Raspberry Pi also genauso ein Ziel wie ein NUC. Zwei
+          Dateien herunterladen, zwei Geheimnisse erzeugen — die Skripte dafür laufen im
+          Image selbst — und starten. Die Datenbank wird beim ersten Start angelegt und
+          migriert.
         </p>
 
         <pre><code>mkdir kassenknoten &amp;&amp; cd kassenknoten
 curl -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
 curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/env.example
 
-<span class="c"># a session secret</span>
+<span class="c"># ein Sitzungsschlüssel</span>
 echo "SESSION_SECRET=$(openssl rand -base64 32)" &gt;&gt; .env
 
-<span class="c"># your household password, hashed</span>
+<span class="c"># euer Haushalts-Passwort, gehasht</span>
 docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
   node scripts/hash-password.ts
 
-<span class="c"># optional: a second factor, prints a QR code into your terminal</span>
+<span class="c"># optional: zweiter Faktor, druckt einen QR-Code ins Terminal</span>
 docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
   node scripts/totp-secret.ts
 
 docker compose up -d</code></pre>
 
         <p style="margin-top: 1.5rem; color: var(--ink-muted); font-size: 0.9375rem">
-          Then open <span class="num">http://127.0.0.1:3000</span> — a three-step wizard
-          sets up the household. For access from outside the machine, put a reverse
-          proxy with TLS in front.
+          Danach <span class="num">http://127.0.0.1:3000</span> öffnen — ein Assistent
+          in drei Schritten richtet den Haushalt ein. Für den Zugriff von außen gehört
+          ein Reverse Proxy mit TLS davor.
         </p>
 
         <div class="cta">
@@ -512,13 +520,13 @@ docker compose up -d</code></pre>
             class="button button--primary"
             href="https://github.com/jankln/KassenKnoten"
           >
-            To the repository
+            Zum Repository
           </a>
           <a
             class="button button--ghost"
             href="https://github.com/jankln/KassenKnoten#run-it"
           >
-            Full instructions
+            Ausführliche Anleitung
           </a>
         </div>
       </div>
@@ -527,14 +535,13 @@ docker compose up -d</code></pre>
     <footer>
       <div class="wrap">
         <p>
-          KassenKnoten — self-hosted, MIT licence. The interface speaks English and
-          German; the code and the documentation are English.
-          <a href="de/">Diese Seite auf Deutsch</a>.
+          KassenKnoten — selbst gehostet, MIT-Lizenz. Die Oberfläche ist deutsch, Code
+          und Dokumentation sind englisch.
         </p>
         <p>
           <a href="https://github.com/jankln/KassenKnoten">GitHub</a> ·
           <a href="https://github.com/jankln/KassenKnoten/issues">Issues</a> ·
-          <a href="https://github.com/jankln/KassenKnoten/blob/main/LICENSE">Licence</a>
+          <a href="https://github.com/jankln/KassenKnoten/blob/main/LICENSE">Lizenz</a>
         </p>
       </div>
     </footer>
