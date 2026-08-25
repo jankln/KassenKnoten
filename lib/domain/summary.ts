@@ -1,6 +1,7 @@
 import { monthlyCents, sumMonthlyCents } from "./interval";
 import { sumCents } from "./money";
 import { splitExpense, type MemberRef, type ShareRule, type SplitMode } from "./split";
+import { countedCents, type VariableCostInput } from "./variable";
 
 export interface IncomeInput {
   memberId: number;
@@ -34,6 +35,8 @@ export interface HouseholdInput {
   defaultShares: readonly ShareRule[];
   incomes: readonly IncomeInput[];
   expenses: readonly ExpenseInput[];
+  /** Budgets for the month being summarised, with their bookings already added up. */
+  variableCosts?: readonly VariableCostInput[];
   savingsPots: readonly SavingsPotInput[];
 }
 
@@ -43,8 +46,12 @@ export interface MemberSummary {
   incomeCents: number;
   ownFixedCents: number;
   sharedShareCents: number;
+  /** This member's own variable budgets. */
+  ownVariableCents: number;
+  /** This member's part of the shared variable budgets. */
+  sharedVariableShareCents: number;
   savingsRateCents: number;
-  /** Income minus own fixed costs minus the share of shared costs. */
+  /** Income minus own costs minus the share of shared costs, fixed and variable. */
   remainderCents: number;
   /** What is actually left once this member's savings rates are paid. */
   freeAfterSavingsCents: number;
@@ -55,11 +62,18 @@ export interface HouseholdSummary {
   fixedPrivateCents: number;
   fixedSharedCents: number;
   fixedTotalCents: number;
+  variablePrivateCents: number;
+  variableSharedCents: number;
+  variableTotalCents: number;
+  /** What the variable budgets planned for this month, whatever mode they are in. */
+  variablePlannedCents: number;
+  /** What was actually booked against them. Zero for a household that only plans. */
+  variableBookedCents: number;
   savingsRateCents: number;
   savingsBalanceCents: number;
   /** Sum of the targets of pots that have one; null when no pot has a target. */
   savingsTargetCents: number | null;
-  /** Income minus all fixed costs minus all savings rates. */
+  /** Income minus all costs, fixed and variable, minus all savings rates. */
   freeCashCents: number;
   members: MemberSummary[];
 }
@@ -119,6 +133,48 @@ export function summariseHousehold(input: HouseholdInput): HouseholdSummary {
     }
   }
 
+  // Variable budgets are split exactly like fixed costs, so a household reads one model
+  // rather than two. The only difference is which figure goes in: `countedCents` decides
+  // that from the budget's mode, and it decides it once, here.
+  const variableCosts = input.variableCosts ?? [];
+  const ownVariableByMember = new Map<number, number>();
+  let variablePrivateCents = 0;
+  for (const cost of variableCosts) {
+    if (cost.scope !== "private" || cost.memberId == null) {
+      continue;
+    }
+    const amount = countedCents(cost);
+    variablePrivateCents += amount;
+    ownVariableByMember.set(
+      cost.memberId,
+      (ownVariableByMember.get(cost.memberId) ?? 0) + amount,
+    );
+  }
+
+  const sharedVariableByMember = new Map<number, number>();
+  let variableSharedCents = 0;
+  for (const cost of variableCosts) {
+    if (cost.scope !== "shared") {
+      continue;
+    }
+    const result = splitExpense(
+      {
+        amountCents: countedCents(cost),
+        intervalMonths: 1,
+        splitMode: cost.splitMode ?? "fixed_quota",
+        shares: cost.shares,
+      },
+      context,
+    );
+    variableSharedCents += result.monthlyCents;
+    for (const share of result.perMember) {
+      sharedVariableByMember.set(
+        share.memberId,
+        (sharedVariableByMember.get(share.memberId) ?? 0) + share.cents,
+      );
+    }
+  }
+
   const savingsRateByMember = new Map<number, number>();
   for (const pot of input.savingsPots) {
     if (pot.ownerMemberId == null) {
@@ -134,8 +190,15 @@ export function summariseHousehold(input: HouseholdInput): HouseholdSummary {
     const incomeCents = monthlyIncomeByMember.get(member.id) ?? 0;
     const ownFixedCents = ownFixedByMember.get(member.id) ?? 0;
     const sharedShareCents = sharedByMember.get(member.id) ?? 0;
+    const ownVariableCents = ownVariableByMember.get(member.id) ?? 0;
+    const sharedVariableShareCents = sharedVariableByMember.get(member.id) ?? 0;
     const savingsRateCents = savingsRateByMember.get(member.id) ?? 0;
-    const remainderCents = incomeCents - ownFixedCents - sharedShareCents;
+    const remainderCents =
+      incomeCents -
+      ownFixedCents -
+      sharedShareCents -
+      ownVariableCents -
+      sharedVariableShareCents;
 
     return {
       memberId: member.id,
@@ -143,6 +206,8 @@ export function summariseHousehold(input: HouseholdInput): HouseholdSummary {
       incomeCents,
       ownFixedCents,
       sharedShareCents,
+      ownVariableCents,
+      sharedVariableShareCents,
       savingsRateCents,
       remainderCents,
       freeAfterSavingsCents: remainderCents - savingsRateCents,
@@ -158,16 +223,26 @@ export function summariseHousehold(input: HouseholdInput): HouseholdSummary {
     .map((pot) => pot.targetCents)
     .filter((target): target is number => target != null);
 
+  const variableTotalCents = variablePrivateCents + variableSharedCents;
+
   return {
     incomeCents,
     fixedPrivateCents,
     fixedSharedCents,
     fixedTotalCents: fixedPrivateCents + fixedSharedCents,
+    variablePrivateCents,
+    variableSharedCents,
+    variableTotalCents,
+    variablePlannedCents: sumCents(variableCosts.map((cost) => cost.plannedCents)),
+    variableBookedCents: sumCents(variableCosts.map((cost) => cost.bookedCents)),
     savingsRateCents,
     savingsBalanceCents: sumCents(input.savingsPots.map((pot) => pot.balanceCents)),
     savingsTargetCents: targets.length > 0 ? sumCents(targets) : null,
     freeCashCents:
-      incomeCents - (fixedPrivateCents + fixedSharedCents) - savingsRateCents,
+      incomeCents -
+      (fixedPrivateCents + fixedSharedCents) -
+      variableTotalCents -
+      savingsRateCents,
     members,
   };
 }

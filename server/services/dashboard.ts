@@ -5,13 +5,16 @@ import * as schema from "@/db/schema";
 import { monthlyCents } from "@/lib/domain/interval";
 import { addMonths, periodFromDate, type Period } from "@/lib/domain/period";
 import {
+  incomeByMember,
   summariseHousehold,
   type HouseholdSummary,
   type ExpenseInput,
 } from "@/lib/domain/summary";
 import type { ShareRule } from "@/lib/domain/split";
+import type { VariableCostInput } from "@/lib/domain/variable";
 import { evenShares, getHouseholdSettings } from "./household";
 import { listSavingsPots, type SavingsPotRow } from "./savings";
+import { listVariableCosts, type VariableCostRow } from "./variable-costs";
 
 export interface DashboardCategory {
   categoryId: number | null;
@@ -39,6 +42,8 @@ export interface DashboardData {
   summary: HouseholdSummary;
   members: DashboardMember[];
   categories: DashboardCategory[];
+  /** The variable budgets of this month, with their bookings already resolved. */
+  variableCosts: VariableCostRow[];
   savingsPots: SavingsPotRow[];
   hasData: boolean;
 }
@@ -50,8 +55,14 @@ export interface DashboardData {
  */
 function appliesIn(
   period: Period,
-  validFrom: typeof schema.income.validFrom | typeof schema.expense.validFrom,
-  validUntil: typeof schema.income.validUntil | typeof schema.expense.validUntil,
+  validFrom:
+    | typeof schema.income.validFrom
+    | typeof schema.expense.validFrom
+    | typeof schema.variableCost.validFrom,
+  validUntil:
+    | typeof schema.income.validUntil
+    | typeof schema.expense.validUntil
+    | typeof schema.variableCost.validUntil,
 ) {
   return and(lte(validFrom, period), or(isNull(validUntil), gte(validUntil, period)));
 }
@@ -145,6 +156,11 @@ export function getDashboardData(
     shares: sharesByExpense.get(expense.id),
   }));
 
+  // Variable budgets need the split context, which needs the incomes that were just
+  // read — so they are resolved here rather than inside `summariseHousehold`, which stays
+  // pure and receives the bookings already added up.
+  const monthlyIncomeByMember = incomeByMember({ members, incomes });
+
   const settings = getHouseholdSettings(db);
   const activeDefaultShares = settings.defaultShares.filter((share) =>
     memberIds.has(share.memberId),
@@ -155,11 +171,34 @@ export function getDashboardData(
       : evenShares(members.map((member) => member.id));
   const savingsPots = listSavingsPots(db);
 
+  const variableCosts = listVariableCosts(
+    period,
+    { members, defaultShares, monthlyIncomeByMember },
+    db,
+  ).filter(
+    (cost) =>
+      cost.scope === "shared" ||
+      (cost.memberId !== null && memberIds.has(cost.memberId)),
+  );
+
+  const variableInputs: VariableCostInput[] = variableCosts.map((cost) => ({
+    id: cost.id,
+    label: cost.label,
+    scope: cost.scope,
+    memberId: cost.memberId,
+    mode: cost.mode,
+    plannedCents: cost.plannedCents,
+    bookedCents: cost.bookedCents,
+    splitMode: cost.splitMode,
+    shares: cost.shares.length > 0 ? cost.shares : undefined,
+  }));
+
   const summary = summariseHousehold({
     members,
     defaultShares,
     incomes,
     expenses,
+    variableCosts: variableInputs,
     savingsPots: savingsPots.map((pot) => ({
       ownerMemberId: pot.ownerMemberId,
       monthlyRateCents: pot.monthlyRateCents,
@@ -194,20 +233,40 @@ export function getDashboardData(
     }
   }
 
+  for (const cost of variableCosts) {
+    const key = cost.categoryId === null ? "uncategorized" : String(cost.categoryId);
+    const current = categoryTotals.get(key);
+    if (current) {
+      current.monthlyCents += cost.countedCents;
+    } else {
+      categoryTotals.set(key, {
+        categoryId: cost.categoryId,
+        name: cost.categoryName,
+        icon: cost.categoryIcon,
+        monthlyCents: cost.countedCents,
+      });
+    }
+  }
+
   const categories = [...categoryTotals.values()].sort(
     (a, b) => b.monthlyCents - a.monthlyCents,
   );
 
   return {
     period,
-    hasEntriesInPeriod: incomes.length > 0 || expenseRows.length > 0,
+    hasEntriesInPeriod:
+      incomes.length > 0 || expenseRows.length > 0 || variableCosts.length > 0,
     summary,
     members: summaryMembers,
     categories,
+    variableCosts,
     savingsPots,
     hasData:
       members.length > 0 &&
-      (incomes.length > 0 || expenseRows.length > 0 || savingsPots.length > 0),
+      (incomes.length > 0 ||
+        expenseRows.length > 0 ||
+        variableCosts.length > 0 ||
+        savingsPots.length > 0),
   };
 }
 
@@ -215,6 +274,7 @@ export interface TrendPoint {
   period: Period;
   incomeCents: number;
   fixedCostsCents: number;
+  variableCostsCents: number;
   savingsRateCents: number;
   freeCashCents: number;
 }
@@ -241,6 +301,7 @@ export function getTrend(
       period,
       incomeCents: summary.incomeCents,
       fixedCostsCents: summary.fixedTotalCents,
+      variableCostsCents: summary.variableTotalCents,
       savingsRateCents: summary.savingsRateCents,
       freeCashCents: summary.freeCashCents,
     };

@@ -15,6 +15,13 @@
       "when": 1787415359012,
       "tag": "0001_quiet_stellaris",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787652974713,
+      "tag": "0002_last_black_queen",
+      "breakpoints": true
     }
   ]
 }

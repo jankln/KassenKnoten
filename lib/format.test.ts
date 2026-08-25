@@ -4,6 +4,7 @@ import {
   formatCents,
   formatCentsRounded,
   formatInterval,
+  formatDay,
   formatPeriod,
   formatRatio,
   formatShareBp,
@@ -122,5 +123,16 @@ describe("periods", () => {
   it("derives the period key from a date", () => {
     expect(toPeriod(new Date(2026, 7, 21))).toBe("2026-08");
     expect(toPeriod(new Date(2026, 0, 1))).toBe("2026-01");
+  });
+});
+
+describe("formatDay", () => {
+  it("shows the day and month of a receipt, without the year", () => {
+    expect(formatDay("2026-08-03")).toBe("03.08.");
+    expect(formatDay("2026-12-31")).toBe("31.12.");
+  });
+
+  it("hands back anything it cannot read rather than inventing a date", () => {
+    expect(formatDay("nicht ein datum")).toBe("nicht ein datum");
   });
 });

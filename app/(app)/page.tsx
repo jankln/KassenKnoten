@@ -1,20 +1,15 @@
 import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/patterns/empty-state";
+import { MonthNav } from "@/components/patterns/month-nav";
 import { PageHeader } from "@/components/patterns/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/ui/category-icon";
 import { buttonStyles } from "@/components/ui/button";
 import { formatCents, formatPeriod, formatRatio } from "@/lib/format";
-import {
-  isPeriod,
-  nextPeriod,
-  periodFromDate,
-  previousPeriod,
-  type Period,
-} from "@/lib/domain/period";
+import { isPeriod, periodFromDate, type Period } from "@/lib/domain/period";
 import { de } from "@/lib/i18n/de";
 import type {
   DashboardCategory,
@@ -36,12 +31,13 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
 
   const dashboard = getDashboardData(period);
   const trend = getTrend(period);
+  const monthHref = (target: Period) => `/?monat=${target}`;
 
   if (!dashboard.hasData) {
     return (
       <>
         <PageHeader title={copy.title} subtitle={copy.subtitle} />
-        <MonthNav period={period} today={today} />
+        <MonthNav period={period} today={today} hrefFor={monthHref} />
         <EmptyState
           title={copy.empty.title}
           body={copy.empty.body}
@@ -62,7 +58,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
     return (
       <>
         <PageHeader title={copy.title} subtitle={copy.subtitle} />
-        <MonthNav period={period} today={today} />
+        <MonthNav period={period} today={today} hrefFor={monthHref} />
         <EmptyState title={copy.emptyMonth.title} body={copy.emptyMonth.body} />
       </>
     );
@@ -71,14 +67,17 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
   return (
     <>
       <PageHeader title={copy.title} subtitle={copy.subtitle} />
-      <MonthNav period={period} today={today} />
+      <MonthNav period={period} today={today} hrefFor={monthHref} />
       <Warnings dashboard={dashboard} />
 
       <section aria-labelledby="dashboard-kpis">
         <h2 id="dashboard-kpis" className="sr-only">
           {copy.kpi.title}
         </h2>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {/* Five tiles: two rows of two on a phone, with free cash spanning the last row
+            on its own. It is the number the household actually came for, and a lone tile
+            in a two-column grid would otherwise sit next to a gap. */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <Kpi
             label={copy.kpi.income}
             value={formatCents(dashboard.summary.incomeCents)}
@@ -88,6 +87,18 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
             label={copy.kpi.fixedCosts}
             value={formatCents(dashboard.summary.fixedTotalCents)}
             hint={copy.kpi.perMonth}
+          />
+          <Kpi
+            label={copy.kpi.variableCosts}
+            value={formatCents(dashboard.summary.variableTotalCents)}
+            hint={
+              dashboard.summary.variableBookedCents > 0
+                ? copy.kpi.bookedOfPlanned(
+                    formatCents(dashboard.summary.variableBookedCents),
+                    formatCents(dashboard.summary.variablePlannedCents),
+                  )
+                : copy.kpi.perMonth
+            }
           />
           <Kpi
             label={copy.kpi.savingsRate}
@@ -107,6 +118,7 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
             label={copy.kpi.freeCash}
             value={formatCents(dashboard.summary.freeCashCents)}
             hint={copy.kpi.perMonth}
+            className="col-span-2 lg:col-span-1"
             valueClassName={
               dashboard.summary.freeCashCents < 0 ? "text-negative" : "text-positive"
             }
@@ -119,53 +131,10 @@ export default async function OverviewPage({ searchParams }: PageProps<"/">) {
         <CategoriesSection dashboard={dashboard} />
       </div>
 
+      <VariableSection dashboard={dashboard} />
       <SavingsSection dashboard={dashboard} />
       <TrendSection trend={trend} />
     </>
-  );
-}
-
-/**
- * Step through the months.
- *
- * Plain links, so the month survives a reload, can be shared, and works before any
- * JavaScript arrives. Both directions stay open: the future is worth looking at when a
- * raise or a contract has already been entered with a later start.
- */
-function MonthNav({ period, today }: { period: Period; today: Period }) {
-  const copy = de.months;
-  return (
-    <nav
-      aria-label={copy.current}
-      className="border-line bg-surface rounded-card mb-6 flex items-center justify-between gap-2 border p-1.5"
-    >
-      <Link
-        href={`/?monat=${previousPeriod(period)}`}
-        aria-label={copy.previous}
-        className={buttonStyles({ variant: "ghost", size: "icon" })}
-      >
-        <ChevronLeft className="size-5" aria-hidden />
-      </Link>
-
-      <p className="font-display min-w-0 truncate text-center text-base font-semibold">
-        {formatPeriod(period)}
-      </p>
-
-      <div className="flex items-center gap-1">
-        {period === today ? null : (
-          <Link href="/" className={buttonStyles({ variant: "ghost", size: "sm" })}>
-            {copy.today}
-          </Link>
-        )}
-        <Link
-          href={`/?monat=${nextPeriod(period)}`}
-          aria-label={copy.next}
-          className={buttonStyles({ variant: "ghost", size: "icon" })}
-        >
-          <ChevronRight className="size-5" aria-hidden />
-        </Link>
-      </div>
-    </nav>
   );
 }
 
@@ -173,15 +142,17 @@ function Kpi({
   label,
   value,
   hint,
+  className,
   valueClassName,
 }: {
   label: string;
   value: string;
   hint: string;
+  className?: string;
   valueClassName?: string;
 }) {
   return (
-    <Card className="min-w-0 p-4 sm:p-5">
+    <Card className={`min-w-0 p-4 sm:p-5 ${className ?? ""}`}>
       <CardTitle className="truncate">{label}</CardTitle>
       <p
         className={`font-ledger tabular mt-3 truncate text-lg font-semibold sm:text-xl ${valueClassName ?? ""}`}
@@ -204,6 +175,14 @@ function Warnings({ dashboard }: { dashboard: DashboardData }) {
   }
   if (dashboard.summary.savingsRateCents > dashboard.summary.incomeCents) {
     warnings.push({ key: "savings-rate", message: copy.savingsAboveIncome });
+  }
+  for (const cost of dashboard.variableCosts) {
+    if (cost.remainingCents < 0) {
+      warnings.push({
+        key: `budget-${cost.id}`,
+        message: copy.overBudget(cost.label, formatCents(-cost.remainingCents)),
+      });
+    }
   }
   for (const pot of dashboard.savingsPots) {
     if (pot.overTarget) {
@@ -265,6 +244,11 @@ function PeopleSection({ dashboard }: { dashboard: DashboardData }) {
               <Metric label={copy.income} cents={member.incomeCents} />
               <Metric label={copy.ownFixed} cents={member.ownFixedCents} />
               <Metric label={copy.sharedShare} cents={member.sharedShareCents} />
+              <Metric label={copy.ownVariable} cents={member.ownVariableCents} />
+              <Metric
+                label={copy.sharedVariableShare}
+                cents={member.sharedVariableShareCents}
+              />
               <Metric label={copy.savingsRate} cents={member.savingsRateCents} />
             </dl>
             <div className="border-line mt-4 flex items-center justify-between border-t pt-3 text-sm">
@@ -319,7 +303,9 @@ function CategoriesSection({ dashboard }: { dashboard: DashboardData }) {
         <div className="border-line mt-5 flex items-center justify-between border-t pt-3 text-sm">
           <span className="text-ink-muted">{copy.total}</span>
           <span className="font-ledger tabular font-medium">
-            {formatCents(dashboard.summary.fixedTotalCents)}
+            {formatCents(
+              dashboard.summary.fixedTotalCents + dashboard.summary.variableTotalCents,
+            )}
           </span>
         </div>
       </Card>
@@ -367,6 +353,69 @@ function CategoryRow({
         />
       </div>
     </li>
+  );
+}
+
+/**
+ * Variable costs on the dashboard.
+ *
+ * Deliberately not just another row of totals: what makes these different from fixed
+ * costs is *which* figure counts, so every row says so — the counted amount on the right,
+ * and beneath it what was planned against what was booked. A plan-mode row shows the two
+ * as equal, which is the honest picture of a budget nobody is tracking receipts for.
+ */
+function VariableSection({ dashboard }: { dashboard: DashboardData }) {
+  const copy = de.sections.overview.variable;
+  const detail = de.sections.variableCosts;
+
+  return (
+    <section aria-labelledby="dashboard-variable" className="mt-6">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <CardTitle id="dashboard-variable">{copy.title}</CardTitle>
+        <Link
+          href={`/variable-kosten?monat=${dashboard.period}`}
+          className={buttonStyles({ variant: "ghost", size: "sm" })}
+        >
+          {copy.action}
+        </Link>
+      </div>
+      <Card className="p-4 sm:p-5">
+        {dashboard.variableCosts.length === 0 ? (
+          <p className="text-ink-muted text-sm">{copy.empty}</p>
+        ) : (
+          <ul className="space-y-4">
+            {dashboard.variableCosts.map((cost) => (
+              <li key={cost.id} className="flex items-start gap-3">
+                <span className="text-ink-muted mt-0.5 shrink-0">
+                  <CategoryIcon name={cost.categoryIcon ?? "circle-dashed"} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">{cost.label}</p>
+                  <p className="text-ink-muted mt-0.5 text-xs">
+                    {cost.mode === "detailed"
+                      ? `${copy.booked} ${formatCents(cost.bookedCents)} · ${copy.planned} ${formatCents(cost.plannedCents)}`
+                      : `${copy.planned} ${formatCents(cost.plannedCents)} · ${detail.modeBadgePlan}`}
+                  </p>
+                </div>
+                <span
+                  className={`font-ledger tabular shrink-0 text-sm font-medium ${
+                    cost.remainingCents < 0 ? "text-negative" : ""
+                  }`}
+                >
+                  {formatCents(cost.countedCents)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="border-line mt-5 flex items-center justify-between border-t pt-3 text-sm">
+          <span className="text-ink-muted">{copy.total}</span>
+          <span className="font-ledger tabular font-medium">
+            {formatCents(dashboard.summary.variableTotalCents)}
+          </span>
+        </div>
+      </Card>
+    </section>
   );
 }
 
@@ -445,6 +494,11 @@ const trendLines = [
     key: "fixedCostsCents",
     label: de.sections.overview.trend.fixedCosts,
     color: "var(--color-member-2)",
+  },
+  {
+    key: "variableCostsCents",
+    label: de.sections.overview.trend.variableCosts,
+    color: "var(--color-member-4)",
   },
   {
     key: "savingsRateCents",

@@ -12,8 +12,12 @@ export const BACKUP_FORMAT = "kassenknoten-backup";
  * Version 2 added `validFrom` / `validUntil` to incomes and expenses. Version 1 files are
  * still accepted: their entries never had an end and are backfilled to the month the
  * household in that same file was created, which is the earliest month it can describe.
+ *
+ * Version 3 added variable costs and their bookings. Older files simply have none, which
+ * restores correctly as an empty list — a household that never had variable costs and a
+ * backup taken before they existed are the same state.
  */
-export const BACKUP_VERSION = 2;
+export const BACKUP_VERSION = 3;
 
 export class RestoreValidationError extends Error {
   constructor(message: string) {
@@ -31,6 +35,7 @@ const dateString = z
 const splitMode = z.enum(["fixed_quota", "income_ratio"]);
 const incomeKind = z.enum(["salary", "other"]);
 const scope = z.enum(["private", "shared"]);
+const variableMode = z.enum(["plan", "detailed"]);
 
 const timestamped = {
   createdAt: dateString,
@@ -124,6 +129,45 @@ const defaultShareSchema = z
   })
   .strict();
 
+const variableCostSchema = z
+  .object({
+    id: z.number().int().positive(),
+    scope,
+    memberId: z.number().int().positive().nullable(),
+    label: z.string().min(1),
+    categoryId: z.number().int().positive().nullable(),
+    mode: variableMode,
+    plannedCents: nonNegativeInteger,
+    splitMode: splitMode.nullable(),
+    note: z.string().nullable(),
+    sortOrder: integer,
+    active: z.boolean(),
+    validFrom: z.string().refine(isPeriod),
+    validUntil: z.string().refine(isPeriod).nullable(),
+    ...timestamped,
+  })
+  .strict();
+
+const variableCostShareSchema = z
+  .object({
+    variableCostId: z.number().int().positive(),
+    memberId: z.number().int().positive(),
+    shareBp: z.number().int().min(0).max(10_000),
+  })
+  .strict();
+
+const variableBookingSchema = z
+  .object({
+    id: z.number().int().positive(),
+    variableCostId: z.number().int().positive(),
+    bookedOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    label: z.string().nullable(),
+    amountCents: nonNegativeInteger,
+    active: z.boolean(),
+    ...timestamped,
+  })
+  .strict();
+
 const savingsPotSchema = z
   .object({
     id: z.number().int().positive(),
@@ -176,7 +220,7 @@ const appSettingSchema = z
 const backupSchema = z
   .object({
     format: z.literal(BACKUP_FORMAT),
-    version: z.union([z.literal(1), z.literal(2)]),
+    version: z.union([z.literal(1), z.literal(2), z.literal(3)]),
     exportedAt: dateString,
     household: householdSchema,
     members: z.array(memberSchema),
@@ -185,6 +229,10 @@ const backupSchema = z
     defaultShares: z.array(defaultShareSchema),
     expenses: z.array(expenseSchema),
     expenseShares: z.array(expenseShareSchema),
+    /** Absent in files older than version 3. */
+    variableCosts: z.array(variableCostSchema).default([]),
+    variableCostShares: z.array(variableCostShareSchema).default([]),
+    variableBookings: z.array(variableBookingSchema).default([]),
     savingsPots: z.array(savingsPotSchema),
     snapshots: z.array(snapshotSchema),
     snapshotMembers: z.array(snapshotMemberSchema),
@@ -312,6 +360,69 @@ function validateReferences(payload: BackupPayload): void {
     }
   }
 
+  unique(
+    payload.variableCosts.map((row) => row.id),
+    "variable cost id",
+  );
+  unique(
+    payload.variableCostShares.map((row) => `${row.variableCostId}:${row.memberId}`),
+    "variable cost share",
+  );
+  unique(
+    payload.variableBookings.map((row) => row.id),
+    "variable booking id",
+  );
+
+  const variableCostById = new Map(payload.variableCosts.map((row) => [row.id, row]));
+  for (const row of payload.variableCosts) {
+    if (row.categoryId !== null && !categoryIds.has(row.categoryId)) {
+      throw new RestoreValidationError("Variable cost references an unknown category.");
+    }
+    if (row.scope === "private") {
+      if (row.memberId === null || row.splitMode !== null) {
+        throw new RestoreValidationError("Private variable cost has an invalid shape.");
+      }
+      if (!memberIds.has(row.memberId)) {
+        throw new RestoreValidationError("Variable cost references an unknown member.");
+      }
+    } else if (row.memberId !== null || row.splitMode === null) {
+      throw new RestoreValidationError("Shared variable cost has an invalid shape.");
+    }
+  }
+  for (const row of payload.variableCostShares) {
+    const cost = variableCostById.get(row.variableCostId);
+    if (!cost || !memberIds.has(row.memberId)) {
+      throw new RestoreValidationError(
+        "Variable cost share references an unknown row.",
+      );
+    }
+    if (cost.scope !== "shared" || cost.splitMode !== "fixed_quota") {
+      throw new RestoreValidationError(
+        "Only shared variable costs with a fixed quota may have shares.",
+      );
+    }
+  }
+  for (const cost of payload.variableCosts.filter(
+    (row) => row.scope === "shared" && row.splitMode === "fixed_quota",
+  )) {
+    const shares = payload.variableCostShares.filter(
+      (row) => row.variableCostId === cost.id,
+    );
+    if (
+      shares.length > 0 &&
+      shares.reduce((sum, row) => sum + row.shareBp, 0) !== 10_000
+    ) {
+      throw new RestoreValidationError("Variable cost shares must add up to 100 %.");
+    }
+  }
+  for (const row of payload.variableBookings) {
+    if (!variableCostById.has(row.variableCostId)) {
+      throw new RestoreValidationError(
+        "Variable booking references an unknown variable cost.",
+      );
+    }
+  }
+
   for (const row of payload.savingsPots) {
     if (row.ownerMemberId !== null && !memberIds.has(row.ownerMemberId)) {
       throw new RestoreValidationError("Savings pot references an unknown member.");
@@ -427,6 +538,34 @@ export function exportBackup(db: Db = getDb(), exportedAt = new Date()): BackupP
       .from(schema.expenseShare)
       .orderBy(asc(schema.expenseShare.expenseId), asc(schema.expenseShare.memberId))
       .all(),
+    variableCosts: db
+      .select()
+      .from(schema.variableCost)
+      .orderBy(asc(schema.variableCost.id))
+      .all()
+      .map((row) => ({
+        ...row,
+        createdAt: iso(row.createdAt),
+        updatedAt: iso(row.updatedAt),
+      })),
+    variableCostShares: db
+      .select()
+      .from(schema.variableCostShare)
+      .orderBy(
+        asc(schema.variableCostShare.variableCostId),
+        asc(schema.variableCostShare.memberId),
+      )
+      .all(),
+    variableBookings: db
+      .select()
+      .from(schema.variableBooking)
+      .orderBy(asc(schema.variableBooking.id))
+      .all()
+      .map((row) => ({
+        ...row,
+        createdAt: iso(row.createdAt),
+        updatedAt: iso(row.updatedAt),
+      })),
     savingsPots: db
       .select()
       .from(schema.savingsPot)
@@ -487,6 +626,9 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
   db.transaction((tx) => {
     checkSystemCategories(validated, tx as unknown as Db);
     tx.delete(schema.snapshotMember).run();
+    tx.delete(schema.variableBooking).run();
+    tx.delete(schema.variableCostShare).run();
+    tx.delete(schema.variableCost).run();
     tx.delete(schema.expenseShare).run();
     tx.delete(schema.defaultShare).run();
     tx.delete(schema.income).run();
@@ -600,6 +742,31 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
         )
         .run();
     }
+    if (validated.variableCosts.length > 0) {
+      tx.insert(schema.variableCost)
+        .values(
+          validated.variableCosts.map((row) => ({
+            ...row,
+            createdAt: date(row.createdAt),
+            updatedAt: date(row.updatedAt),
+          })),
+        )
+        .run();
+    }
+    if (validated.variableCostShares.length > 0) {
+      tx.insert(schema.variableCostShare).values(validated.variableCostShares).run();
+    }
+    if (validated.variableBookings.length > 0) {
+      tx.insert(schema.variableBooking)
+        .values(
+          validated.variableBookings.map((row) => ({
+            ...row,
+            createdAt: date(row.createdAt),
+            updatedAt: date(row.updatedAt),
+          })),
+        )
+        .run();
+    }
     if (validated.defaultShares.length > 0) {
       tx.insert(schema.defaultShare).values(validated.defaultShares).run();
     }
@@ -693,6 +860,33 @@ export function exportPlanningCsv(db: Db = getDb()): string {
       row.amountCents,
       row.intervalMonths,
       monthlyCents(row.amountCents, row.intervalMonths),
+      null,
+      null,
+      null,
+      row.splitMode,
+    ]);
+  }
+
+  // Variable costs export their planned figure: the CSV is the plan, and a detailed
+  // budget's bookings belong to one month rather than to the plan as such.
+  for (const row of db
+    .select()
+    .from(schema.variableCost)
+    .where(eq(schema.variableCost.active, true))
+    .orderBy(asc(schema.variableCost.id))
+    .all()) {
+    rows.push([
+      row.scope === "shared" ? copy.sharedVariable : copy.privateVariable,
+      row.label,
+      row.memberId === null
+        ? copy.household
+        : (memberNames.get(row.memberId) ?? copy.unknown),
+      row.categoryId === null
+        ? null
+        : (categoryNames.get(row.categoryId) ?? copy.unknown),
+      row.plannedCents,
+      1,
+      row.plannedCents,
       null,
       null,
       null,

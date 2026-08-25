@@ -61,6 +61,17 @@ export const INCOME_KINDS = ["salary", "other"] as const;
 export type IncomeKind = (typeof INCOME_KINDS)[number];
 
 /**
+ * How a variable cost is counted.
+ *
+ * `plan` counts the planned figure and nothing else — "300 € fürs Essen" is the number
+ * that reaches the dashboard whether or not anyone writes down a receipt. `detailed`
+ * counts what was actually booked in that month, so the planned figure becomes a budget
+ * to compare against rather than the figure itself.
+ */
+export const VARIABLE_MODES = ["plan", "detailed"] as const;
+export type VariableMode = (typeof VARIABLE_MODES)[number];
+
+/**
  * Exactly one row, id 1. An instance hosts a single household by design — see
  * docs/PLAN.md section 1.
  */
@@ -220,6 +231,107 @@ export const expenseShare = sqliteTable(
   ],
 );
 
+/**
+ * A variable cost: one budget for something that is not the same every month.
+ *
+ * Deliberately a separate table from `expense` rather than a flag on it. A fixed cost is
+ * an amount and a rhythm; a variable one is a budget that may or may not have receipts
+ * hanging off it, and `interval_months` means nothing to it. Merging the two would have
+ * given every fixed cost three columns it can never use, and every query a branch.
+ *
+ * Scope and split work exactly as they do for fixed costs, and for the same reason: the
+ * per-person figures on the dashboard are only right if every cost knows whose it is.
+ */
+export const variableCost = sqliteTable(
+  "variable_cost",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    scope: text("scope", { enum: EXPENSE_SCOPES }).notNull(),
+    memberId: integer("member_id").references(() => member.id, {
+      onDelete: "cascade",
+    }),
+    label: text("label").notNull(),
+    categoryId: integer("category_id").references(() => category.id, {
+      onDelete: "set null",
+    }),
+    mode: text("mode", { enum: VARIABLE_MODES }).notNull().default("plan"),
+    /** The monthly figure. In `detailed` mode it is the budget the bookings run against. */
+    plannedCents: integer("planned_cents").notNull().default(0),
+    splitMode: text("split_mode", { enum: SPLIT_MODES }),
+    note: text("note"),
+    sortOrder: integer("sort_order").notNull().default(0),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    ...validity,
+    ...timestamps,
+  },
+  (t) => [
+    index("variable_cost_scope_idx").on(t.scope, t.active),
+    index("variable_cost_member_idx").on(t.memberId),
+    index("variable_cost_validity_idx").on(t.validFrom, t.validUntil),
+    check("variable_cost_valid_from_format", validityChecks(t)[0]),
+    check("variable_cost_valid_until_range", validityChecks(t)[1]),
+    check("variable_cost_planned_nonnegative", sql`${t.plannedCents} >= 0`),
+    check(
+      "variable_cost_scope_shape",
+      sql`(${t.scope} = 'private' and ${t.memberId} is not null and ${t.splitMode} is null)
+          or (${t.scope} = 'shared' and ${t.memberId} is null and ${t.splitMode} is not null)`,
+    ),
+  ],
+);
+
+/** Per-budget override of the fixed quota, mirroring `expense_share`. */
+export const variableCostShare = sqliteTable(
+  "variable_cost_share",
+  {
+    variableCostId: integer("variable_cost_id")
+      .notNull()
+      .references(() => variableCost.id, { onDelete: "cascade" }),
+    memberId: integer("member_id")
+      .notNull()
+      .references(() => member.id, { onDelete: "cascade" }),
+    shareBp: integer("share_bp").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.variableCostId, t.memberId] }),
+    check("variable_cost_share_range", sql`${t.shareBp} between 0 and 10000`),
+  ],
+);
+
+/**
+ * One receipt against a variable cost.
+ *
+ * This is the only place in the schema that knows about days. A booking belongs to the
+ * month its date falls in, which is what makes `detailed` mode add up per month; the day
+ * itself is kept because "wann war das?" is the first question anyone asks of a list of
+ * amounts.
+ *
+ * It carries no split of its own on purpose — the budget above it decides who pays what,
+ * so a shopping trip cannot quietly be divided differently from the budget it belongs to.
+ */
+export const variableBooking = sqliteTable(
+  "variable_booking",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    variableCostId: integer("variable_cost_id")
+      .notNull()
+      .references(() => variableCost.id, { onDelete: "cascade" }),
+    /** ISO day, `YYYY-MM-DD`. The month it falls in is the month it counts for. */
+    bookedOn: text("booked_on").notNull(),
+    label: text("label"),
+    amountCents: integer("amount_cents").notNull().default(0),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    ...timestamps,
+  },
+  (t) => [
+    index("variable_booking_cost_idx").on(t.variableCostId, t.bookedOn),
+    check(
+      "variable_booking_date_format",
+      sql`${t.bookedOn} glob '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]'`,
+    ),
+    check("variable_booking_amount_nonnegative", sql`${t.amountCents} >= 0`),
+  ],
+);
+
 /** A savings goal. `ownerMemberId = null` means the pot belongs to the household. */
 export const savingsPot = sqliteTable(
   "savings_pot",
@@ -303,6 +415,9 @@ export type Income = typeof income.$inferSelect;
 export type Category = typeof category.$inferSelect;
 export type Expense = typeof expense.$inferSelect;
 export type ExpenseShare = typeof expenseShare.$inferSelect;
+export type VariableCost = typeof variableCost.$inferSelect;
+export type VariableCostShare = typeof variableCostShare.$inferSelect;
+export type VariableBooking = typeof variableBooking.$inferSelect;
 export type SavingsPot = typeof savingsPot.$inferSelect;
 export type Snapshot = typeof snapshot.$inferSelect;
 export type SnapshotMember = typeof snapshotMember.$inferSelect;

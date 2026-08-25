@@ -24,6 +24,11 @@ const monthAndYear = new Intl.DateTimeFormat("de-DE", {
   year: "numeric",
 });
 
+const dayAndMonth = new Intl.DateTimeFormat("de-DE", {
+  day: "2-digit",
+  month: "2-digit",
+});
+
 /** `123456` → `"1.234,56 €"`. */
 export function formatCents(cents: number): string {
   return currency.format(cents / 100);
@@ -130,6 +135,22 @@ export function formatPeriod(period: string): string {
     return period;
   }
   return monthAndYear.format(new Date(Date.UTC(year, month - 1, 1)));
+}
+
+/**
+ * `"2026-08-03"` → `"03.08."`. For a list of receipts inside one month, where the year
+ * is already established by the screen and repeating it in every row is noise.
+ *
+ * Parsed as UTC so a date near midnight cannot slide into the previous day in a timezone
+ * behind it; these are calendar days, not moments.
+ */
+export function formatDay(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  if (!year || !month || !day) {
+    return isoDate;
+  }
+  // de-DE already renders "03.08." with its trailing dot; adding one gives "03.08..".
+  return dayAndMonth.format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 /** The period key for a date, e.g. `"2026-08"`. */

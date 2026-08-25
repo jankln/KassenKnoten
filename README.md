@@ -49,6 +49,12 @@ steps back through the months to show what each one actually was. When an amount
 the app asks what that means — a new figure from a month on, or a correction to what was
 always true — and shows the resulting rows before saving.
 
+**Plan the parts that move.** Groceries, fuel, going out: each gets a budget, and you
+choose per budget how it is kept. **Plan** counts the figure you set and asks nothing more
+of you. **Detailliert** counts what you actually booked, receipt by receipt with a date,
+and turns the plan into a budget to measure against. Both are split between you the same
+way fixed costs are, and both land on the dashboard.
+
 **Normalise every interval.** A 132,00 € yearly insurance shows up as 11,00 € a month
 next to everything else, without anyone dividing by twelve in their head.
 

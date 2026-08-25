@@ -6,6 +6,7 @@ import {
   type ExpenseInput,
   type HouseholdInput,
 } from "./summary";
+import type { VariableCostInput } from "./variable";
 
 const ALEX = { id: 1, name: "Alex" };
 const ROBIN = { id: 2, name: "Robin" };
@@ -295,5 +296,134 @@ describe("potProgress", () => {
 
   it("can exceed 1 when a pot is over its target", () => {
     expect(potProgress(1_200_000, 1_000_000)).toBeCloseTo(1.2);
+  });
+});
+
+/* ------------------------------------------------------------------------- *
+ * Variable costs
+ * ------------------------------------------------------------------------- */
+
+function privateBudget(
+  memberId: number,
+  mode: "plan" | "detailed",
+  plannedCents: number,
+  bookedCents = 0,
+): VariableCostInput {
+  nextId += 1;
+  return {
+    id: nextId,
+    label: `variable-${nextId}`,
+    scope: "private",
+    memberId,
+    mode,
+    plannedCents,
+    bookedCents,
+  };
+}
+
+function sharedBudget(
+  mode: "plan" | "detailed",
+  plannedCents: number,
+  bookedCents = 0,
+): VariableCostInput {
+  nextId += 1;
+  return {
+    id: nextId,
+    label: `variable-${nextId}`,
+    scope: "shared",
+    memberId: null,
+    mode,
+    plannedCents,
+    bookedCents,
+    splitMode: "fixed_quota",
+  };
+}
+
+describe("summariseHousehold with variable costs", () => {
+  it("leaves every figure alone when the household has none", () => {
+    const withoutField = summariseHousehold(exampleHousehold());
+    const withEmptyList = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [],
+    });
+
+    expect(withEmptyList.freeCashCents).toBe(withoutField.freeCashCents);
+    expect(withEmptyList.variableTotalCents).toBe(0);
+  });
+
+  it("counts a planned budget at its plan and a detailed one at its bookings", () => {
+    const summary = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [
+        sharedBudget("plan", 30_000, 12_000),
+        sharedBudget("detailed", 20_000, 7_350),
+      ],
+    });
+
+    expect(summary.variableSharedCents).toBe(30_000 + 7_350);
+    expect(summary.variablePlannedCents).toBe(50_000);
+    expect(summary.variableBookedCents).toBe(19_350);
+  });
+
+  it("takes variable costs out of free cash", () => {
+    const base = summariseHousehold(exampleHousehold());
+    const summary = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [privateBudget(ALEX.id, "plan", 30_000)],
+    });
+
+    expect(summary.freeCashCents).toBe(base.freeCashCents - 30_000);
+  });
+
+  it("charges a private budget to its owner alone", () => {
+    const summary = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [privateBudget(ALEX.id, "plan", 30_000)],
+    });
+
+    const alex = summary.members.find((member) => member.memberId === ALEX.id);
+    const robin = summary.members.find((member) => member.memberId === ROBIN.id);
+    expect(alex?.ownVariableCents).toBe(30_000);
+    expect(robin?.ownVariableCents).toBe(0);
+    expect(summary.variablePrivateCents).toBe(30_000);
+  });
+
+  it("splits a shared budget to the cent, odd amounts included", () => {
+    const summary = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [sharedBudget("detailed", 30_000, 30_001)],
+    });
+
+    const shares = summary.members.map((member) => member.sharedVariableShareCents);
+    expect(shares).toEqual([15_001, 15_000]);
+    expect(shares[0]! + shares[1]!).toBe(summary.variableSharedCents);
+  });
+
+  it("takes both kinds out of a member's remainder", () => {
+    const base = summariseHousehold(exampleHousehold());
+    const summary = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [
+        privateBudget(ALEX.id, "plan", 10_000),
+        sharedBudget("plan", 20_000),
+      ],
+    });
+
+    const before = base.members.find((member) => member.memberId === ALEX.id);
+    const after = summary.members.find((member) => member.memberId === ALEX.id);
+    expect(after?.remainderCents).toBe(before!.remainderCents - 10_000 - 10_000);
+  });
+
+  it("counts a detailed budget with no receipts as nothing at all", () => {
+    const base = summariseHousehold(exampleHousehold());
+    const summary = summariseHousehold({
+      ...exampleHousehold(),
+      variableCosts: [sharedBudget("detailed", 30_000, 0)],
+    });
+
+    expect(summary.variableTotalCents).toBe(0);
+    expect(summary.freeCashCents).toBe(base.freeCashCents);
+    // The budget still reports what it planned, so a screen can show 0 of 300 €.
+    expect(summary.variablePlannedCents).toBe(30_000);
   });
 });

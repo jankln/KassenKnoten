@@ -62,6 +62,22 @@ One household, one writer, tiny dataset, and the whole database is a single file
 user can copy for a backup. Postgres would add a second container for zero benefit here.
 Drizzle keeps the door open — the schema is portable if it ever needs Postgres.
 
+### Why variable costs are their own table
+
+A fixed cost is an amount and a rhythm. A variable one is a budget that may or may not
+have receipts hanging off it, and `interval_months` means nothing to it — you do not buy
+groceries quarterly. Modelling it as a flag on `expense` would have given every fixed cost
+three columns it can never use and every query a branch, so `variable_cost` is a table of
+its own, with the same scope and split model so the household still reads one idea rather
+than two.
+
+The mode is the interesting part. `plan` counts the planned figure and nothing else;
+`detailed` counts what was actually booked in that month, from the first receipt onward,
+the running month included. That last clause is a deliberate choice with a visible
+consequence — free cash starts a month high and falls as receipts arrive — so every screen
+that shows a counted figure also shows booked against planned, and the mode is a badge on
+the card rather than a setting you have to open a dialog to remember.
+
 ### Why the service worker caches nothing
 
 Installability requires a service worker with a fetch handler, and the usual next step is
@@ -163,6 +179,10 @@ expense          id, scope(private|shared), member_id?, label, category_id, amou
                  interval, split_mode(fixed_quota|income_ratio|null for private),
                  note, active, timestamps
 expense_share    expense_id, member_id, share_bp          -- only for split_mode=fixed_quota
+variable_cost    id, scope(private|shared), member_id?, label, category_id, mode(plan|detailed),
+                 planned_cents, split_mode, note, valid_from, valid_until, active
+variable_cost_share  variable_cost_id, member_id, share_bp
+variable_booking id, variable_cost_id, booked_on(YYYY-MM-DD), label?, amount_cents, active
 savings_pot      id, name, owner_member_id?(null = shared), monthly_rate_cents,
                  balance_cents, target_cents?, sort_order, note
 snapshot         id, period(YYYY-MM), taken_at,
@@ -234,15 +254,16 @@ LOCAL_PASSWORD_HASH_FILE=       # alternative: read it from a Docker secret
 
 ### Screens
 
-| Route            | Purpose                                                                                      |
-| ---------------- | -------------------------------------------------------------------------------------------- |
-| `/`              | Dashboard — KPI row, per-person breakdown, category split, trend, savings progress, warnings |
-| `/haushalt`      | Members and their income sources                                                             |
-| `/fixkosten`     | Fixed costs — segmented into "Privat" per member and "Gemeinsam"                             |
-| `/sparen`        | Savings pots with rate, balance, target, progress                                            |
-| `/einstellungen` | Default split, categories, snapshots, import/export, appearance                              |
-| `/login`         | Authentik button and/or password form                                                        |
-| `/willkommen`    | First-run onboarding wizard                                                                  |
+| Route              | Purpose                                                                                      |
+| ------------------ | -------------------------------------------------------------------------------------------- |
+| `/`                | Dashboard — KPI row, per-person breakdown, category split, trend, savings progress, warnings |
+| `/haushalt`        | Members and their income sources                                                             |
+| `/fixkosten`       | Fixed costs — segmented into "Privat" per member and "Gemeinsam"                             |
+| `/variable-kosten` | Variable costs for one month — budgets, their mode, and the receipts booked against them     |
+| `/sparen`          | Savings pots with rate, balance, target, progress                                            |
+| `/einstellungen`   | Default split, categories, snapshots, import/export, appearance                              |
+| `/login`           | Authentik button and/or password form                                                        |
+| `/willkommen`      | First-run onboarding wizard                                                                  |
 
 ### Interaction principles
 
@@ -326,10 +347,11 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F19 Effective-dated incomes and fixed costs, month navigation on the dashboard
 - [x] F20 Changing an amount asks what the change means instead of inferring it
 - [x] F21 Installable as an app: manifest, icons, service worker, per-browser install advice
+- [x] F22 Variable costs: budgets in plan or itemised mode, own screen, on the dashboard
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
-keeping. Ideas parked for later: plan-vs-actual bookkeeping, recurring irregular expenses,
-budget envelopes for variable spending, multi-currency.
+keeping. Ideas parked for later: recurring bookings, importing bank statements,
+multi-currency.
 
 ---
 

@@ -1,15 +1,25 @@
-import { LayoutDashboard, PiggyBank, Receipt, Users } from "lucide-react";
+import {
+  LayoutDashboard,
+  PiggyBank,
+  Receipt,
+  ShoppingBasket,
+  Users,
+} from "lucide-react";
 import { de } from "@/lib/i18n/de";
 
 /**
- * The four sections that carry data. Settings is deliberately not among them: on a phone
- * four targets stay comfortably wide at 375 px, five do not, and settings is not somewhere
- * you go every day.
+ * The five sections that carry data. Settings is deliberately not among them — it is not
+ * somewhere you go every day, and at 375 px five targets are already 75 px wide, which is
+ * comfortable for a thumb but leaves no room for a sixth.
+ *
+ * "Variabel" rather than "Variable Kosten" for the same reason: the label has to survive
+ * a fifth of a phone screen, and the icon carries the rest of the meaning.
  */
 export const navItems = [
   { href: "/", label: de.nav.overview, icon: LayoutDashboard },
   { href: "/haushalt", label: de.nav.household, icon: Users },
   { href: "/fixkosten", label: de.nav.fixedCosts, icon: Receipt },
+  { href: "/variable-kosten", label: de.nav.variableCosts, icon: ShoppingBasket },
   { href: "/sparen", label: de.nav.savings, icon: PiggyBank },
 ] as const;
 
