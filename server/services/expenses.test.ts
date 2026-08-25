@@ -13,6 +13,7 @@ import {
   listSharedExpenses,
   restoreExpense,
   retireExpense,
+  sumApplying,
   updatePrivateExpense,
   updateSharedExpense,
 } from "./expenses";
@@ -134,6 +135,41 @@ describe("private expenses", () => {
     expect(rows[1]).toMatchObject({ categoryName: null, categoryIcon: null });
   });
 
+  it("totals the month, not the archive", () => {
+    // Cancelled in June.
+    createPrivateExpense(
+      {
+        memberId: alex,
+        label: "Sportverein",
+        amountCents: 4500,
+        intervalMonths: 1,
+        validFrom: "2026-01",
+        validUntil: "2026-06",
+      },
+      db(),
+    );
+    // Agreed now, first charged in October.
+    createPrivateExpense(
+      {
+        memberId: alex,
+        label: "Musikschule",
+        amountCents: 6000,
+        intervalMonths: 1,
+        validFrom: "2026-10",
+        validUntil: null,
+      },
+      db(),
+    );
+
+    const [july] = listPrivateExpenses(db(), "2026-07");
+    expect(july?.monthlyCents).toBe(0);
+    // Both are still on the screen they are edited on.
+    expect(july?.expenses.map((row) => row.appliesInPeriod)).toEqual([false, false]);
+
+    expect(listPrivateExpenses(db(), "2026-03")[0]?.monthlyCents).toBe(4500);
+    expect(listPrivateExpenses(db(), "2026-10")[0]?.monthlyCents).toBe(6000);
+  });
+
   it("lists a person with no costs as an empty group, not as missing", () => {
     const groups = listPrivateExpenses(db());
     expect(groups).toHaveLength(2);
@@ -248,6 +284,34 @@ describe("shared expenses", () => {
 
     const [expense] = listSharedExpenses(context(), db());
     expect(expense?.perMember.map((share) => share.cents)).toEqual([29_400, 68_600]);
+  });
+
+  it("marks a shared cost outside the month, and keeps its split visible", () => {
+    createSharedExpense(
+      {
+        validFrom: "2026-10",
+        validUntil: null,
+        label: "Miete",
+        amountCents: 98_000,
+        intervalMonths: 1,
+        splitMode: "fixed_quota",
+        shares: [
+          { memberId: alex, shareBp: 3000 },
+          { memberId: robin, shareBp: 7000 },
+        ],
+      },
+      db(),
+    );
+
+    const [september] = listSharedExpenses(context(), db(), "2026-09");
+    expect(september?.appliesInPeriod).toBe(false);
+    // The row is drawn in full: who would pay what is the reason it was entered early.
+    expect(september?.perMember.map((share) => share.cents)).toEqual([29_400, 68_600]);
+    expect(sumApplying([september!])).toBe(0);
+
+    const [october] = listSharedExpenses(context(), db(), "2026-10");
+    expect(october?.appliesInPeriod).toBe(true);
+    expect(sumApplying([october!])).toBe(98_000);
   });
 
   it("splits by income when that is the mode, without storing a quota", () => {

@@ -2,7 +2,13 @@ import { and, asc, eq } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
-import { comparePeriods, previousPeriod, type Period } from "@/lib/domain/period";
+import {
+  comparePeriods,
+  coversPeriod,
+  periodFromDate,
+  previousPeriod,
+  type Period,
+} from "@/lib/domain/period";
 import { monthlyCents } from "@/lib/domain/interval";
 import {
   splitExpense,
@@ -26,6 +32,14 @@ export interface ExpenseRow extends Validity {
   intervalMonths: number;
   /** The amount normalised to a month, which is what the plan works in. */
   monthlyCents: number;
+  /**
+   * Whether this row is being paid in the month the caller asked about.
+   *
+   * Every row is listed — the screen you enter a cost on has to show it back to you —
+   * but only the ones that apply belong in a total. The flag saves the page from
+   * repeating the rule, and tells a row that counts apart from one that does not.
+   */
+  appliesInPeriod: boolean;
   categoryId: number | null;
   categoryName: string | null;
   categoryIcon: string | null;
@@ -36,8 +50,18 @@ export interface MemberExpenses {
   memberId: number;
   name: string;
   colorIndex: number;
+  /** Every cost on record, including the ones outside the period. */
   expenses: ExpenseRow[];
+  /** What this person pays in the period, per month. */
   monthlyCents: number;
+}
+
+/** The monthly total of the rows that apply, which is never all of them. */
+export function sumApplying(rows: ReadonlyArray<ExpenseRow>): number {
+  return rows.reduce(
+    (total, row) => total + (row.appliesInPeriod ? row.monthlyCents : 0),
+    0,
+  );
 }
 
 function selectExpenses(db: Db, scope: "private" | "shared") {
@@ -62,18 +86,21 @@ function selectExpenses(db: Db, scope: "private" | "shared") {
     .all();
 }
 
-function toRow(entry: {
-  id: number;
-  label: string;
-  amountCents: number;
-  intervalMonths: number;
-  splitMode: "fixed_quota" | "income_ratio" | null;
-  categoryId: number | null;
-  categoryName: string | null;
-  categoryIcon: string | null;
-  validFrom: string;
-  validUntil: string | null;
-}): ExpenseRow {
+function toRow(
+  entry: {
+    id: number;
+    label: string;
+    amountCents: number;
+    intervalMonths: number;
+    splitMode: "fixed_quota" | "income_ratio" | null;
+    categoryId: number | null;
+    categoryName: string | null;
+    categoryIcon: string | null;
+    validFrom: string;
+    validUntil: string | null;
+  },
+  period: Period,
+): ExpenseRow {
   return {
     id: entry.id,
     label: entry.label,
@@ -82,6 +109,7 @@ function toRow(entry: {
     validFrom: entry.validFrom,
     validUntil: entry.validUntil,
     monthlyCents: monthlyCents(entry.amountCents, entry.intervalMonths),
+    appliesInPeriod: coversPeriod(period, entry.validFrom, entry.validUntil),
     categoryId: entry.categoryId,
     categoryName: entry.categoryName,
     categoryIcon: entry.categoryIcon,
@@ -89,8 +117,17 @@ function toRow(entry: {
   };
 }
 
-/** Private costs, grouped under the person who pays them. */
-export function listPrivateExpenses(db: Db = getDb()): MemberExpenses[] {
+/**
+ * Private costs, grouped under the person who pays them.
+ *
+ * The group's total is what that person pays in `period`. A gym membership cancelled in
+ * June and a rent increase that starts in October are both in `expenses` — the screen
+ * they are edited on has to show them — and neither is in the figure.
+ */
+export function listPrivateExpenses(
+  db: Db = getDb(),
+  period: Period = periodFromDate(new Date()),
+): MemberExpenses[] {
   const members = db
     .select()
     .from(schema.member)
@@ -103,14 +140,14 @@ export function listPrivateExpenses(db: Db = getDb()): MemberExpenses[] {
   return members.map((member) => {
     const own = rows
       .filter((row) => row.memberId === member.id)
-      .map((row) => toRow(row));
+      .map((row) => toRow(row, period));
 
     return {
       memberId: member.id,
       name: member.name,
       colorIndex: member.colorIndex,
       expenses: own,
-      monthlyCents: own.reduce((total, row) => total + row.monthlyCents, 0),
+      monthlyCents: sumApplying(own),
     };
   });
 }
@@ -259,6 +296,7 @@ export interface SharedExpenseRow extends ExpenseRow {
 export function listSharedExpenses(
   context: SplitContext,
   db: Db = getDb(),
+  period: Period = periodFromDate(new Date()),
 ): SharedExpenseRow[] {
   const rows = selectExpenses(db, "shared");
   const shares = db.select().from(schema.expenseShare).all();
@@ -280,7 +318,7 @@ export function listSharedExpenses(
     );
 
     return {
-      ...toRow(row),
+      ...toRow(row, period),
       splitMode,
       shares: own,
       perMember: result.perMember,

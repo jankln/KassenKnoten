@@ -5,7 +5,11 @@ import { PageHeader } from "@/components/patterns/page-header";
 import { buttonStyles } from "@/components/ui/button";
 import { formatCents } from "@/lib/format";
 import { listCategories } from "@/server/services/categories";
-import { listPrivateExpenses, listSharedExpenses } from "@/server/services/expenses";
+import {
+  listPrivateExpenses,
+  listSharedExpenses,
+  sumApplying,
+} from "@/server/services/expenses";
 import { getHouseholdSettings, getSplitContext } from "@/server/services/household";
 import { listMembersWithIncome } from "@/server/services/members";
 import { MemberExpenseCard } from "./expense-list";
@@ -43,8 +47,10 @@ export default async function FixedCostsPage(props: PageProps<"/fixkosten">) {
     monthlyIncomeCents: member.monthlyIncomeCents,
   }));
 
+  // Both totals are this month's: a cost that ended in June and one that starts in
+  // October are on the screen, with the note that says so, but not in the figures.
   const privateTotal = groups.reduce((sum, group) => sum + group.monthlyCents, 0);
-  const sharedTotal = shared.reduce((sum, expense) => sum + expense.monthlyCents, 0);
+  const sharedTotal = sumApplying(shared);
 
   // Fixed costs always belong to someone, so there is nothing to do here first.
   if (membersWithIncome.length === 0) {
