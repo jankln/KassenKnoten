@@ -1,20 +1,39 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** The fixed-costs totals count the current month only
+**Status:** in progress
+**Started:** 2026-08-25
 
-Last finished: **1.2.0, released**. `ghcr.io/jankln/kassenknoten:latest` is the manifest
-`sha256:ca1f1bd0…` for amd64 and arm64, and its settings screen has Extensions on it. The
-release carries `docker-compose.yml` and `env.example`; both documented curls were run
-from an empty directory and serve 1.2.0.
+## Goal
 
-The three reported issues are closed: the income total counts the current month only (#1),
-the image is current (#2), and the README links the extension guide and the example (#3).
+The fixed-costs screen adds up what the household actually pays this month. A cost that
+ended in June, or a rent increase that starts in October, is still listed with its
+validity note, but it no longer sits inside the per-person total, the private and shared
+subtotals, or the grand total at the bottom.
 
-Note for whoever comes next: `listPrivateExpenses` in `server/services/expenses.ts` sums
-every row regardless of validity, so a fixed cost that ended in June still shows up in the
-private total on the fixed-costs screen. It is the same flaw #1 fixed for income, on a
-different screen, and it wants the same fix in a commit of its own.
+## Scope
 
-Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request.
+- In: `listPrivateExpenses` and `listSharedExpenses` learn the period they describe, the
+  way `listMembersWithIncome` did in fix #1 and `listVariableCosts` always has.
+- In: every row says whether it counts in that month, so the page can total without
+  repeating the rule and a row that does not count can be told apart from one that does.
+- Out: the shape of what those two functions return. Extensions are handed
+  `api.services.expenses` under `apiVersion: 1`; a new field on a row is additive, a new
+  return type would break somebody's card. The `period` argument goes last and defaults.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] `appliesInPeriod` on `ExpenseRow`, totals filtered in the service
+- [ ] The page's private, shared and grand totals skip rows outside the month
+- [ ] Tests: an ended cost and one that has not started are listed but not counted
+- [ ] `npm run check`, and the screen at 375 px
+
+## Notes / decisions
+
+- This is the same flaw fix #1 corrected for income, on the other screen. The dashboard
+  was right all along; it queries by period in SQL. What drifted is the screens that read
+  every active row and add it up.
+
+## Resume here
+
+`server/services/expenses.ts`.
