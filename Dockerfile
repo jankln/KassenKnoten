@@ -49,9 +49,12 @@ RUN mkdir -p /data && chown node:node /data
 
 # The standalone output is a complete server: its own node_modules, the traced
 # db/migrations, and a server.js. Static assets are not included by design and are
-# copied in next to it.
+# copied in next to it. `public/` is one of them: it carries the service worker and the
+# app icons, and without it the image runs fine but cannot be installed as an app —
+# the browser asks for /sw.js and /icons/*, gets a 404, and simply never offers.
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
 
 USER node
 VOLUME ["/data"]
