@@ -10,9 +10,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/field";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
 import { addCategory, editCategory } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function CategoryDialog({
   trigger,
@@ -22,6 +22,7 @@ export function CategoryDialog({
   /** Absent when adding a new one. */
   category?: { id: number; name: string; icon: string };
 }) {
+  const t = useMessages();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [icon, setIcon] = useState(category?.icon ?? "circle-dashed");
@@ -42,7 +43,7 @@ export function CategoryDialog({
     });
   }
 
-  const copy = de.sections.settings;
+  const copy = t.sections.settings;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,11 +92,11 @@ export function CategoryDialog({
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                {de.actions.cancel}
+                {t.actions.cancel}
               </Button>
             </DialogClose>
             <Button type="submit" variant="primary" disabled={pending}>
-              {de.actions.save}
+              {t.actions.save}
             </Button>
           </div>
         </form>

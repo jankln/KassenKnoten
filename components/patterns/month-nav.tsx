@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
 import { nextPeriod, previousPeriod, type Period } from "@/lib/domain/period";
 import { formatPeriod } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
+import { getMessages } from "@/server/i18n";
 
 /**
  * Step through the months.
@@ -25,7 +25,8 @@ export function MonthNav({
   today: Period;
   hrefFor: (period: Period) => string;
 }) {
-  const copy = de.months;
+  const t = getMessages();
+  const copy = t.months;
   return (
     <nav
       aria-label={copy.current}

@@ -2,7 +2,6 @@
 
 import { refresh } from "next/cache";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import {
   bookingInput,
   privateVariableCostInput,
@@ -18,6 +17,7 @@ import {
   updateBooking,
   updateVariableCost,
 } from "@/server/services/variable-costs";
+import { getMessages } from "@/server/i18n";
 
 export interface ActionResult {
   error?: string;
@@ -48,14 +48,14 @@ function readShares(formData: FormData): { memberId: number; shareBp: number }[]
 }
 
 function parsePrivate(formData: FormData) {
-  return privateVariableCostInput.safeParse({
+  return privateVariableCostInput(getMessages()).safeParse({
     ...common(formData),
     memberId: formData.get("memberId"),
   });
 }
 
 function parseShared(formData: FormData) {
-  return sharedVariableCostInput.safeParse({
+  return sharedVariableCostInput(getMessages()).safeParse({
     ...common(formData),
     splitMode: formData.get("splitMode"),
     shares: readShares(formData),
@@ -65,10 +65,11 @@ function parseShared(formData: FormData) {
 export async function addPrivateVariableCost(
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parsePrivate(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   createVariableCost({ ...parsed.data, scope: "private" });
   refresh();
@@ -79,10 +80,11 @@ export async function editPrivateVariableCost(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parsePrivate(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   updateVariableCost(id, { ...parsed.data, scope: "private" });
   refresh();
@@ -90,10 +92,11 @@ export async function editPrivateVariableCost(
 }
 
 export async function addSharedVariableCost(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parseShared(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   createVariableCost({ ...parsed.data, scope: "shared" });
   refresh();
@@ -104,10 +107,11 @@ export async function editSharedVariableCost(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parseShared(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   updateVariableCost(id, { ...parsed.data, scope: "shared" });
   refresh();
@@ -133,7 +137,7 @@ export async function restoreVariableCostAction(id: number): Promise<ActionResul
  * ------------------------------------------------------------------------- */
 
 function parseBooking(formData: FormData) {
-  return bookingInput.safeParse({
+  return bookingInput(getMessages()).safeParse({
     variableCostId: formData.get("variableCostId"),
     bookedOn: formData.get("bookedOn"),
     label: formData.get("label") ?? "",
@@ -142,10 +146,11 @@ function parseBooking(formData: FormData) {
 }
 
 export async function addBooking(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parseBooking(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   createBooking(parsed.data);
   refresh();
@@ -156,10 +161,11 @@ export async function editBooking(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parseBooking(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   updateBooking(id, parsed.data);
   refresh();

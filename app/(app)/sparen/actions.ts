@@ -2,7 +2,6 @@
 
 import { refresh } from "next/cache";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import { savingsPotInput } from "@/lib/validation/savings";
 import {
   createSavingsPot,
@@ -10,13 +9,14 @@ import {
   retireSavingsPot,
   updateSavingsPot,
 } from "@/server/services/savings";
+import { getMessages } from "@/server/i18n";
 
 export interface ActionResult {
   error?: string;
 }
 
 function parse(formData: FormData) {
-  return savingsPotInput.safeParse({
+  return savingsPotInput(getMessages()).safeParse({
     name: formData.get("name"),
     monthlyRateCents: formData.get("monthlyRateCents"),
     balanceCents: formData.get("balanceCents"),
@@ -27,10 +27,11 @@ function parse(formData: FormData) {
 }
 
 export async function addSavingsPot(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   createSavingsPot(parsed.data);
@@ -42,10 +43,11 @@ export async function editSavingsPot(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
   const parsed = parse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   updateSavingsPot(id, parsed.data);

@@ -7,8 +7,10 @@ import { Field, Input, Select } from "@/components/ui/field";
 import { MoneyInput } from "@/components/ui/money-input";
 import { KnotMark } from "@/components/brand/knot-mark";
 import { formatInterval } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { completeOnboarding } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
+import { LanguagePicker } from "@/app/(app)/einstellungen/language-picker";
+import type { Locale } from "@/lib/i18n";
 
 type DraftIncome = { id: number; label: string };
 type DraftMember = {
@@ -20,14 +22,15 @@ type DraftMember = {
 const INTERVALS = [1, 3, 6, 12] as const;
 const emptyIncome = (id: number): DraftIncome => ({ id, label: "" });
 
-export function OnboardingWizard() {
+export function OnboardingWizard({ locale }: { locale: Locale }) {
+  const t = useMessages();
   const [step, setStep] = useState(0);
   const [members, setMembers] = useState<DraftMember[]>(() => [
     { name: "", colorIndex: 1, incomes: [emptyIncome(1)] },
   ]);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string>();
-  const copy = de.onboarding;
+  const copy = t.onboarding;
 
   function updateMember(index: number, name: string) {
     setMembers((current) =>
@@ -133,7 +136,7 @@ export function OnboardingWizard() {
       <div className="mb-8 flex items-center gap-3">
         <KnotMark className="size-9 shrink-0" />
         <div className="min-w-0">
-          <p className="font-display text-lg font-semibold">{de.app.name}</p>
+          <p className="font-display text-lg font-semibold">{t.app.name}</p>
           <p className="text-ink-muted text-sm">{copy.stepLabel(step + 1, 3)}</p>
         </div>
       </div>
@@ -152,6 +155,19 @@ export function OnboardingWizard() {
               {copy.introTitle}
             </h1>
             <p className="text-ink-muted mt-3 leading-relaxed">{copy.introBody}</p>
+
+            {/* The very first decision, before anything else is asked: a wizard that
+                greets somebody in a language they do not read is a wizard they abandon. */}
+            <div className="border-line rounded-card mt-8 border p-4">
+              <p className="font-medium">{t.language.chooseTitle}</p>
+              <p className="text-ink-muted mt-1 text-sm leading-relaxed">
+                {t.language.chooseBody}
+              </p>
+              <div className="mt-4">
+                <LanguagePicker current={locale} />
+              </div>
+            </div>
+
             <div className="mt-8 flex justify-end">
               <Button
                 type="button"
@@ -262,7 +278,7 @@ export function OnboardingWizard() {
                             </Button>
                           </div>
                           <Field
-                            label={de.sections.household.incomeLabel}
+                            label={t.sections.household.incomeLabel}
                             htmlFor={`income-label-${fieldKey}`}
                           >
                             <Input
@@ -277,7 +293,7 @@ export function OnboardingWizard() {
                             />
                           </Field>
                           <Field
-                            label={de.sections.household.amount}
+                            label={t.sections.household.amount}
                             htmlFor={`income-amount-${fieldKey}`}
                           >
                             <MoneyInput
@@ -287,7 +303,7 @@ export function OnboardingWizard() {
                           </Field>
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <Field
-                              label={de.sections.household.interval}
+                              label={t.sections.household.interval}
                               htmlFor={`income-interval-${fieldKey}`}
                             >
                               <Select
@@ -297,13 +313,13 @@ export function OnboardingWizard() {
                               >
                                 {INTERVALS.map((months) => (
                                   <option key={months} value={months}>
-                                    {formatInterval(months)}
+                                    {formatInterval(months, t)}
                                   </option>
                                 ))}
                               </Select>
                             </Field>
                             <Field
-                              label={de.sections.household.incomeKind}
+                              label={t.sections.household.incomeKind}
                               htmlFor={`income-kind-${fieldKey}`}
                             >
                               <Select
@@ -312,10 +328,10 @@ export function OnboardingWizard() {
                                 defaultValue="salary"
                               >
                                 <option value="salary">
-                                  {de.sections.household.incomeKindSalary}
+                                  {t.sections.household.incomeKindSalary}
                                 </option>
                                 <option value="other">
-                                  {de.sections.household.incomeKindOther}
+                                  {t.sections.household.incomeKindOther}
                                 </option>
                               </Select>
                             </Field>

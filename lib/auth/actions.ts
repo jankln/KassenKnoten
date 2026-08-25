@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getEnv, requiresSecondFactor } from "@/lib/env";
-import { de } from "@/lib/i18n/de";
+import { getMessages } from "@/server/i18n";
 import { endSession, startSession } from "./current-session";
 import { verifyPassword } from "./password";
 import { loginLimiter } from "./rate-limit";
@@ -41,7 +41,7 @@ export async function signIn(
   _previous: LoginState,
   formData: FormData,
 ): Promise<LoginState> {
-  const copy = de.login;
+  const copy = getMessages().login;
   const env = getEnv();
   const client = await clientKey();
 
@@ -103,5 +103,7 @@ async function clientKey(): Promise<string> {
 
 function minutes(ms: number): string {
   const value = Math.max(1, Math.ceil(ms / 60_000));
-  return value === 1 ? de.login.oneMinute : de.login.minutes(value);
+  return value === 1
+    ? getMessages().login.oneMinute
+    : getMessages().login.minutes(value);
 }

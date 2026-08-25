@@ -4,7 +4,6 @@ import { EmptyState } from "@/components/patterns/empty-state";
 import { PageHeader } from "@/components/patterns/page-header";
 import { buttonStyles } from "@/components/ui/button";
 import { formatCents } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { listCategories } from "@/server/services/categories";
 import { listPrivateExpenses, listSharedExpenses } from "@/server/services/expenses";
 import { getHouseholdSettings, getSplitContext } from "@/server/services/household";
@@ -13,11 +12,18 @@ import { MemberExpenseCard } from "./expense-list";
 import { Segments } from "./segments";
 import { SharedExpenseList } from "./shared-list";
 import { SharedExpenseDialog } from "./shared-dialog";
+import { getMessages } from "@/server/i18n";
 
-export const metadata: Metadata = { title: de.sections.fixedCosts.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.sections.fixedCosts.title };
+}
 
 export default async function FixedCostsPage(props: PageProps<"/fixkosten">) {
-  const copy = de.sections.fixedCosts;
+  const t = getMessages();
+  const copy = t.sections.fixedCosts;
   const { bereich } = await props.searchParams;
   const current = bereich === "gemeinsam" ? "shared" : "private";
 

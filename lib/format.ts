@@ -1,4 +1,4 @@
-import { de } from "./i18n/de";
+import type { Messages } from "./i18n";
 
 /**
  * Formatting and parsing for everything the household reads and types.
@@ -122,10 +122,15 @@ export function formatRatio(ratio: number): string {
   return `${Math.round(ratio * 100).toLocaleString("de-DE")} %`;
 }
 
-/** `1` → `"monatlich"`, `12` → `"jährlich"`, `4` → `"alle 4 Monate"`. */
-export function formatInterval(months: number): string {
-  const known = de.intervals[months as 1 | 3 | 6 | 12];
-  return known ?? de.intervals.other(months);
+/**
+ * `1` → "monthly", `12` → "yearly", `4` → "every 4 months".
+ *
+ * Takes the messages rather than reaching for a language of its own: this is the one
+ * formatting helper whose output is words instead of digits, and words have a language.
+ */
+export function formatInterval(months: number, t: Messages): string {
+  const known = t.intervals[months as 1 | 3 | 6 | 12];
+  return known ?? t.intervals.other(months);
 }
 
 /** `"2026-08"` → `"August 2026"`. */

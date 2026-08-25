@@ -2,7 +2,6 @@
 
 import { refresh } from "next/cache";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import { incomeInput, memberInput } from "@/lib/validation/member";
 import {
   createIncome,
@@ -15,6 +14,7 @@ import {
   updateIncome,
   updateMember,
 } from "@/server/services/members";
+import { getMessages } from "@/server/i18n";
 
 /**
  * Mutations for the household screen.
@@ -29,13 +29,14 @@ export interface ActionResult {
 }
 
 function fail(message?: string): ActionResult {
-  return { error: message ?? de.validation.failed };
+  const t = getMessages();
+  return { error: message ?? t.validation.failed };
 }
 
 export async function addMember(formData: FormData): Promise<ActionResult> {
   await requireSession();
 
-  const parsed = memberInput.safeParse({
+  const parsed = memberInput(getMessages()).safeParse({
     name: formData.get("name"),
     colorIndex: formData.get("colorIndex"),
   });
@@ -54,7 +55,7 @@ export async function editMember(
 ): Promise<ActionResult> {
   await requireSession();
 
-  const parsed = memberInput.safeParse({
+  const parsed = memberInput(getMessages()).safeParse({
     name: formData.get("name"),
     colorIndex: formData.get("colorIndex"),
   });
@@ -90,7 +91,7 @@ export async function addIncome(
 ): Promise<ActionResult> {
   await requireSession();
 
-  const parsed = incomeInput.safeParse({
+  const parsed = incomeInput(getMessages()).safeParse({
     memberId,
     label: formData.get("label"),
     kind: formData.get("kind"),
@@ -118,7 +119,7 @@ export async function editIncome(
 ): Promise<ActionResult> {
   await requireSession();
 
-  const parsed = incomeInput.safeParse({
+  const parsed = incomeInput(getMessages()).safeParse({
     memberId,
     label: formData.get("label"),
     kind: formData.get("kind"),

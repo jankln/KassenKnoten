@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { KnotMark } from "@/components/brand/knot-mark";
 import { getEnv, requiresSecondFactor } from "@/lib/env";
-import { de } from "@/lib/i18n/de";
 import { LoginForm } from "./login-form";
+import { getMessages } from "@/server/i18n";
 
 export const metadata: Metadata = {
   title: "Anmelden",
 };
 
 export default async function LoginPage() {
+  const t = getMessages();
   // Every other route reads cookies and is dynamic already; this one is not, and a
   // prerendered login screen cannot carry the per-request CSP nonce that `proxy.ts`
   // issues. Its scripts would be blocked and the form would never become interactive.
@@ -31,7 +32,7 @@ export default async function LoginPage() {
           KassenKnoten
         </h1>
         <p className="text-ink-muted mt-2.5 text-sm leading-relaxed">
-          {requiresCode ? de.login.introWithCode : de.login.intro}
+          {requiresCode ? t.login.introWithCode : t.login.intro}
         </p>
 
         <LoginForm requiresCode={requiresCode} />

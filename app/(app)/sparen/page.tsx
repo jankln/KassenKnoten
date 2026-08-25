@@ -3,16 +3,22 @@ import { Plus } from "lucide-react";
 import { EmptyState } from "@/components/patterns/empty-state";
 import { PageHeader } from "@/components/patterns/page-header";
 import { Button } from "@/components/ui/button";
-import { de } from "@/lib/i18n/de";
 import { listMembersWithIncome } from "@/server/services/members";
 import { listSavingsPots } from "@/server/services/savings";
 import { SavingsList } from "./savings-list";
 import { SavingsPotDialog } from "./savings-pot-dialog";
+import { getMessages } from "@/server/i18n";
 
-export const metadata: Metadata = { title: de.sections.savings.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.sections.savings.title };
+}
 
 export default async function SavingsPage() {
-  const copy = de.sections.savings;
+  const t = getMessages();
+  const copy = t.sections.savings;
   const [pots, members] = await Promise.all([
     listSavingsPots(),
     listMembersWithIncome(),

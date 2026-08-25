@@ -1,0 +1,1 @@
+ALTER TABLE `household` ADD `locale` text DEFAULT 'en' NOT NULL;

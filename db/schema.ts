@@ -85,6 +85,8 @@ export const household = sqliteTable(
     defaultSplitMode: text("default_split_mode", { enum: SPLIT_MODES })
       .notNull()
       .default("fixed_quota"),
+    /** The interface language for everyone in this household. See lib/i18n. */
+    locale: text("locale").notNull().default("en"),
     onboardingDone: integer("onboarding_done", { mode: "boolean" })
       .notNull()
       .default(false),

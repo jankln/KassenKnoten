@@ -8,7 +8,6 @@ import { Button, buttonStyles } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { isPeriod, periodFromDate, type Period } from "@/lib/domain/period";
 import { formatCents } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { listCategories } from "@/server/services/categories";
 import { getHouseholdSettings, getSplitContext } from "@/server/services/household";
 import { listMembersWithIncome } from "@/server/services/members";
@@ -19,8 +18,14 @@ import {
 import { CostCard } from "./cost-card";
 import { VariableCostDialog } from "./cost-dialog";
 import { Segments } from "./segments";
+import { getMessages } from "@/server/i18n";
 
-export const metadata: Metadata = { title: de.sections.variableCosts.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.sections.variableCosts.title };
+}
 
 /**
  * Variable costs, one month at a time.
@@ -31,7 +36,8 @@ export const metadata: Metadata = { title: de.sections.variableCosts.title };
  * showed a different one than the header claims would be reporting the wrong money.
  */
 export default async function VariableCostsPage(props: PageProps<"/variable-kosten">) {
-  const copy = de.sections.variableCosts;
+  const t = getMessages();
+  const copy = t.sections.variableCosts;
   const { bereich, monat } = await props.searchParams;
   const today = periodFromDate(new Date());
   const period: Period = typeof monat === "string" && isPeriod(monat) ? monat : today;

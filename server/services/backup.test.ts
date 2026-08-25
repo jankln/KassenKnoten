@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
 import * as schema from "@/db/schema";
+import { setLocale } from "@/server/i18n";
 import { createCategory } from "./categories";
 import {
   exportBackup,
@@ -193,8 +194,23 @@ describe("backup", () => {
       .all();
     expect(after).toEqual(before);
     const csv = exportPlanningCsv(handle.db);
-    expect(csv).toContain("Bezeichnung");
+    expect(csv).toContain("Label");
     expect(csv).toContain("Miete");
     expect(csv).toContain("Urlaub");
+  });
+
+  /**
+   * The export is read by a person, so its headings follow the household's language while
+   * the rows — the household's own names and figures — never change.
+   */
+  it("writes the CSV headings in the household's language", () => {
+    seedHouseholdData();
+
+    expect(exportPlanningCsv(handle.db)).toContain("Amount (cents)");
+
+    setLocale("de", handle.db);
+    const german = exportPlanningCsv(handle.db);
+    expect(german).toContain("Betrag (Cent)");
+    expect(german).toContain("Miete");
   });
 });

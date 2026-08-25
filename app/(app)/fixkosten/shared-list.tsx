@@ -11,11 +11,11 @@ import type { SplitMode } from "@/lib/domain/split";
 import { ValidityNote } from "@/components/patterns/validity-note";
 import { periodFromDate } from "@/lib/domain/period";
 import { formatCents, formatInterval, formatShareBp } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { SharedExpenseRow } from "@/server/services/expenses";
 import { removeExpense, restoreExpenseAction } from "./actions";
 import { SharedExpenseDialog } from "./shared-dialog";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function SharedExpenseList({
   expenses,
@@ -30,8 +30,9 @@ export function SharedExpenseList({
   defaultMode: SplitMode;
   defaultShares: readonly { memberId: number; shareBp: number }[];
 }) {
+  const t = useMessages();
   const [, startTransition] = useTransition();
-  const copy = de.sections.fixedCosts;
+  const copy = t.sections.fixedCosts;
   const currentPeriod = periodFromDate(new Date());
 
   function drop(id: number) {
@@ -39,7 +40,7 @@ export function SharedExpenseList({
       await removeExpense(id);
       toast(copy.expenseRemoved, {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreExpenseAction(id)),
         },
       });
@@ -69,7 +70,7 @@ export function SharedExpenseList({
                   {expense.intervalMonths !== 1 ? (
                     <span>
                       {formatCents(expense.amountCents)} ·{" "}
-                      {formatInterval(expense.intervalMonths)}
+                      {formatInterval(expense.intervalMonths, t)}
                     </span>
                   ) : null}
                   <ValidityNote

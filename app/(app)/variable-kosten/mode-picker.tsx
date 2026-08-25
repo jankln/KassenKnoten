@@ -1,9 +1,9 @@
 "use client";
 
 import { useId } from "react";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
 import type { VariableMode } from "@/lib/domain/variable";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * Plan or Detailliert — the one real decision in this form.
@@ -24,8 +24,9 @@ export function ModePicker({
   value: VariableMode;
   onChange: (mode: VariableMode) => void;
 }) {
+  const t = useMessages();
   const name = useId();
-  const copy = de.sections.variableCosts;
+  const copy = t.sections.variableCosts;
 
   const options = [
     { value: "plan" as const, label: copy.modePlan, hint: copy.modePlanHint },

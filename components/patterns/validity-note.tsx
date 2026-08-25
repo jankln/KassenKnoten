@@ -1,5 +1,7 @@
+"use client";
+
 import { formatPeriod } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * When an entry applies, shown only when that is not simply "now and onwards".
@@ -19,7 +21,8 @@ export function ValidityNote({
   /** The month the reader is looking at, normally today. */
   currentPeriod: string;
 }) {
-  const copy = de.validity;
+  const t = useMessages();
+  const copy = t.validity;
   const notStarted = validFrom > currentPeriod;
   const ended = validUntil !== null && validUntil < currentPeriod;
 

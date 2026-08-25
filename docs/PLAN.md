@@ -40,7 +40,7 @@ transaction bookkeeping, tax features, mobile native apps.
 | Authorization  | E-mail allowlist inside the app                                                                                                                                           |
 | Time dimension | Incomes and fixed costs are valid for a range of months; every month is computed from what applied in it. Snapshots remain only for savings balances                      |
 | Split modes    | Fixed quota (default 50/50, configurable) and income-proportional; **the split mode is chosen explicitly per shared item**, the household default only pre-fills the form |
-| UI language    | German. Code and docs: English                                                                                                                                            |
+| UI language    | English and German, chosen by the household at setup; English is the default. Code and docs: English                                                                      |
 
 ### Why no animation library
 
@@ -373,6 +373,7 @@ Each item is one feature and one commit on `main`, preceded by a committed
       what the software does
 - [x] F25 Multi-arch image on GHCR; compose pulls instead of builds, and the image carries
       its own setup scripts so installing needs no toolchain
+- [x] F26 English alongside German, chosen at setup and changeable in the settings
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

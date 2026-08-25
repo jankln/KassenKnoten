@@ -2,8 +2,8 @@
 
 import { useId, useState } from "react";
 import { formatCents, parseAmountToCents } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { Input } from "./field";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * An amount field that speaks German: "1.234,56" and "1234,56" and "1234.56" all mean the
@@ -27,6 +27,7 @@ export function MoneyInput({
   /** Lets a form react to the amount as it is typed, e.g. for a live split preview. */
   onTextChange?: (value: string) => void;
 }) {
+  const t = useMessages();
   const [text, setText] = useState(
     defaultCents === undefined ? "" : (defaultCents / 100).toFixed(2).replace(".", ","),
   );
@@ -70,7 +71,7 @@ export function MoneyInput({
         {text.trim() === ""
           ? " "
           : cents === null
-            ? de.validation.amountNotUnderstood
+            ? t.validation.amountNotUnderstood
             : formatCents(cents)}
       </p>
     </div>

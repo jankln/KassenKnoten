@@ -2,7 +2,6 @@
 
 import { refresh } from "next/cache";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import { privateExpenseInput, sharedExpenseInput } from "@/lib/validation/expense";
 import {
   createPrivateExpense,
@@ -12,13 +11,14 @@ import {
   updatePrivateExpense,
   updateSharedExpense,
 } from "@/server/services/expenses";
+import { getMessages } from "@/server/i18n";
 
 export interface ActionResult {
   error?: string;
 }
 
 function parse(formData: FormData) {
-  return privateExpenseInput.safeParse({
+  return privateExpenseInput(getMessages()).safeParse({
     memberId: formData.get("memberId"),
     label: formData.get("label"),
     amountCents: formData.get("amountCents"),
@@ -30,11 +30,12 @@ function parse(formData: FormData) {
 }
 
 export async function addPrivateExpense(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const parsed = parse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   createPrivateExpense(parsed.data);
@@ -46,11 +47,12 @@ export async function editPrivateExpense(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const parsed = parse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   updatePrivateExpense(id, parsed.data);
@@ -92,7 +94,7 @@ function readShares(formData: FormData): { memberId: number; shareBp: number }[]
 }
 
 function parseShared(formData: FormData) {
-  return sharedExpenseInput.safeParse({
+  return sharedExpenseInput(getMessages()).safeParse({
     label: formData.get("label"),
     amountCents: formData.get("amountCents"),
     intervalMonths: formData.get("intervalMonths"),
@@ -105,11 +107,12 @@ function parseShared(formData: FormData) {
 }
 
 export async function addSharedExpense(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const parsed = parseShared(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   createSharedExpense(parsed.data);
@@ -121,11 +124,12 @@ export async function editSharedExpense(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const parsed = parseShared(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   updateSharedExpense(id, parsed.data);

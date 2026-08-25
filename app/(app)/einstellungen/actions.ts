@@ -2,7 +2,6 @@
 
 import { refresh } from "next/cache";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import { categoryInput } from "@/lib/validation/category";
 import { defaultSplitInput } from "@/lib/validation/expense";
 import {
@@ -12,27 +11,31 @@ import {
   updateCategory,
 } from "@/server/services/categories";
 import { setDefaultSplit } from "@/server/services/household";
+import { getMessages } from "@/server/i18n";
+import { setLocale } from "@/server/i18n";
+import { isLocale, type Locale } from "@/lib/i18n";
 
 export interface ActionResult {
   error?: string;
 }
 
 function parse(formData: FormData) {
-  return categoryInput.safeParse({
+  return categoryInput(getMessages()).safeParse({
     name: formData.get("name"),
     icon: formData.get("icon"),
   });
 }
 
 export async function addCategory(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const parsed = parse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   if (categoryNameTaken(parsed.data.name, undefined)) {
-    return { error: de.validation.nameTaken };
+    return { error: t.validation.nameTaken };
   }
 
   createCategory(parsed.data);
@@ -44,14 +47,15 @@ export async function editCategory(
   id: number,
   formData: FormData,
 ): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const parsed = parse(formData);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
   if (categoryNameTaken(parsed.data.name, id)) {
-    return { error: de.validation.nameTaken };
+    return { error: t.validation.nameTaken };
   }
 
   updateCategory(id, parsed.data);
@@ -64,10 +68,11 @@ export async function editCategory(
  * the button asks for a category the household added, and never a seeded one.
  */
 export async function removeCategory(id: number): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   if (!deleteCategory(id)) {
-    return { error: de.validation.failed };
+    return { error: t.validation.failed };
   }
   refresh();
   return {};
@@ -78,6 +83,7 @@ export async function removeCategory(id: number): Promise<ActionResult> {
  * touch existing expenses: those carry the split the household decided for them.
  */
 export async function saveDefaultSplit(formData: FormData): Promise<ActionResult> {
+  const t = getMessages();
   await requireSession();
 
   const shares: { memberId: number; shareBp: number }[] = [];
@@ -88,15 +94,32 @@ export async function saveDefaultSplit(formData: FormData): Promise<ActionResult
     }
   }
 
-  const parsed = defaultSplitInput.safeParse({
+  const parsed = defaultSplitInput(getMessages()).safeParse({
     splitMode: formData.get("splitMode"),
     shares,
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   setDefaultSplit(parsed.data);
+  refresh();
+  return {};
+}
+
+/**
+ * Change the interface language for the whole household.
+ *
+ * Stored on the household rather than in a cookie: a household that reads German reads
+ * German on the tablet in the kitchen too, and the login screen — which nobody has
+ * authenticated to yet — still needs to know which language to greet them in.
+ */
+export async function changeLanguage(locale: Locale): Promise<ActionResult> {
+  await requireSession();
+  if (!isLocale(locale)) {
+    return { error: getMessages().validation.failed };
+  }
+  setLocale(locale);
   refresh();
   return {};
 }

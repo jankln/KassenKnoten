@@ -3,21 +3,21 @@
 import { Monitor, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSyncExternalStore } from "react";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
-
-const OPTIONS = [
-  { value: "light", label: de.theme.light, icon: Sun },
-  { value: "dark", label: de.theme.dark, icon: Moon },
-  { value: "system", label: de.theme.system, icon: Monitor },
-] as const;
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * A three-way segmented control rather than a toggle, because "system" is a real choice
  * and a two-state switch cannot express it.
  */
 export function ThemeToggle() {
+  const t = useMessages();
   const { theme, setTheme } = useTheme();
+  const options = [
+    { value: "light", label: t.theme.light, icon: Sun },
+    { value: "dark", label: t.theme.dark, icon: Moon },
+    { value: "system", label: t.theme.system, icon: Monitor },
+  ] as const;
 
   // The server cannot know the chosen theme, so nothing may render as selected until
   // hydration. useSyncExternalStore gives that as a plain server/client snapshot
@@ -31,10 +31,10 @@ export function ThemeToggle() {
   return (
     <div
       role="group"
-      aria-label={de.theme.label}
+      aria-label={t.theme.label}
       className="border-line bg-surface-muted inline-flex rounded-full border p-0.5"
     >
-      {OPTIONS.map((option) => {
+      {options.map((option) => {
         const active = mounted && theme === option.value;
         return (
           <button

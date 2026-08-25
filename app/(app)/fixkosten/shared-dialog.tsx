@@ -15,10 +15,10 @@ import type { SplitMode } from "@/lib/domain/split";
 import { formatInterval, parseAmountToCents } from "@/lib/format";
 import { ValidityFields } from "@/components/patterns/validity-fields";
 import { periodFromDate } from "@/lib/domain/period";
-import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { SharedExpenseRow } from "@/server/services/expenses";
 import { addSharedExpense, editSharedExpense } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 const INTERVALS = [1, 3, 6, 12] as const;
 
@@ -37,6 +37,7 @@ export function SharedExpenseDialog({
   defaultShares: readonly { memberId: number; shareBp: number }[];
   expense?: SharedExpenseRow;
 }) {
+  const t = useMessages();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -65,7 +66,7 @@ export function SharedExpenseDialog({
     });
   }
 
-  const copy = de.sections.fixedCosts;
+  const copy = t.sections.fixedCosts;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -91,7 +92,7 @@ export function SharedExpenseDialog({
             />
           </Field>
 
-          <Field label={de.sections.household.amount} htmlFor="shared-amount">
+          <Field label={t.sections.household.amount} htmlFor="shared-amount">
             <MoneyInput
               id="shared-amount"
               name="amountCents"
@@ -104,7 +105,7 @@ export function SharedExpenseDialog({
           {/* Stacked on a phone: two native selects side by side clip their own
               option text at 375 px. */}
           <div className="grid gap-3 sm:grid-cols-2">
-            <Field label={de.sections.household.interval} htmlFor="shared-interval">
+            <Field label={t.sections.household.interval} htmlFor="shared-interval">
               <Select
                 id="shared-interval"
                 name="intervalMonths"
@@ -113,7 +114,7 @@ export function SharedExpenseDialog({
               >
                 {INTERVALS.map((months) => (
                   <option key={months} value={months}>
-                    {formatInterval(months)}
+                    {formatInterval(months, t)}
                   </option>
                 ))}
               </Select>
@@ -156,11 +157,11 @@ export function SharedExpenseDialog({
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                {de.actions.cancel}
+                {t.actions.cancel}
               </Button>
             </DialogClose>
             <Button type="submit" variant="primary" disabled={pending}>
-              {de.actions.save}
+              {t.actions.save}
             </Button>
           </div>
         </form>

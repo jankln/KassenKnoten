@@ -3,17 +3,18 @@ import { AppHeader } from "@/components/navigation/app-header";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import { de } from "@/lib/i18n/de";
 import { requireSession } from "@/lib/auth/current-session";
 import { redirect } from "next/navigation";
 import { isOnboardingDone } from "@/server/services/household";
 import { ensurePreviousMonthSnapshot } from "@/server/services/snapshots";
+import { getMessages } from "@/server/i18n";
 
 /**
  * The authenticated frame. Sidebar on wide screens, bottom bar on narrow ones — the same
  * four destinations either way, so the app has one mental model rather than two.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
+  const t = getMessages();
   // A second gate behind the proxy: a server action or a mistyped matcher must never be
   // the only thing standing between a stranger and the household's finances. It also
   // makes this segment dynamic, so pages read the database per request instead of being
@@ -38,7 +39,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         href="#inhalt"
         className="focus-visible:bg-surface focus-visible:text-ink focus-visible:border-line focus-visible:rounded-control sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-3 focus-visible:left-3 focus-visible:z-50 focus-visible:border focus-visible:px-4 focus-visible:py-2 focus-visible:text-sm focus-visible:font-medium focus-visible:shadow-lg"
       >
-        {de.nav.skipToContent}
+        {t.nav.skipToContent}
       </a>
 
       <Sidebar />

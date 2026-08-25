@@ -6,10 +6,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { formatCents, formatShareBp } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import type { SavingsPotRow } from "@/server/services/savings";
 import { removeSavingsPot, restoreSavingsPotAction } from "./actions";
 import { SavingsPotDialog } from "./savings-pot-dialog";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function SavingsList({
   pots,
@@ -18,8 +18,9 @@ export function SavingsList({
   pots: SavingsPotRow[];
   members: { id: number; name: string }[];
 }) {
+  const t = useMessages();
   const [, startTransition] = useTransition();
-  const copy = de.sections.savings;
+  const copy = t.sections.savings;
   const totalRate = pots.reduce((sum, pot) => sum + pot.monthlyRateCents, 0);
   const totalBalance = pots.reduce((sum, pot) => sum + pot.balanceCents, 0);
 
@@ -28,7 +29,7 @@ export function SavingsList({
       await removeSavingsPot(id);
       toast(copy.potRemoved, {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreSavingsPotAction(id)),
         },
       });

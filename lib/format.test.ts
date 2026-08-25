@@ -11,6 +11,8 @@ import {
   parseAmountToCents,
   toPeriod,
 } from "./format";
+import { de } from "./i18n/de";
+import { en } from "./i18n/en";
 
 /** Intl uses a narrow no-break space before the currency symbol. */
 function normalise(value: string): string {
@@ -97,16 +99,19 @@ describe("formatRatio", () => {
 });
 
 describe("formatInterval", () => {
-  it("names the intervals people actually use", () => {
-    expect(formatInterval(1)).toBe("monatlich");
-    expect(formatInterval(3)).toBe("vierteljährlich");
-    expect(formatInterval(6)).toBe("halbjährlich");
-    expect(formatInterval(12)).toBe("jährlich");
+  it("names the intervals people actually use, in each language", () => {
+    expect(formatInterval(1, en)).toBe("monthly");
+    expect(formatInterval(12, en)).toBe("yearly");
+    expect(formatInterval(1, de)).toBe("monatlich");
+    expect(formatInterval(3, de)).toBe("vierteljährlich");
+    expect(formatInterval(6, de)).toBe("halbjährlich");
+    expect(formatInterval(12, de)).toBe("jährlich");
   });
 
   it("falls back to a readable phrase for anything else", () => {
-    expect(formatInterval(4)).toBe("alle 4 Monate");
-    expect(formatInterval(24)).toBe("alle 24 Monate");
+    expect(formatInterval(4, en)).toBe("every 4 months");
+    expect(formatInterval(4, de)).toBe("alle 4 Monate");
+    expect(formatInterval(24, de)).toBe("alle 24 Monate");
   });
 });
 

@@ -2,12 +2,12 @@
 
 import { redirect } from "next/navigation";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import { onboardingInput } from "@/lib/validation/onboarding";
 import {
   completeOnboarding as completeOnboardingService,
   isOnboardingDone,
 } from "@/server/services/household";
+import { getMessages } from "@/server/i18n";
 
 export interface OnboardingActionResult {
   error?: string;
@@ -16,6 +16,7 @@ export interface OnboardingActionResult {
 export async function completeOnboarding(
   formData: FormData,
 ): Promise<OnboardingActionResult> {
+  const t = getMessages();
   await requireSession();
 
   if (isOnboardingDone()) {
@@ -26,12 +27,12 @@ export async function completeOnboarding(
   try {
     raw = JSON.parse(String(formData.get("members") ?? "[]"));
   } catch {
-    return { error: de.validation.failed };
+    return { error: t.validation.failed };
   }
 
-  const parsed = onboardingInput.safeParse(raw);
+  const parsed = onboardingInput(getMessages()).safeParse(raw);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? de.validation.failed };
+    return { error: parsed.error.issues[0]?.message ?? t.validation.failed };
   }
 
   completeOnboardingService(parsed.data);

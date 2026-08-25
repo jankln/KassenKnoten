@@ -8,7 +8,6 @@ import { Card } from "@/components/ui/card";
 import { ValidityNote } from "@/components/patterns/validity-note";
 import { periodFromDate } from "@/lib/domain/period";
 import { formatCents, formatInterval } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import type { MemberWithIncome } from "@/server/services/members";
 import {
   removeIncomeAction,
@@ -18,10 +17,12 @@ import {
 } from "./actions";
 import { IncomeDialog } from "./income-dialog";
 import { MemberDialog } from "./member-dialog";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function MemberCard({ member }: { member: MemberWithIncome }) {
+  const t = useMessages();
   const [, startTransition] = useTransition();
-  const copy = de.sections.household;
+  const copy = t.sections.household;
   const currentPeriod = periodFromDate(new Date());
 
   /**
@@ -33,7 +34,7 @@ export function MemberCard({ member }: { member: MemberWithIncome }) {
       await retireMemberAction(member.id);
       toast(copy.memberRemoved(member.name), {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreMemberAction(member.id)),
         },
       });
@@ -45,7 +46,7 @@ export function MemberCard({ member }: { member: MemberWithIncome }) {
       await removeIncomeAction(id);
       toast(copy.incomeRemoved, {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreIncomeAction(id)),
         },
       });
@@ -104,7 +105,7 @@ export function MemberCard({ member }: { member: MemberWithIncome }) {
                     {entry.intervalMonths !== 1 ? (
                       <span>
                         {formatCents(entry.amountCents)} ·{" "}
-                        {formatInterval(entry.intervalMonths)}
+                        {formatInterval(entry.intervalMonths, t)}
                       </span>
                     ) : null}
                     <ValidityNote

@@ -10,18 +10,25 @@ import { CategoryIcon } from "@/components/ui/category-icon";
 import { buttonStyles } from "@/components/ui/button";
 import { formatCents, formatPeriod, formatRatio } from "@/lib/format";
 import { isPeriod, periodFromDate, type Period } from "@/lib/domain/period";
-import { de } from "@/lib/i18n/de";
 import type {
   DashboardCategory,
   DashboardData,
   TrendPoint,
 } from "@/server/services/dashboard";
 import { getDashboardData, getTrend } from "@/server/services/dashboard";
+import { getMessages } from "@/server/i18n";
+import type { Messages } from "@/lib/i18n";
 
-export const metadata: Metadata = { title: de.sections.overview.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.sections.overview.title };
+}
 
 export default async function OverviewPage({ searchParams }: PageProps<"/">) {
-  const copy = de.sections.overview;
+  const t = getMessages();
+  const copy = t.sections.overview;
   const today = periodFromDate(new Date());
   // A malformed month in the URL falls back to today rather than erroring: the address
   // bar is user input, and there is a perfectly good month to show.
@@ -165,7 +172,8 @@ function Kpi({
 }
 
 function Warnings({ dashboard }: { dashboard: DashboardData }) {
-  const copy = de.sections.overview.warnings;
+  const t = getMessages();
+  const copy = t.sections.overview.warnings;
   const warnings: { message: string; key: string }[] = [];
   if (dashboard.summary.freeCashCents < 0) {
     warnings.push({
@@ -214,7 +222,8 @@ function Warnings({ dashboard }: { dashboard: DashboardData }) {
 }
 
 function PeopleSection({ dashboard }: { dashboard: DashboardData }) {
-  const copy = de.sections.overview.people;
+  const t = getMessages();
+  const copy = t.sections.overview.people;
   return (
     <section aria-labelledby="dashboard-people">
       <CardTitle id="dashboard-people" className="mb-3">
@@ -276,7 +285,8 @@ function Metric({ label, cents }: { label: string; cents: number }) {
 }
 
 function CategoriesSection({ dashboard }: { dashboard: DashboardData }) {
-  const copy = de.sections.overview.categories;
+  const t = getMessages();
+  const copy = t.sections.overview.categories;
   const max = dashboard.categories[0]?.monthlyCents ?? 0;
   return (
     <section aria-labelledby="dashboard-categories">
@@ -322,7 +332,8 @@ function CategoryRow({
   max: number;
   index: number;
 }) {
-  const copy = de.sections.overview.categories;
+  const t = getMessages();
+  const copy = t.sections.overview.categories;
   const width = max > 0 ? Math.round((category.monthlyCents * 100) / max) : 0;
   return (
     <li>
@@ -365,8 +376,9 @@ function CategoryRow({
  * as equal, which is the honest picture of a budget nobody is tracking receipts for.
  */
 function VariableSection({ dashboard }: { dashboard: DashboardData }) {
-  const copy = de.sections.overview.variable;
-  const detail = de.sections.variableCosts;
+  const t = getMessages();
+  const copy = t.sections.overview.variable;
+  const detail = t.sections.variableCosts;
 
   return (
     <section aria-labelledby="dashboard-variable" className="mt-6">
@@ -420,7 +432,8 @@ function VariableSection({ dashboard }: { dashboard: DashboardData }) {
 }
 
 function SavingsSection({ dashboard }: { dashboard: DashboardData }) {
-  const copy = de.sections.overview.savings;
+  const t = getMessages();
+  const copy = t.sections.overview.savings;
   return (
     <section aria-labelledby="dashboard-savings" className="mt-6">
       <CardTitle id="dashboard-savings" className="mb-3">
@@ -484,36 +497,34 @@ function SavingsSection({ dashboard }: { dashboard: DashboardData }) {
   );
 }
 
-const trendLines = [
-  {
-    key: "incomeCents",
-    label: de.sections.overview.trend.income,
-    color: "var(--color-member-1)",
-  },
-  {
-    key: "fixedCostsCents",
-    label: de.sections.overview.trend.fixedCosts,
-    color: "var(--color-member-2)",
-  },
-  {
-    key: "variableCostsCents",
-    label: de.sections.overview.trend.variableCosts,
-    color: "var(--color-member-4)",
-  },
-  {
-    key: "savingsRateCents",
-    label: de.sections.overview.trend.savingsRate,
-    color: "var(--color-member-3)",
-  },
-  {
-    key: "freeCashCents",
-    label: de.sections.overview.trend.freeCash,
-    color: "var(--color-brass)",
-  },
+/**
+ * The series the trend draws, and their colours. Deliberately free of copy: the chart
+ * itself needs neither, and a component that takes no strings cannot need a language.
+ */
+const trendSeries = [
+  { key: "incomeCents", color: "var(--color-member-1)" },
+  { key: "fixedCostsCents", color: "var(--color-member-2)" },
+  { key: "variableCostsCents", color: "var(--color-member-4)" },
+  { key: "savingsRateCents", color: "var(--color-member-3)" },
+  { key: "freeCashCents", color: "var(--color-brass)" },
 ] as const;
 
+type TrendKey = (typeof trendSeries)[number]["key"];
+
+function trendLabel(t: Messages, key: TrendKey): string {
+  const labels: Record<TrendKey, string> = {
+    incomeCents: t.sections.overview.trend.income,
+    fixedCostsCents: t.sections.overview.trend.fixedCosts,
+    variableCostsCents: t.sections.overview.trend.variableCosts,
+    savingsRateCents: t.sections.overview.trend.savingsRate,
+    freeCashCents: t.sections.overview.trend.freeCash,
+  };
+  return labels[key];
+}
+
 function TrendSection({ trend }: { trend: TrendPoint[] }) {
-  const copy = de.sections.overview.trend;
+  const t = getMessages();
+  const copy = t.sections.overview.trend;
   return (
     <section aria-labelledby="dashboard-trend" className="mt-6">
       <CardTitle id="dashboard-trend" className="mb-3">
@@ -532,14 +543,14 @@ function TrendSection({ trend }: { trend: TrendPoint[] }) {
               <TrendChart trend={trend} />
             </div>
             <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
-              {trendLines.map((line) => (
+              {trendSeries.map((line) => (
                 <li key={line.key} className="flex items-center gap-2">
                   <span
                     aria-hidden
                     className="size-2 shrink-0 rounded-full"
                     style={{ backgroundColor: line.color }}
                   />
-                  <span>{line.label}</span>
+                  <span>{trendLabel(t, line.key)}</span>
                 </li>
               ))}
             </ul>
@@ -553,9 +564,11 @@ function TrendSection({ trend }: { trend: TrendPoint[] }) {
                     {formatPeriod(point.period)}
                   </p>
                   <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-                    {trendLines.map((line) => (
+                    {trendSeries.map((line) => (
                       <div key={line.key} className="min-w-0">
-                        <dt className="text-ink-muted truncate">{line.label}</dt>
+                        <dt className="text-ink-muted truncate">
+                          {trendLabel(t, line.key)}
+                        </dt>
                         <dd className="font-ledger tabular mt-0.5 truncate font-medium">
                           {formatCents(point[line.key])}
                         </dd>
@@ -573,7 +586,7 @@ function TrendSection({ trend }: { trend: TrendPoint[] }) {
 }
 
 function TrendChart({ trend }: { trend: TrendPoint[] }) {
-  const values = trend.flatMap((point) => trendLines.map((line) => point[line.key]));
+  const values = trend.flatMap((point) => trendSeries.map((line) => point[line.key]));
   const min = Math.min(0, ...values);
   const max = Math.max(0, ...values);
   const range = max - min || 1;
@@ -598,7 +611,7 @@ function TrendChart({ trend }: { trend: TrendPoint[] }) {
         stroke="var(--color-line)"
         strokeDasharray="4 5"
       />
-      {trendLines.map((line) => (
+      {trendSeries.map((line) => (
         <polyline
           key={line.key}
           points={trend
@@ -613,7 +626,7 @@ function TrendChart({ trend }: { trend: TrendPoint[] }) {
           className="line-draw"
         />
       ))}
-      {trendLines.map((line) =>
+      {trendSeries.map((line) =>
         trend.map((point, index) => (
           <circle
             key={`${line.key}-${point.period}`}

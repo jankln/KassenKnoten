@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { FULL_SHARE_BP } from "@/lib/domain/money";
 import type { SplitMode } from "@/lib/domain/split";
 import { formatShareBp } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
 import { saveDefaultSplit } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export interface SplitDefaultsMember {
   id: number;
@@ -28,6 +28,7 @@ export function DefaultSplitForm({
   defaultMode: SplitMode;
   defaultShares: readonly { memberId: number; shareBp: number }[];
 }) {
+  const t = useMessages();
   const [mode, setMode] = useState<SplitMode>(defaultMode);
   const [shares, setShares] = useState<Record<number, number>>(() =>
     Object.fromEntries(
@@ -41,7 +42,7 @@ export function DefaultSplitForm({
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  const copy = de.sections.fixedCosts;
+  const copy = t.sections.fixedCosts;
   const totalBp = members.reduce(
     (total, member) => total + (shares[member.id] ?? 0),
     0,
@@ -127,7 +128,7 @@ export function DefaultSplitForm({
 
           {!valid ? (
             <p role="alert" className="text-negative text-sm">
-              {de.validation.sharesMustSum} ({formatShareBp(totalBp)})
+              {t.validation.sharesMustSum} ({formatShareBp(totalBp)})
             </p>
           ) : null}
         </div>
@@ -142,10 +143,10 @@ export function DefaultSplitForm({
           size="sm"
           disabled={pending || !valid}
         >
-          {de.actions.save}
+          {t.actions.save}
         </Button>
         {saved ? (
-          <span className="text-positive text-sm">{de.actions.saved}</span>
+          <span className="text-positive text-sm">{t.actions.saved}</span>
         ) : null}
       </div>
     </form>

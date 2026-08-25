@@ -15,7 +15,8 @@ decisions and `docs/WORKFLOW.md` before committing.
 
 ## Non-negotiables
 
-- **Code, comments and docs in English. All user-facing UI text in German.**
+- **Code, comments and docs in English. No user-facing text hardcoded in a component —
+  every string lives in `lib/i18n/en.ts` and `lib/i18n/de.ts`, and both stay complete.**
 - **Money is integer cents, percentages are basis points.** No floating point arithmetic
   on amounts, ever. Splits use the largest-remainder method so shares sum to the total.
 - **`lib/domain/` stays pure**: no database, no framework imports, no ambient clock.

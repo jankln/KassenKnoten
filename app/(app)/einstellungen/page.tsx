@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { ThemeToggle } from "@/components/navigation/theme-toggle";
 import { PageHeader } from "@/components/patterns/page-header";
 import { Card, CardTitle } from "@/components/ui/card";
-import { de } from "@/lib/i18n/de";
 import { listCategories } from "@/server/services/categories";
 import { getHouseholdSettings, getSplitContext } from "@/server/services/household";
 import { listMembersWithIncome } from "@/server/services/members";
@@ -10,11 +9,19 @@ import { CategoryList } from "./category-list";
 import { DataBackup } from "./data-backup";
 import { DefaultSplitForm } from "./default-split";
 import { InstallApp } from "./install-app";
+import { LanguagePicker } from "./language-picker";
+import { getLocale, getMessages } from "@/server/i18n";
 
-export const metadata: Metadata = { title: de.sections.settings.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.sections.settings.title };
+}
 
 export default async function SettingsPage() {
-  const copy = de.sections.settings;
+  const t = getMessages();
+  const copy = t.sections.settings;
   const categories = listCategories();
   const members = await listMembersWithIncome();
   const settings = getHouseholdSettings();
@@ -27,7 +34,15 @@ export default async function SettingsPage() {
       <div className="space-y-4">
         <Card className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <CardTitle>{de.theme.label}</CardTitle>
+            <CardTitle>{t.language.label}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{t.language.hint}</p>
+          </div>
+          <LanguagePicker current={getLocale()} />
+        </Card>
+
+        <Card className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <CardTitle>{t.theme.label}</CardTitle>
             <p className="text-ink-muted mt-1 text-sm">{copy.themeHint}</p>
           </div>
           <ThemeToggle />
@@ -36,9 +51,9 @@ export default async function SettingsPage() {
         {members.length > 0 ? (
           <Card>
             <div className="mb-4">
-              <CardTitle>{de.sections.fixedCosts.defaultSplit}</CardTitle>
+              <CardTitle>{t.sections.fixedCosts.defaultSplit}</CardTitle>
               <p className="text-ink-muted mt-1 text-sm">
-                {de.sections.fixedCosts.defaultSplitHint}
+                {t.sections.fixedCosts.defaultSplitHint}
               </p>
             </div>
             <DefaultSplitForm
@@ -63,8 +78,8 @@ export default async function SettingsPage() {
 
         <Card>
           <div className="mb-4">
-            <CardTitle>{de.install.title}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{de.install.hint}</p>
+            <CardTitle>{t.install.title}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{t.install.hint}</p>
           </div>
           <InstallApp />
         </Card>

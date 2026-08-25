@@ -5,8 +5,11 @@ How we work on KassenKnoten. This file is binding for every change.
 ## Language rule
 
 - **Code, comments, identifiers, documentation, commit messages: English.**
-- **The product itself (all user-facing UI text, labels, errors, emails): German.**
-  German copy lives in a dedicated messages module, never hardcoded across components.
+- **The product speaks English and German.** English is the default and `lib/i18n/en.ts`
+  is the canonical set: `Messages` is derived from it, and `de.ts` is declared as
+  `Messages`, so the compiler refuses a build where a translation has fallen behind.
+- **No user-facing string is ever hardcoded in a component.** Adding copy means adding it
+  to both files; there is no "I will translate it later", because the build says no.
 
 ## One feature = one commit
 
@@ -103,7 +106,7 @@ not typecheck, lint and test cleanly.
 
 - Domain logic covered by unit tests where it computes money.
 - `npm run typecheck`, `npm run lint`, `npm run test` pass.
-- German UI copy reviewed, no English leaking into the interface.
+- Copy reviewed in both languages, nothing hardcoded in a component.
 - Works on a 375 px viewport, not only on desktop.
 - `docs/PLAN.md` roadmap entry ticked, `CURRENT_WORK.md` reset.
 - Committed **and pushed**. Every commit is pushed to `origin/main` right after it is

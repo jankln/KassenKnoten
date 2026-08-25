@@ -1,16 +1,32 @@
+import type { Messages } from "./en";
+
 /**
- * Every user-facing string in the app.
+ * The German copy — the language the product was designed in.
  *
- * The interface is German; the code is English. Keeping the copy in one file is what
- * makes that workable: the whole voice of the product can be read and reviewed in one
- * sitting, and a heading cannot quietly drift out of step with the button below it.
+ * Declared as `Messages` rather than inferred, so the compiler refuses a build where a
+ * string has been added to English and not to this file. That check is the whole reason
+ * a second language stays complete past the week it was added.
  *
- * A German string hardcoded in a component is a bug.
+ * A user-facing string hardcoded in a component is a bug.
  */
-export const de = {
+export const de: Messages = {
   app: {
     name: "KassenKnoten",
     tagline: "Haushaltsfinanzen planen",
+  },
+
+  /** The name of each language, in that language. Never translated. */
+  languages: {
+    en: "English",
+    de: "Deutsch",
+  },
+
+  language: {
+    label: "Sprache",
+    hint: "Gilt für alle in diesem Haushalt.",
+    chooseTitle: "In welcher Sprache möchtest du planen?",
+    chooseBody:
+      "KassenKnoten spricht Deutsch und Englisch. Du kannst das später in den Einstellungen ändern.",
   },
 
   /**
@@ -51,7 +67,7 @@ export const de = {
   onboarding: {
     title: "Willkommen bei KassenKnoten",
     subtitle: "Richte deinen Haushalt in wenigen Schritten ein.",
-    steps: ["Start", "Haushalt", "Einnahmen"] as const,
+    steps: ["Start", "Haushalt", "Einnahmen"],
     introTitle: "Dein Haushaltsplan beginnt hier",
     introBody:
       "KassenKnoten hilft dir, Einnahmen, Fixkosten und Rücklagen übersichtlich zu planen. Du kannst später jederzeit weitere Details ergänzen.",
@@ -396,7 +412,7 @@ export const de = {
 
     settings: {
       title: "Einstellungen",
-      subtitle: "Aufteilung, Kategorien und Daten.",
+      subtitle: "Sprache, Aufteilung, Kategorien und Daten.",
       themeHint: "Gilt nur auf diesem Gerät.",
       dataTitle: "Daten sichern",
       dataHint:
@@ -520,4 +536,4 @@ export const de = {
     title: "Wird gerade gebaut",
     body: "Dieser Bereich kommt als Nächstes.",
   },
-} as const;
+};

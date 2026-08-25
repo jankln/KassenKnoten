@@ -9,8 +9,8 @@ import {
   previousPeriod,
 } from "@/lib/domain/period";
 import { formatCents, formatPeriod } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * The months an entry applies to, and — while editing an amount — what changing it means.
@@ -44,9 +44,10 @@ export function ValidityFields({
   /** The amount currently in the form, or null while it cannot be parsed. */
   amountCents?: number | null;
 }) {
+  const t = useMessages();
   const fromId = useId();
   const untilId = useId();
-  const copy = de.validity;
+  const copy = t.validity;
 
   const editing = currentFrom !== undefined;
   const amountChanged =
@@ -169,7 +170,8 @@ function Preview({
   oldCents: number;
   newCents: number;
 }) {
-  const copy = de.validity;
+  const t = useMessages();
+  const copy = t.validity;
 
   // A half-typed month must never reach the period arithmetic.
   if (!isPeriod(changeFrom)) {

@@ -2,8 +2,9 @@
 
 import { useState, useSyncExternalStore } from "react";
 import { buttonStyles } from "@/components/ui/button";
-import { de } from "@/lib/i18n/de";
 import { installAdvice, type InstallAdvice } from "@/lib/pwa/install-target";
+import { useMessages } from "@/components/providers/messages-provider";
+import type { Messages } from "@/lib/i18n";
 
 /**
  * The `beforeinstallprompt` event. Chromium-only, so it is not in the DOM lib.
@@ -91,13 +92,15 @@ function getServerSnapshot(): InstallState | null {
   return null;
 }
 
-const ADVICE_TEXT: Record<Exclude<InstallAdvice, "prompt">, string> = {
-  installed: de.install.installed,
-  ios: de.install.ios,
-  "firefox-mobile": de.install.firefoxMobile,
-  "firefox-desktop": de.install.firefoxDesktop,
-  menu: de.install.menu,
-};
+function adviceText(t: Messages): Record<Exclude<InstallAdvice, "prompt">, string> {
+  return {
+    installed: t.install.installed,
+    ios: t.install.ios,
+    "firefox-mobile": t.install.firefoxMobile,
+    "firefox-desktop": t.install.firefoxDesktop,
+    menu: t.install.menu,
+  };
+}
 
 /**
  * "Als App installieren".
@@ -109,6 +112,7 @@ const ADVICE_TEXT: Record<Exclude<InstallAdvice, "prompt">, string> = {
  * would do nothing.
  */
 export function InstallApp() {
+  const t = useMessages();
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const [status, setStatus] = useState<"dismissed" | "failed" | null>(null);
   const [pending, setPending] = useState(false);
@@ -137,11 +141,11 @@ export function InstallApp() {
     <div className="space-y-3">
       {status === "failed" ? (
         <p className="text-negative text-sm" role="alert">
-          {de.install.failed}
+          {t.install.failed}
         </p>
       ) : status === "dismissed" ? (
         <p className="text-ink-muted text-sm" role="status">
-          {de.install.dismissed}
+          {t.install.dismissed}
         </p>
       ) : null}
 
@@ -152,11 +156,11 @@ export function InstallApp() {
           onClick={() => void install(state.prompt as InstallPromptEvent)}
           disabled={pending}
         >
-          {pending ? de.install.installing : de.install.button}
+          {pending ? t.install.installing : t.install.button}
         </button>
       ) : (
         <p className="text-ink-muted text-sm leading-relaxed">
-          {ADVICE_TEXT[state.advice === "prompt" ? "menu" : state.advice]}
+          {adviceText(t)[state.advice === "prompt" ? "menu" : state.advice]}
         </p>
       )}
     </div>

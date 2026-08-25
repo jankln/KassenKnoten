@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { en } from "@/lib/i18n/en";
 import { onboardingInput } from "./onboarding";
 
 describe("onboarding validation", () => {
   it("accepts multiple incomes and members without incomes", () => {
-    const result = onboardingInput.safeParse([
+    const result = onboardingInput(en).safeParse([
       {
         name: "Alex",
         colorIndex: 1,
@@ -29,7 +30,7 @@ describe("onboarding validation", () => {
   });
 
   it("keeps income optional but validates every provided source", () => {
-    const result = onboardingInput.safeParse([
+    const result = onboardingInput(en).safeParse([
       {
         name: "Alex",
         colorIndex: 1,
@@ -46,7 +47,7 @@ describe("onboarding validation", () => {
 
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(result.error.issues[0]?.message).toBe("Bitte eine Bezeichnung eingeben.");
+      expect(result.error.issues[0]?.message).toBe("Please enter a label.");
     }
   });
 });

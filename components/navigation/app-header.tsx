@@ -3,7 +3,7 @@ import { LogOut, Settings } from "lucide-react";
 import { KnotMark } from "@/components/brand/knot-mark";
 import { Button, buttonStyles } from "@/components/ui/button";
 import { signOut } from "@/lib/auth/actions";
-import { de } from "@/lib/i18n/de";
+import { getMessages } from "@/server/i18n";
 
 /**
  * The bar above the content. On a phone it also carries the wordmark, because the
@@ -13,17 +13,18 @@ import { de } from "@/lib/i18n/de";
  * Theme lives in Einstellungen, not here: it is a setting, not a per-screen control.
  */
 export function AppHeader() {
+  const t = getMessages();
   return (
     <header className="border-line bg-canvas/90 sticky top-0 z-10 flex h-14 items-center gap-3 border-b px-4 backdrop-blur sm:px-6">
       <Link href="/" className="flex items-center gap-2 lg:hidden">
         <KnotMark className="h-6 w-6" />
-        <span className="font-display font-semibold tracking-tight">{de.app.name}</span>
+        <span className="font-display font-semibold tracking-tight">{t.app.name}</span>
       </Link>
 
       <div className="ml-auto flex items-center gap-1">
         <Link
           href="/einstellungen"
-          aria-label={de.nav.settings}
+          aria-label={t.nav.settings}
           className={buttonStyles({ variant: "ghost", size: "icon" })}
         >
           <Settings className="size-[18px]" aria-hidden />
@@ -34,7 +35,7 @@ export function AppHeader() {
             type="submit"
             variant="ghost"
             size="icon"
-            aria-label={de.actions.signOut}
+            aria-label={t.actions.signOut}
             className="sm:hidden"
           >
             <LogOut className="size-[18px]" aria-hidden />
@@ -45,7 +46,7 @@ export function AppHeader() {
             size="sm"
             className="hidden sm:inline-flex"
           >
-            {de.actions.signOut}
+            {t.actions.signOut}
           </Button>
         </form>
       </div>

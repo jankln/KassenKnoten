@@ -3,14 +3,15 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { signIn, type LoginState } from "@/lib/auth/actions";
-import { de } from "@/lib/i18n/de";
+import { useMessages } from "@/components/providers/messages-provider";
 
 const field =
   "border-line bg-surface rounded-control placeholder:text-ink-muted/60 focus-visible:border-brass h-12 w-full border px-3.5 text-base transition-colors outline-none";
 
 export function LoginForm({ requiresCode }: { requiresCode: boolean }) {
+  const t = useMessages();
   const [state, formAction] = useActionState<LoginState, FormData>(signIn, {});
-  const copy = de.login;
+  const copy = t.login;
 
   return (
     <form action={formAction} className="mt-9 space-y-4">
@@ -72,6 +73,7 @@ export function LoginForm({ requiresCode }: { requiresCode: boolean }) {
 }
 
 function SubmitButton() {
+  const t = useMessages();
   const { pending } = useFormStatus();
 
   return (
@@ -80,7 +82,7 @@ function SubmitButton() {
       disabled={pending}
       className="bg-brass text-brass-ink rounded-control h-12 w-full text-sm font-semibold tracking-wide transition-[opacity,transform] hover:opacity-90 active:scale-[0.99] disabled:opacity-70"
     >
-      {pending ? de.login.pending : de.login.submit}
+      {pending ? t.login.pending : t.login.submit}
     </button>
   );
 }

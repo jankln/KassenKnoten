@@ -64,12 +64,15 @@ export function getEnv(): Env {
 
   const totpSecret = resolveTotpSecret(parsed.data);
 
-  // The raw value is dropped rather than spread through. An untouched `TOTP_SECRET=` line
-  // parses as the empty string, and spreading it would leave the key present-but-empty:
-  // truthiness checks would see 2FA as off while presence checks saw it as on. That
+  // The raw value is dropped rather than carried through. An untouched `TOTP_SECRET=`
+  // line parses as the empty string, and keeping the key present-but-empty would let
+  // truthiness checks see 2FA as off while presence checks saw it as on. That
   // disagreement is not academic — it is a login screen demanding a code that the server
   // does not verify.
-  const { TOTP_SECRET: _raw, ...rest } = parsed.data;
+  const rest: Omit<z.infer<typeof schema>, "TOTP_SECRET"> & {
+    TOTP_SECRET?: string;
+  } = { ...parsed.data };
+  delete rest.TOTP_SECRET;
 
   cached = {
     ...rest,

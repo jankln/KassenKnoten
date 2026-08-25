@@ -9,11 +9,11 @@ import { CategoryIcon } from "@/components/ui/category-icon";
 import { ValidityNote } from "@/components/patterns/validity-note";
 import { periodFromDate } from "@/lib/domain/period";
 import { formatCents, formatInterval } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { MemberExpenses } from "@/server/services/expenses";
 import { removeExpense, restoreExpenseAction } from "./actions";
 import { ExpenseDialog } from "./expense-dialog";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function MemberExpenseCard({
   group,
@@ -24,8 +24,9 @@ export function MemberExpenseCard({
   members: { id: number; name: string }[];
   categories: CategoryRow[];
 }) {
+  const t = useMessages();
   const [, startTransition] = useTransition();
-  const copy = de.sections.fixedCosts;
+  const copy = t.sections.fixedCosts;
   const currentPeriod = periodFromDate(new Date());
 
   function drop(id: number) {
@@ -33,7 +34,7 @@ export function MemberExpenseCard({
       await removeExpense(id);
       toast(copy.expenseRemoved, {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreExpenseAction(id)),
         },
       });
@@ -83,7 +84,7 @@ export function MemberExpenseCard({
                     {expense.intervalMonths !== 1 ? (
                       <span>
                         {formatCents(expense.amountCents)} ·{" "}
-                        {formatInterval(expense.intervalMonths)}
+                        {formatInterval(expense.intervalMonths, t)}
                       </span>
                     ) : null}
                     <ValidityNote

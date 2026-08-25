@@ -2,11 +2,16 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { KnotMark } from "@/components/brand/knot-mark";
 import { requireSession } from "@/lib/auth/current-session";
-import { de } from "@/lib/i18n/de";
 import { isOnboardingDone } from "@/server/services/household";
 import { OnboardingWizard } from "./onboarding-wizard";
+import { getLocale, getMessages } from "@/server/i18n";
 
-export const metadata: Metadata = { title: de.onboarding.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.onboarding.title };
+}
 
 export default async function WelcomePage() {
   await requireSession();
@@ -20,7 +25,7 @@ export default async function WelcomePage() {
         <div className="mb-6 flex justify-center">
           <KnotMark className="size-12" />
         </div>
-        <OnboardingWizard />
+        <OnboardingWizard locale={getLocale()} />
       </div>
     </main>
   );

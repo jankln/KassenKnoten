@@ -5,7 +5,8 @@ import { getDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { monthlyCents } from "@/lib/domain/interval";
 import { isPeriod, periodFromDate } from "@/lib/domain/period";
-import { de } from "@/lib/i18n/de";
+import { getMessages } from "@/server/i18n";
+import { isLocale } from "@/lib/i18n";
 
 export const BACKUP_FORMAT = "kassenknoten-backup";
 /**
@@ -16,8 +17,11 @@ export const BACKUP_FORMAT = "kassenknoten-backup";
  * Version 3 added variable costs and their bookings. Older files simply have none, which
  * restores correctly as an empty list — a household that never had variable costs and a
  * backup taken before they existed are the same state.
+ *
+ * Version 4 added the household's interface language. A file without one restores to
+ * English, which is what an instance that predates the choice was showing anyway.
  */
-export const BACKUP_VERSION = 3;
+export const BACKUP_VERSION = 4;
 
 export class RestoreValidationError extends Error {
   constructor(message: string) {
@@ -48,6 +52,8 @@ const householdSchema = z
     name: z.string().min(1),
     currency: z.string().min(1),
     defaultSplitMode: splitMode,
+    /** Absent in files older than version 4. */
+    locale: z.enum(["en", "de"]).optional(),
     onboardingDone: z.boolean(),
     ...timestamped,
   })
@@ -220,7 +226,7 @@ const appSettingSchema = z
 const backupSchema = z
   .object({
     format: z.literal(BACKUP_FORMAT),
-    version: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+    version: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
     exportedAt: dateString,
     household: householdSchema,
     members: z.array(memberSchema),
@@ -485,6 +491,9 @@ export function exportBackup(db: Db = getDb(), exportedAt = new Date()): BackupP
     household: {
       ...household,
       id: 1,
+      // The column is a plain string so an unknown value cannot break a migration; the
+      // backup only carries a language it can restore.
+      locale: isLocale(household.locale) ? household.locale : "en",
       createdAt: iso(household.createdAt),
       updatedAt: iso(household.updatedAt),
     },
@@ -644,6 +653,7 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
         name: validated.household.name,
         currency: validated.household.currency,
         defaultSplitMode: validated.household.defaultSplitMode,
+        locale: validated.household.locale ?? "en",
         onboardingDone: validated.household.onboardingDone,
         createdAt: date(validated.household.createdAt),
         updatedAt: date(validated.household.updatedAt),
@@ -814,7 +824,7 @@ function csvCell(value: string | number | null): string {
 }
 
 export function exportPlanningCsv(db: Db = getDb()): string {
-  const copy = de.sections.settings.csv;
+  const copy = getMessages(db).sections.settings.csv;
   const members = db.select().from(schema.member).all();
   const categories = db.select().from(schema.category).all();
   const memberNames = new Map(members.map((row) => [row.id, row.name]));

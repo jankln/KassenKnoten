@@ -12,7 +12,6 @@ import type { SplitMember } from "@/components/patterns/split-editor";
 import type { SplitMode } from "@/lib/domain/split";
 import type { Period } from "@/lib/domain/period";
 import { formatCents, formatDay, formatShareBp } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
 import type { CategoryRow } from "@/server/services/categories";
 import type { VariableCostRow } from "@/server/services/variable-costs";
@@ -24,6 +23,7 @@ import {
   restoreBookingAction,
   restoreVariableCostAction,
 } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * One budget for one month.
@@ -55,8 +55,9 @@ export function CostCard({
   defaultMode: SplitMode;
   defaultShares: readonly { memberId: number; shareBp: number }[];
 }) {
+  const t = useMessages();
   const [, startTransition] = useTransition();
-  const copy = de.sections.variableCosts;
+  const copy = t.sections.variableCosts;
   const detailed = cost.mode === "detailed";
   const over = cost.remainingCents < 0;
   const showBudget = detailed || cost.bookedCents > 0;
@@ -66,7 +67,7 @@ export function CostCard({
       await removeVariableCost(cost.id);
       toast(copy.costRemoved, {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreVariableCostAction(cost.id)),
         },
       });
@@ -78,7 +79,7 @@ export function CostCard({
       await removeBooking(id);
       toast(copy.bookingRemoved, {
         action: {
-          label: de.actions.undo,
+          label: t.actions.undo,
           onClick: () => startTransition(() => void restoreBookingAction(id)),
         },
       });
@@ -276,7 +277,8 @@ export function CostCard({
 }
 
 function ModeBadge({ detailed }: { detailed: boolean }) {
-  const copy = de.sections.variableCosts;
+  const t = useMessages();
+  const copy = t.sections.variableCosts;
   return (
     <span
       className={cn(

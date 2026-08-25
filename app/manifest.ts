@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { de } from "@/lib/i18n/de";
+import { getMessages } from "@/server/i18n";
 
 /**
  * What the browser needs in order to offer "install".
@@ -14,11 +14,12 @@ import { de } from "@/lib/i18n/de";
  * offering a second copy of it alongside the first.
  */
 export default function manifest(): MetadataRoute.Manifest {
+  const t = getMessages();
   return {
     id: "/",
-    name: de.app.name,
-    short_name: de.app.name,
-    description: de.app.tagline,
+    name: t.app.name,
+    short_name: t.app.name,
+    description: t.app.tagline,
     lang: "de",
     dir: "ltr",
     start_url: "/",
@@ -60,8 +61,8 @@ export default function manifest(): MetadataRoute.Manifest {
       },
     ],
     shortcuts: [
-      { name: de.nav.fixedCosts, url: "/fixkosten" },
-      { name: de.nav.savings, url: "/sparen" },
+      { name: t.nav.fixedCosts, url: "/fixkosten" },
+      { name: t.nav.savings, url: "/sparen" },
     ],
   };
 }

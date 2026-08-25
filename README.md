@@ -15,7 +15,7 @@ and want the maths to be exactly right.
 [![Release](https://img.shields.io/badge/release-v1.1.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
 [![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
 [![Tests](https://img.shields.io/badge/tests-280%20passing-1e8f6a?style=flat-square)](#contributing)
-[![UI](https://img.shields.io/badge/UI-Deutsch-008aa3?style=flat-square)](#a-note-on-language)
+[![UI](https://img.shields.io/badge/UI-English%20%C2%B7%20Deutsch-008aa3?style=flat-square)](#a-note-on-language)
 
 </div>
 
@@ -214,10 +214,17 @@ finances.
 
 ## A note on language
 
-The interface is **German**, from the first label to the last error message — and so is
-the [landing page](https://jankln.github.io/KassenKnoten/), because it advertises a German
-product. The code, the documentation and this README are English, so anyone can run and
-modify it.
+The interface speaks **English and German**. A fresh instance starts in English; the setup
+wizard asks which you would rather have before it asks anything else, and the settings
+screen changes it later. The choice belongs to the household, not to a browser, so the
+tablet in the kitchen agrees with the laptop.
+
+Both message sets live in `lib/i18n/`, and English is the canonical one: the German file is
+typed against it, so the build fails if a translation falls behind. There is no
+"I will translate it later".
+
+The code, the documentation and this README are English, so anyone can run and modify it.
+The [landing page](https://jankln.github.io/KassenKnoten/) is still German only.
 
 ## Contributing
 

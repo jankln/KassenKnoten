@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { FULL_SHARE_BP } from "@/lib/domain/money";
 import { splitExpense, type SplitMode } from "@/lib/domain/split";
 import { formatCents, formatShareBp } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export interface SplitMember {
   id: number;
@@ -36,6 +36,7 @@ export function SplitEditor({
   defaultShares: readonly { memberId: number; shareBp: number }[];
   error?: string;
 }) {
+  const t = useMessages();
   const [mode, setMode] = useState<SplitMode>(defaultMode);
   const [shares, setShares] = useState<Record<number, number>>(() =>
     Object.fromEntries(
@@ -47,7 +48,7 @@ export function SplitEditor({
     ),
   );
 
-  const copy = de.sections.fixedCosts;
+  const copy = t.sections.fixedCosts;
   const totalBp = members.reduce(
     (total, member) => total + (shares[member.id] ?? 0),
     0,
@@ -154,7 +155,7 @@ export function SplitEditor({
 
           {totalBp !== FULL_SHARE_BP ? (
             <p role="alert" className="text-negative pt-1 text-sm">
-              {de.validation.sharesMustSum} ({formatShareBp(totalBp)})
+              {t.validation.sharesMustSum} ({formatShareBp(totalBp)})
             </p>
           ) : null}
         </div>

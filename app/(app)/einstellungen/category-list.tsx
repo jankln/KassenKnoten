@@ -5,14 +5,15 @@ import { useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CategoryIcon } from "@/components/ui/category-icon";
-import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import { removeCategory } from "./actions";
 import { CategoryDialog } from "./category-dialog";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function CategoryList({ categories }: { categories: CategoryRow[] }) {
+  const t = useMessages();
   const [, startTransition] = useTransition();
-  const copy = de.sections.settings;
+  const copy = t.sections.settings;
 
   function remove(category: CategoryRow) {
     startTransition(async () => {

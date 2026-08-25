@@ -9,10 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
 import { MAX_COLOR_INDEX } from "@/lib/validation/member";
 import { addMember, editMember } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 const MEMBER_COLORS = [
   "member-1",
@@ -32,6 +32,7 @@ export function MemberDialog({
   member?: { id: number; name: string; colorIndex: number };
   defaultColorIndex?: number;
 }) {
+  const t = useMessages();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -54,7 +55,7 @@ export function MemberDialog({
     });
   }
 
-  const copy = de.sections.household;
+  const copy = t.sections.household;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -109,11 +110,11 @@ export function MemberDialog({
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                {de.actions.cancel}
+                {t.actions.cancel}
               </Button>
             </DialogClose>
             <Button type="submit" variant="primary" disabled={pending}>
-              {de.actions.save}
+              {t.actions.save}
             </Button>
           </div>
         </form>

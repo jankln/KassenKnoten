@@ -14,10 +14,10 @@ import { formatInterval } from "@/lib/format";
 import { ValidityFields } from "@/components/patterns/validity-fields";
 import { periodFromDate } from "@/lib/domain/period";
 import { parseAmountToCents } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import type { CategoryRow } from "@/server/services/categories";
 import type { ExpenseRow } from "@/server/services/expenses";
 import { addPrivateExpense, editPrivateExpense } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /** The rhythms a fixed cost is actually charged in. */
 const INTERVALS = [1, 3, 6, 12] as const;
@@ -36,6 +36,7 @@ export function ExpenseDialog({
   /** Absent when adding a new cost. */
   expense?: ExpenseRow;
 }) {
+  const t = useMessages();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [amountText, setAmountText] = useState(
@@ -60,7 +61,7 @@ export function ExpenseDialog({
     });
   }
 
-  const copy = de.sections.fixedCosts;
+  const copy = t.sections.fixedCosts;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -80,7 +81,7 @@ export function ExpenseDialog({
             />
           </Field>
 
-          <Field label={de.sections.household.amount} htmlFor="expense-amount">
+          <Field label={t.sections.household.amount} htmlFor="expense-amount">
             <MoneyInput
               id="expense-amount"
               name="amountCents"
@@ -91,7 +92,7 @@ export function ExpenseDialog({
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label={de.sections.household.interval} htmlFor="expense-interval">
+            <Field label={t.sections.household.interval} htmlFor="expense-interval">
               <Select
                 id="expense-interval"
                 name="intervalMonths"
@@ -99,7 +100,7 @@ export function ExpenseDialog({
               >
                 {INTERVALS.map((months) => (
                   <option key={months} value={months}>
-                    {formatInterval(months)}
+                    {formatInterval(months, t)}
                   </option>
                 ))}
               </Select>
@@ -144,11 +145,11 @@ export function ExpenseDialog({
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                {de.actions.cancel}
+                {t.actions.cancel}
               </Button>
             </DialogClose>
             <Button type="submit" variant="primary" disabled={pending}>
-              {de.actions.save}
+              {t.actions.save}
             </Button>
           </div>
         </form>

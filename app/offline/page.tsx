@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
 import { KnotMark } from "@/components/brand/knot-mark";
 import { buttonStyles } from "@/components/ui/button";
-import { de } from "@/lib/i18n/de";
+import { getMessages } from "@/server/i18n";
 
-export const metadata: Metadata = { title: de.offline.title };
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  const t = getMessages();
+  return { title: t.offline.title };
+}
 
 /**
  * What the installed app shows when it cannot reach the server.
@@ -14,6 +19,7 @@ export const metadata: Metadata = { title: de.offline.title };
  * lands here again, which is the honest answer.
  */
 export default function OfflinePage() {
+  const t = getMessages();
   return (
     <main className="relative flex flex-1 items-center justify-center px-6 py-16">
       <div className="ruled pointer-events-none absolute inset-0" aria-hidden="true" />
@@ -22,10 +28,10 @@ export default function OfflinePage() {
         <KnotMark className="mx-auto mb-8 h-14 w-14 opacity-60" />
 
         <h1 className="font-display text-3xl font-semibold tracking-tight text-balance">
-          {de.offline.title}
+          {t.offline.title}
         </h1>
         <p className="text-ink-muted mt-3 text-sm leading-relaxed text-balance">
-          {de.offline.body}
+          {t.offline.body}
         </p>
 
         {/* A hard navigation on purpose. `next/link` would ask the router for an RSC
@@ -40,7 +46,7 @@ export default function OfflinePage() {
             className: "mt-8",
           })}
         >
-          {de.offline.retry}
+          {t.offline.retry}
         </a>
       </div>
     </main>

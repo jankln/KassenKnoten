@@ -3,10 +3,11 @@
 import { useRef, useState, useTransition } from "react";
 import { buttonStyles } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
-import { de } from "@/lib/i18n/de";
+import { useMessages } from "@/components/providers/messages-provider";
 
 export function DataBackup() {
-  const copy = de.sections.settings;
+  const t = useMessages();
+  const copy = t.sections.settings;
   const inputRef = useRef<HTMLInputElement>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState<string>();

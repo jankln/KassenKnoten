@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Bricolage_Grotesque, IBM_Plex_Mono, Manrope } from "next/font/google";
 import { ServiceWorker } from "@/components/providers/service-worker";
+import { MessagesProvider } from "@/components/providers/messages-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { getLocale } from "@/server/i18n";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -71,14 +73,20 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   // the same nonce the proxy issued for this request.
   const nonce = (await headers()).get("x-nonce") ?? undefined;
 
+  // Only the locale crosses into the client tree; the message sets hold functions, which
+  // cannot be serialised across that boundary.
+  const locale = getLocale();
+
   return (
     <html
-      lang="de"
+      lang={locale}
       suppressHydrationWarning
       className={`${bricolage.variable} ${manrope.variable} ${plexMono.variable} h-full`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
+        <MessagesProvider locale={locale}>
+          <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
+        </MessagesProvider>
         <ServiceWorker />
       </body>
     </html>

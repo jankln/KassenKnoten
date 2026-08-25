@@ -3,8 +3,8 @@
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import type { ComponentProps, ReactNode } from "react";
-import { de } from "@/lib/i18n/de";
 import { cn } from "@/lib/utils";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /**
  * A modal on wide screens, a bottom sheet on narrow ones — the same component, because
@@ -24,6 +24,7 @@ export function DialogContent({
   title: string;
   description?: ReactNode;
 }) {
+  const t = useMessages();
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=open]:fade-in fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" />
@@ -66,7 +67,7 @@ export function DialogContent({
             )}
           </div>
           <DialogPrimitive.Close
-            aria-label={de.actions.cancel}
+            aria-label={t.actions.cancel}
             className="text-ink-muted hover:text-ink hover:bg-surface-muted rounded-control -mt-1 -mr-1 p-1.5 transition-colors"
           >
             <X className="size-4" aria-hidden />

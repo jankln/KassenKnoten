@@ -13,9 +13,9 @@ import { MoneyInput } from "@/components/ui/money-input";
 import { ValidityFields } from "@/components/patterns/validity-fields";
 import { periodFromDate } from "@/lib/domain/period";
 import { parseAmountToCents } from "@/lib/format";
-import { de } from "@/lib/i18n/de";
 import { formatInterval } from "@/lib/format";
 import { addIncome, editIncome } from "./actions";
+import { useMessages } from "@/components/providers/messages-provider";
 
 /** The rhythms an income actually comes in. */
 const INTERVALS = [1, 3, 6, 12] as const;
@@ -38,6 +38,7 @@ export function IncomeDialog({
     validUntil: string | null;
   };
 }) {
+  const t = useMessages();
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const [amountText, setAmountText] = useState(
@@ -60,7 +61,7 @@ export function IncomeDialog({
     });
   }
 
-  const copy = de.sections.household;
+  const copy = t.sections.household;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -99,7 +100,7 @@ export function IncomeDialog({
               >
                 {INTERVALS.map((months) => (
                   <option key={months} value={months}>
-                    {formatInterval(months)}
+                    {formatInterval(months, t)}
                   </option>
                 ))}
               </Select>
@@ -130,11 +131,11 @@ export function IncomeDialog({
           <div className="flex justify-end gap-2 pt-1">
             <DialogClose asChild>
               <Button type="button" variant="ghost">
-                {de.actions.cancel}
+                {t.actions.cancel}
               </Button>
             </DialogClose>
             <Button type="submit" variant="primary" disabled={pending}>
-              {de.actions.save}
+              {t.actions.save}
             </Button>
           </div>
         </form>
