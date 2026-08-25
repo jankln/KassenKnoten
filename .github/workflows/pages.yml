@@ -4,8 +4,10 @@
 # README also reads them from, and are copied in as the artifact is assembled. One copy of
 # a screenshot is one screenshot that cannot go out of date on one of two paths.
 #
-# `enablement: true` switches Pages on and points it at Actions the first time this runs,
-# so there is no click-through in the repository settings to remember or to document.
+# Pages has to be enabled for the repository with its build type set to "workflow" — the
+# workflow token is not allowed to do that itself, so it is a one-time setup step:
+#   gh api -X POST repos/OWNER/REPO/pages -f build_type=workflow
+# or Settings → Pages → Build and deployment → Source → GitHub Actions.
 name: Deploy landing page
 
 on:
@@ -40,8 +42,6 @@ jobs:
         run: cp -r docs/media site/media
 
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
