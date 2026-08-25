@@ -12,7 +12,7 @@ and want the maths to be exactly right.
 **[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Security](#security) · [Extensions](#extensions)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.1.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
+[![Release](https://img.shields.io/badge/release-v1.2.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
 [![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
 [![Tests](https://img.shields.io/badge/tests-293%20passing-1e8f6a?style=flat-square)](#contributing)
 [![UI](https://img.shields.io/badge/UI-English%20%C2%B7%20Deutsch-008aa3?style=flat-square)](#a-note-on-language)
@@ -205,9 +205,11 @@ runtime.
 
 ## Status
 
-**Stable — 1.1.0.** Everything described above works and is in daily use. The data model,
+**Stable — 1.2.0.** Everything described above works and is in daily use. The data model,
 the backup format and the environment variables are settled; from here they change by
 migration, not by surprise, and breaking changes wait for a major version.
+
+1.2.0 adds the English interface and extensions; `latest` carries both.
 
 Planned: OIDC sign-in against Authentik with an e-mail allowlist. Until it exists,
 `AUTH_MODE` refuses the value rather than silently locking a household out of their own
