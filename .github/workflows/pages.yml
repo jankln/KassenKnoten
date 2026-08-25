@@ -4,8 +4,8 @@
 # README also reads them from, and are copied in as the artifact is assembled. One copy of
 # a screenshot is one screenshot that cannot go out of date on one of two paths.
 #
-# Requires the repository's Pages source to be set to "GitHub Actions"
-# (Settings → Pages → Build and deployment → Source).
+# `enablement: true` switches Pages on and points it at Actions the first time this runs,
+# so there is no click-through in the repository settings to remember or to document.
 name: Deploy landing page
 
 on:
@@ -34,12 +34,14 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Assemble the site
         run: cp -r docs/media site/media
 
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
