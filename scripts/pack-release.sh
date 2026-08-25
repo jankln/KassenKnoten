@@ -7,17 +7,20 @@
 # agent instructions. This produces the other thing — everything needed to build the image
 # and run the app, and nothing else.
 #
-# The file list is derived from `git ls-files`, which is the safety property that matters:
-# only tracked files can be included, so `.env`, the SQLite database and any local
-# screenshot of real figures cannot end up in a published archive by accident. This
-# repository's first rule is that no real household data reaches it; a release is the one
-# place where breaking that rule would be irreversible and public.
+# The contents come from `git archive HEAD`, not from the working tree, and that is the
+# property worth having twice over. Only committed files can be included, so a local
+# experiment, an uncommitted config line, `.env`, the SQLite database or a screenshot of
+# real figures cannot reach a published archive by accident — and what ships is exactly
+# what the tag says it is. This repository's first rule is that no real household data
+# enters it, and a release is the one place where breaking that rule would be public and
+# permanent.
 #
-# Usage: npm run pack
+# Usage: npm run pack [ref]     (ref defaults to HEAD)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+ref="${1:-HEAD}"
 version="$(node -p "require('./package.json').version")"
 name="kassenknoten-${version}"
 out="dist"
@@ -26,39 +29,31 @@ stage="${out}/${name}"
 rm -rf "$stage" "${out}/${name}.tar.gz"
 mkdir -p "$stage"
 
-# Development-only paths. Everything else that git tracks is needed to build or to run.
-#   docs/, site/, .github/  — documentation, marketing and CI
-#   *.test.ts               — the suite; clone the repository to run it
-#   eslint/prettier/vitest  — configuration for tools the image never invokes
-#   AGENTS/CLAUDE/CURRENT_WORK — how the project is worked on, not how it is run
-#   scripts/*               — except the two the setup instructions actually tell you to
-#                             run: auth:hash and auth:totp
-git ls-files -z | while IFS= read -r -d '' file; do
-  case "$file" in
-    docs/* | site/* | .github/* | .gitignore) continue ;;
-    *.test.ts | *.test.tsx) continue ;;
-    eslint.config.mjs | .prettierrc.json | .prettierignore | vitest.config.mts) continue ;;
-    AGENTS.md | CLAUDE.md | CURRENT_WORK.md) continue ;;
-    README.md) continue ;;
-    scripts/*)
-      case "$file" in
-        scripts/hash-password.ts | scripts/totp-secret.ts) ;;
-        *) continue ;;
-      esac
-      ;;
-  esac
-  mkdir -p "$stage/$(dirname "$file")"
-  cp "$file" "$stage/$file"
-done
+git archive --format=tar "$ref" | tar -x -C "$stage"
 
-# The bundle's own README. The setup instructions are lifted out of the repository README
+# The bundle's README. The setup instructions are lifted out of the repository README
 # rather than written a second time — if that section is ever renamed, this fails loudly
 # instead of quietly shipping instructions that have drifted.
-run_it="$(awk '/^## Run it$/{flag=1} /^## Security$/{flag=0} flag' README.md)"
+run_it="$(awk '/^## Run it$/{flag=1} /^## Security$/{flag=0} flag' "$stage/README.md")"
 if [ -z "$run_it" ]; then
   echo "pack-release: could not find the '## Run it' section in README.md" >&2
   exit 1
 fi
+
+# Development-only paths. Everything else the repository tracks is needed to build or run.
+#   docs/, site/, .github/     documentation, marketing and CI
+#   *.test.ts                  the suite; clone the repository to run it
+#   eslint/prettier/vitest     configuration for tools the image never invokes
+#   AGENTS/CLAUDE/CURRENT_WORK how the project is worked on, not how it is run
+#   scripts/*                  except the two the setup instructions tell you to run
+rm -rf \
+  "$stage/docs" "$stage/site" "$stage/.github" "$stage/.gitignore" \
+  "$stage/eslint.config.mjs" "$stage/.prettierrc.json" "$stage/.prettierignore" \
+  "$stage/vitest.config.mts" \
+  "$stage/AGENTS.md" "$stage/CLAUDE.md" "$stage/CURRENT_WORK.md"
+find "$stage" -name '*.test.ts' -o -name '*.test.tsx' | xargs -r rm -f
+find "$stage/scripts" -type f \
+  ! -name 'hash-password.ts' ! -name 'totp-secret.ts' -delete
 
 {
   echo "# KassenKnoten ${version}"
@@ -79,5 +74,5 @@ tar -czf "${out}/${name}.tar.gz" -C "$out" "$name"
 rm -rf "$stage"
 
 echo "${out}/${name}.tar.gz"
-tar -tzf "${out}/${name}.tar.gz" | wc -l | xargs echo "files:"
+tar -tzf "${out}/${name}.tar.gz" | grep -vc '/$' | xargs echo "files:"
 du -h "${out}/${name}.tar.gz" | cut -f1 | xargs echo "size:"
