@@ -12,8 +12,8 @@ and want the maths to be exactly right.
 **[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Security](#security)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.0.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
-[![Self-hosted](https://img.shields.io/badge/self--hosted-Docker-b6498d?style=flat-square)](#run-it)
+[![Release](https://img.shields.io/badge/release-v1.1.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
+[![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
 [![Tests](https://img.shields.io/badge/tests-280%20passing-1e8f6a?style=flat-square)](#contributing)
 [![UI](https://img.shields.io/badge/UI-Deutsch-008aa3?style=flat-square)](#a-note-on-language)
 
@@ -123,28 +123,49 @@ you sure?".
 
 ## Run it
 
-You need Docker and about two minutes.
+You need Docker and about two minutes. No checkout, no Node, no build — the image is
+published for **amd64 and arm64**, so a Raspberry Pi is as much a target as a NUC.
 
 ```bash
-git clone https://github.com/jankln/KassenKnoten.git
-cd KassenKnoten
-cp .env.example .env
+mkdir kassenknoten && cd kassenknoten
+curl -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
+curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/.env.example
 
 # a session secret
 echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
 
 # your household password, hashed — paste the printed line into .env
-npm run auth:hash
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/hash-password.ts
 
 # optional: a second factor. Prints a QR code to scan and the line for .env
-npm run auth:totp
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/totp-secret.ts
 
 docker compose up -d
 ```
 
+The two setup scripts run **inside the image**, so there is nothing to install to produce
+an argon2id hash or a TOTP secret.
+
 Open <http://127.0.0.1:3000> and a three-step wizard sets up the household. The database
-is created, migrated and seeded on first use — there is no separate migration step, and
-upgrading is `git pull && docker compose up -d --build`.
+is created, migrated and seeded on first use — there is no separate migration step.
+Upgrading is editing the tag in `docker-compose.yml` and `docker compose up -d`.
+
+<details>
+<summary>Building it yourself instead</summary>
+
+```bash
+git clone https://github.com/jankln/KassenKnoten.git
+cd KassenKnoten
+cp .env.example .env
+echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
+npm run auth:hash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
+
+The override replaces the published image with a local build and tags it
+`kassenknoten:local`, so the two never get confused in `docker images`.
+
+</details>
 
 Compose binds to localhost on purpose: put a reverse proxy in front for TLS, forward
 `X-Forwarded-Proto` and `X-Forwarded-For`, and set `APP_URL` to the public HTTPS address
@@ -183,7 +204,7 @@ runtime.
 
 ## Status
 
-**Stable — 1.0.0.** Everything described above works and is in daily use. The data model,
+**Stable — 1.1.0.** Everything described above works and is in daily use. The data model,
 the backup format and the environment variables are settled; from here they change by
 migration, not by surprise, and breaking changes wait for a major version.
 

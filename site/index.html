@@ -543,7 +543,7 @@
           <span
             ><strong>Auf den Cent</strong> — kein Float berührt je einen Betrag</span
           >
-          <span><strong>Ein Container</strong>, eine SQLite-Datei</span>
+          <span><strong>Ein Container</strong> für amd64 und arm64</span>
           <span><strong>Keine Telemetrie</strong>, keine externen Aufrufe</span>
           <span><strong>MIT-Lizenz</strong></span>
         </div>
@@ -889,18 +889,20 @@
           Start angelegt und migriert — es gibt keinen separaten Migrationsschritt.
         </p>
 
-        <pre><code>git clone https://github.com/jankln/KassenKnoten.git
-cd KassenKnoten
-cp .env.example .env
+        <pre><code>mkdir kassenknoten &amp;&amp; cd kassenknoten
+curl -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
+curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/.env.example
 
 <span class="c"># ein Sitzungsschlüssel</span>
 echo "SESSION_SECRET=$(openssl rand -base64 32)" &gt;&gt; .env
 
 <span class="c"># euer Haushalts-Passwort, gehasht</span>
-npm run auth:hash
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
+  node scripts/hash-password.ts
 
 <span class="c"># optional: zweiter Faktor, druckt einen QR-Code ins Terminal</span>
-npm run auth:totp
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
+  node scripts/totp-secret.ts
 
 docker compose up -d</code></pre>
 

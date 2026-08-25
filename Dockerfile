@@ -2,6 +2,10 @@
 #
 # KassenKnoten as a single container.
 #
+# Published to ghcr.io/jankln/kassenknoten for amd64 and arm64 on every tag; see
+# .github/workflows/image.yml. Building it yourself is `docker compose -f docker-compose.yml
+# -f docker-compose.build.yml up -d --build`.
+#
 # Three stages so the runtime image carries neither the npm cache nor a C++ toolchain:
 # dependencies, build, and a runtime that receives only Next.js' standalone output.
 
@@ -55,6 +59,28 @@ RUN mkdir -p /data && chown node:node /data
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
+
+# The two setup scripts travel with the image.
+#
+# Whoever pulls this instead of cloning still has to produce an argon2id hash and, if they
+# want it, a TOTP secret — and without a checkout there is nothing to run. "Just pull the
+# image" would be a promise that breaks at step two.
+#
+#   docker run -it --rm ghcr.io/jankln/kassenknoten \
+#     node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/hash-password.ts
+#   ... likewise scripts/totp-secret.ts
+#
+# Node 22 strips TypeScript types on its own, so these go in as the very files the test
+# suite covers rather than as a JavaScript copy that can drift away from them. The
+# --disable-warning flag silences one specific notice about the standalone package.json
+# having no "type" field; adding that field would break Next's CommonJS server.js. @node-rs/argon2
+# is already in the traced standalone output; `uqr` only draws the QR code for the second
+# factor and is a devDependency, so it is copied in beside them.
+COPY --from=builder --chown=node:node /app/scripts/hash-password.ts ./scripts/hash-password.ts
+COPY --from=builder --chown=node:node /app/scripts/totp-secret.ts ./scripts/totp-secret.ts
+COPY --from=builder --chown=node:node /app/lib/auth/password.ts ./lib/auth/password.ts
+COPY --from=builder --chown=node:node /app/lib/auth/totp.ts ./lib/auth/totp.ts
+COPY --from=deps --chown=node:node /app/node_modules/uqr ./node_modules/uqr
 
 USER node
 VOLUME ["/data"]

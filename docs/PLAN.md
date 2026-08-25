@@ -20,7 +20,8 @@ Status of this document: **agreed baseline**. Changes to it are their own `docs:
 4. **Mobile is a first-class target**, not a shrunken desktop. Same feature set, layout and
    interaction patterns designed for touch.
 5. **Self-hostable by anyone.** `docker compose up`, a handful of env vars, done.
-   Works with or without an identity provider.
+   A published multi-architecture image, so there is no toolchain and no build between
+   somebody and a running instance. Works with or without an identity provider.
 
 Explicit non-goals for v1: multi-household/multi-tenant, bank account sync, individual
 transaction bookkeeping, tax features, mobile native apps.
@@ -370,6 +371,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F23 Two-factor sign-in: TOTP as an optional second factor on the household password
 - [x] F24 Landing page in `site/`, published to GitHub Pages, and a README that leads with
       what the software does
+- [x] F25 Multi-arch image on GHCR; compose pulls instead of builds, and the image carries
+      its own setup scripts so installing needs no toolchain
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

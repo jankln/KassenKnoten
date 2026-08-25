@@ -1,15 +1,22 @@
 # KassenKnoten — one container, one SQLite file on a volume.
 #
 #   cp .env.example .env      and fill in SESSION_SECRET and LOCAL_PASSWORD_HASH
-#   docker compose up -d --build
+#   docker compose up -d
+#
+# This pulls a published image; nothing is built and no source checkout is needed. To
+# build from source instead, layer the override on top:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# The two files are kept apart on purpose. A compose file carrying both `image` and
+# `build` quietly builds whenever the image happens to be missing locally, which is
+# exactly what someone who came here to pull an image does not want to happen.
 #
 # Put a reverse proxy in front of this for TLS; see the README.
 
 services:
   kassenknoten:
-    build:
-      context: .
-    image: kassenknoten:latest
+    image: ghcr.io/jankln/kassenknoten:1.1.0
     container_name: kassenknoten
     restart: unless-stopped
     # Bind to localhost: the container is meant to sit behind a reverse proxy, not on
