@@ -410,6 +410,30 @@ export const de: Messages = {
       },
     },
 
+    receipt: {
+      scan: "Beleg scannen",
+      title: "Beleg scannen",
+      choosePhoto: "Foto wählen",
+      reading: "Beleg wird gelesen …",
+      privacy: "Das Foto wird auf diesem Server gelesen und nicht gespeichert.",
+      anotherPhoto: "Anderes Foto wählen",
+      budget: "Buchen auf",
+      budgetPlaceholder: "Posten wählen",
+      readFromReceipt:
+        "Betrag, Datum und Händler kommen vom Beleg. Bitte vor dem Speichern prüfen.",
+      checkAmount: "Die Summe war nicht eindeutig markiert. Bitte prüfen.",
+      noAmount: "Auf dem Beleg war keine Summe zu finden. Bitte selbst eintragen.",
+      noDate: "Auf dem Beleg war kein Datum zu finden. Bitte selbst eintragen.",
+      planCounts: (name: string) =>
+        `„${name}“ zählt den Plan. Die Ausgabe wird festgehalten, ändert die Monatssumme aber nicht.`,
+      otherMonth: (month: string) => `Datiert auf ${month} und wird dort gebucht.`,
+      notAnImage: "Diese Datei ist kein Bild.",
+      tooLarge: "Das Bild ist zu groß. 8 MB sind das Maximum.",
+      failed:
+        "Der Beleg konnte nicht gelesen werden. Bitte die Ausgabe von Hand eintragen.",
+      saved: "Ausgabe gebucht.",
+    },
+
     settings: {
       title: "Einstellungen",
       subtitle: "Sprache, Aufteilung, Kategorien und Daten.",

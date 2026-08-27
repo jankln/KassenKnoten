@@ -17,6 +17,7 @@ import {
 } from "@/server/services/variable-costs";
 import { CostCard } from "./cost-card";
 import { VariableCostDialog } from "./cost-dialog";
+import { ReceiptScan, type ScanTarget } from "./receipt-scan";
 import { Segments } from "./segments";
 import { getMessages } from "@/server/i18n";
 
@@ -38,7 +39,7 @@ export function generateMetadata(): Metadata {
 export default async function VariableCostsPage(props: PageProps<"/variable-kosten">) {
   const t = getMessages();
   const copy = t.sections.variableCosts;
-  const { bereich, monat } = await props.searchParams;
+  const { bereich, monat, scan } = await props.searchParams;
   const today = periodFromDate(new Date());
   const period: Period = typeof monat === "string" && isPeriod(monat) ? monat : today;
   const current = bereich === "gemeinsam" ? "shared" : "private";
@@ -99,9 +100,54 @@ export default async function VariableCostsPage(props: PageProps<"/variable-kost
     defaultFrom: period,
   };
 
+  const memberNames = new Map(members.map((member) => [member.id, member.name]));
+
+  /**
+   * What a scanned receipt can be booked against, most recently used first.
+   *
+   * An order, not a guess: the budget somebody entered a receipt against yesterday is
+   * the one the next receipt most likely belongs to, and a budget with no receipts at
+   * all cannot be that. Nothing here pre-selects anything — `docs/PLAN.md` keeps every
+   * decision that reaches a split in the household's hands, and the budget decides the
+   * split.
+   */
+  const scanTargets: ScanTarget[] = costs
+    .map((cost) => ({
+      cost,
+      lastBooking: cost.bookings.reduce(
+        (latest, booking) => (booking.bookedOn > latest ? booking.bookedOn : latest),
+        "",
+      ),
+    }))
+    .sort(
+      (a, b) =>
+        b.lastBooking.localeCompare(a.lastBooking) ||
+        a.cost.label.localeCompare(b.cost.label),
+    )
+    .map(({ cost }) => ({
+      id: cost.id,
+      label: cost.label,
+      scope: cost.scope,
+      detailed: cost.mode === "detailed",
+      memberName:
+        cost.memberId === null ? null : (memberNames.get(cost.memberId) ?? null),
+    }));
+
   return (
     <>
-      <PageHeader title={copy.title} subtitle={copy.subtitle} />
+      <PageHeader
+        title={copy.title}
+        subtitle={copy.subtitle}
+        action={
+          scanTargets.length > 0 ? (
+            <ReceiptScan
+              targets={scanTargets}
+              period={period}
+              autoOpen={scan === "1"}
+            />
+          ) : null
+        }
+      />
       <MonthNav period={period} today={today} hrefFor={hrefFor} />
       <Segments
         current={current}

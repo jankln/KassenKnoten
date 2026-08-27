@@ -60,7 +60,11 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    // Scanning is first because it is the one thing done standing up, with a receipt in
+    // the other hand — a long press on the icon should reach it without a screen in
+    // between.
     shortcuts: [
+      { name: t.sections.receipt.scan, url: "/variable-kosten?scan=1" },
       { name: t.nav.fixedCosts, url: "/fixkosten" },
       { name: t.nav.savings, url: "/sparen" },
     ],

@@ -96,6 +96,33 @@ breaks the app also breaks the screen you would use to remove it.
 The card contract is structured rows rather than markup, which is a design decision rather
 than a safety one: a card then renders in the app's own language and cannot look foreign.
 
+### Why a receipt is read on the household's own server
+
+Reading a photographed receipt is the one place in this application where a hosted model
+would plainly do the job better. Crumpled thermal paper is exactly what large multimodal
+models are good at and what a 2007 OCR engine is not, and the accuracy gap is real rather
+than theoretical.
+
+It is not taken, because a receipt is not a number — it is the shop, the hour and the
+basket, the most detailed record of somebody's day this app would ever hold. The product
+promises that a household's finances stay on the household's machine, and a feature that
+quietly posts a photograph of their groceries somewhere else would make that promise
+false in the one place it is most worth keeping. `tesseract.js` runs in the application
+process; nothing about this feature contacts a network.
+
+The trade is paid for by the design rather than hidden. The read is a proposal: a field
+the parser could not determine stays empty and says so, a total inferred from the largest
+amount rather than read off a `SUMME` line is marked for a second look, and nothing is
+booked without the save button. An OCR engine that is right most of the time is a good
+assistant and a terrible oracle, so the interface treats it as the former.
+
+The parsing itself is where the correctness lives, and it is therefore pure:
+`lib/domain/receipt.ts` takes text and a reference date and returns a draft, with tests
+built from real Tesseract output — the space it drops into `50, 00`, a `Geg. BAR 50,00`
+line larger than the total, a VAT rate that would double a small receipt, a date that a
+naive amount pattern reads as 14,03 €. The OCR engine is I/O around that, and I/O is the
+part that is allowed to be imperfect.
+
 ### Why the service worker caches nothing
 
 Installability requires a service worker with a fetch handler, and the usual next step is
@@ -160,6 +187,7 @@ lib/
 server/
   services/              household.ts, expenses.ts, savings.ts, snapshots.ts
   actions/               server actions, zod-validated
+  receipts/              ocr.ts — Tesseract worker; the parsing lives in lib/domain
 scripts/
   import-excel.ts        one-off seed from Finanzplan.xlsx
 docs/
@@ -393,6 +421,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F26 English alongside German, chosen at setup and changeable in the settings
 - [x] F27 Extensions: upload your own server-side code, managed in the settings
 - [x] F28 Landing page in English and German, one stylesheet, screenshots per language
+- [x] F29 Scan a receipt: photograph it, the app reads total, date and merchant, and the
+      household only says which budget it belongs to
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

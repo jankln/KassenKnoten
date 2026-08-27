@@ -409,6 +409,35 @@ export const en = {
       },
     },
 
+    /**
+     * Scanning a till receipt.
+     *
+     * The privacy line is copy, not a footnote: it belongs next to the button that
+     * uploads a photograph, because that is where somebody decides whether to press it.
+     */
+    receipt: {
+      scan: "Scan receipt",
+      title: "Scan a receipt",
+      choosePhoto: "Choose a photo",
+      reading: "Reading the receipt …",
+      privacy: "The photo is read on this server and is not stored.",
+      anotherPhoto: "Use another photo",
+      budget: "Book against",
+      budgetPlaceholder: "Choose an item",
+      readFromReceipt:
+        "Amount, date and merchant were read from the receipt. Check them before saving.",
+      checkAmount: "The total was not clearly marked. Please check it.",
+      noAmount: "No total was found on the receipt. Enter it yourself.",
+      noDate: "No date was found on the receipt. Enter it yourself.",
+      planCounts: (name: string) =>
+        `“${name}” counts its plan, so this is recorded but does not change the month's total.`,
+      otherMonth: (month: string) => `Dated ${month}, and booked into that month.`,
+      notAnImage: "That file is not an image.",
+      tooLarge: "The image is too large. 8 MB is the limit.",
+      failed: "The receipt could not be read. Enter the expense by hand.",
+      saved: "Expense booked.",
+    },
+
     settings: {
       title: "Settings",
       subtitle: "Language, split, categories and data.",

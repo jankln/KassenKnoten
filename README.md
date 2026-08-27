@@ -14,7 +14,7 @@ and want the maths to be exactly right.
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.2.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
 [![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
-[![Tests](https://img.shields.io/badge/tests-293%20passing-1e8f6a?style=flat-square)](#contributing)
+[![Tests](https://img.shields.io/badge/tests-324%20passing-1e8f6a?style=flat-square)](#contributing)
 [![UI](https://img.shields.io/badge/UI-English%20%C2%B7%20Deutsch-008aa3?style=flat-square)](#a-note-on-language)
 
 </div>
@@ -53,6 +53,7 @@ the cent, and shows both people what it actually costs them — while they type.
 | **Two-factor sign-in**        | Optional TOTP from any authenticator app, on top of the household password.                                 |
 | **Your data stays yours**     | One SQLite file on your volume, versioned JSON backups, CSV export, restore in one transaction.             |
 | **Extend it yourself**        | A single `.mjs` file, installed from the settings screen, adds your own cards to the overview.              |
+| **Scan a receipt**            | Photograph it and the total, date and shop are filled in — read on your own server, never uploaded.         |
 
 <br>
 
