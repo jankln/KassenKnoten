@@ -1,22 +1,41 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Release 1.3.0
+**Status:** in progress
+**Started:** 2026-08-27
 
-Last finished: **F29 – Scan a receipt instead of typing it**. A photograph is downscaled
-in the browser, read by Tesseract in the application process and parsed into a draft
-booking; the household picks the budget and saves. The photo is never written anywhere.
+## Goal
 
-Open on `docs/PLAN.md`: **F04b – OIDC against Authentik**, deferred by request.
+Publish the receipt scanner as a release, so the tag a running instance follows actually
+carries it. `main` only publishes `:edge`; `latest`, `{{version}}` and `{{major}}.{{minor}}`
+are cut by pushing `v*`. Until that tag exists, F29 is written but not shipped.
 
-Two notes for whoever comes next:
+## Scope
 
-- `lib/domain/receipt.ts` is the part that matters and is pure. Anything that reads more
-  off a receipt — a category, a payment method, line items — belongs there with tests,
-  not in the OCR module.
-- The trained models are found through `@tesseract.js-data/*`'s own `langPath`, never
-  through this app's `import.meta.url`: the app's modules are bundled, and in development
-  the bundler hands back a virtual `[project]/…` path that fails at runtime. Both data
-  packages are therefore in `serverExternalPackages`, and `next.config.ts` names their
-  files for the file tracer.
+- In: version in `package.json`, the pinned tag in `docker-compose.yml`, the release
+  badge and the Status section in `README.md`, the `v1.3.0` tag, the GitHub release.
+- Out: any change to what the software does, and any change to how the image is tagged.
+
+## Plan
+
+- [ ] Wait for the image build of the F29 commit to go green — a release cut on a red
+      build is a tag that pulls nothing.
+- [ ] `npm version 1.3.0 --no-git-tag-version`, compose pin, README badge and Status.
+- [ ] `npm run check`, commit `chore(release): 1.3.0`, push.
+- [ ] Tag `v1.3.0`, push the tag, watch the workflow publish `1.3.0`, `1.3` and `latest`.
+- [ ] GitHub release with notes.
+
+## Notes / decisions
+
+- The compose file in this repository keeps pinning an exact version. It is what a
+  stranger runs on first contact, and a moving tag there would mean their instance
+  changes underneath them without them asking. Following a moving tag is a decision the
+  person running the instance makes in their own compose file, not one this repository
+  makes for them.
+
+## Resume here
+
+Check `gh run list`. If the F29 build is green, bump and tag; if it failed, fix that
+first — nothing about a release is urgent enough to publish a broken image.
 
 See `docs/WORKFLOW.md` for how this file is used.
