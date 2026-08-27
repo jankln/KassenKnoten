@@ -395,7 +395,7 @@ export const de: Messages = {
 
       empty: {
         title: "Noch keine variablen Kosten",
-        body: "Lebensmittel, Tanken, Ausgehen: Lege einen Posten an und entscheide, ob du mit einem festen Plan rechnest oder jede Ausgabe einträgst.",
+        body: "Lebensmittel, Tanken, Ausgehen: Lege einen Posten an und entscheide, ob du mit einem festen Plan rechnest oder jede Ausgabe einträgst. Im Modus „Detailliert“ kannst du Belege dann einscannen, statt sie abzutippen.",
         action: "Ersten Posten anlegen",
       },
       sharedEmpty: {
@@ -413,6 +413,9 @@ export const de: Messages = {
     receipt: {
       scan: "Beleg scannen",
       title: "Beleg scannen",
+      needsItemTitle: "Erst ein Posten",
+      needsItem:
+        "Ein Beleg wird immer auf einen Posten gebucht, also muss es einen geben. Leg ihn hier an — danach ist Scannen: fotografieren, Posten wählen, speichern.",
       choosePhoto: "Foto wählen",
       reading: "Beleg wird gelesen …",
       privacy: "Das Foto wird auf diesem Server gelesen und nicht gespeichert.",

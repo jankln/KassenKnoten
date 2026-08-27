@@ -394,7 +394,7 @@ export const en = {
 
       empty: {
         title: "No variable costs yet",
-        body: "Groceries, fuel, going out: create an item and decide whether you plan a figure or enter every expense.",
+        body: "Groceries, fuel, going out: create an item and decide whether you plan a figure or enter every expense. In detailed mode you can then scan a receipt into it instead of typing it in.",
         action: "Create the first item",
       },
       sharedEmpty: {
@@ -418,6 +418,11 @@ export const en = {
     receipt: {
       scan: "Scan receipt",
       title: "Scan a receipt",
+      /* Shown when somebody arrives asking to scan — from the launcher shortcut —
+         and the month has nothing to book a receipt onto. */
+      needsItemTitle: "An item first",
+      needsItem:
+        "A receipt is always booked against an item, so there has to be one. Create it here — after that, scanning is: photograph, pick the item, save.",
       choosePhoto: "Choose a photo",
       reading: "Reading the receipt …",
       privacy: "The photo is read on this server and is not stored.",

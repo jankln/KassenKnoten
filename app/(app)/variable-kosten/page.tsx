@@ -39,6 +39,7 @@ export function generateMetadata(): Metadata {
 export default async function VariableCostsPage(props: PageProps<"/variable-kosten">) {
   const t = getMessages();
   const copy = t.sections.variableCosts;
+  const scanCopy = t.sections.receipt;
   const { bereich, monat, scan } = await props.searchParams;
   const today = periodFromDate(new Date());
   const period: Period = typeof monat === "string" && isPeriod(monat) ? monat : today;
@@ -133,6 +134,17 @@ export default async function VariableCostsPage(props: PageProps<"/variable-kost
         cost.memberId === null ? null : (memberNames.get(cost.memberId) ?? null),
     }));
 
+  /**
+   * Somebody asked to scan — from the launcher shortcut — and this month has nothing to
+   * book a receipt onto.
+   *
+   * Keyed on the scan targets rather than on the segment being empty: the shared segment
+   * can be empty while two private budgets sit one tab away, and scanning is perfectly
+   * possible then. The generic empty state would answer a question nobody asked, which
+   * is how a shortcut ends up promising something the screen does not have.
+   */
+  const needsItemToScan = scan === "1" && scanTargets.length === 0;
+
   return (
     <>
       <PageHeader
@@ -160,8 +172,8 @@ export default async function VariableCostsPage(props: PageProps<"/variable-kost
           per-person cards are the better view and this disappears. */}
       {current === "private" && costs.length === 0 ? (
         <EmptyState
-          title={copy.empty.title}
-          body={copy.empty.body}
+          title={needsItemToScan ? scanCopy.needsItemTitle : copy.empty.title}
+          body={needsItemToScan ? scanCopy.needsItem : copy.empty.body}
           action={
             <VariableCostDialog
               scope="private"
@@ -227,8 +239,8 @@ export default async function VariableCostsPage(props: PageProps<"/variable-kost
         </div>
       ) : shared.length === 0 ? (
         <EmptyState
-          title={copy.sharedEmpty.title}
-          body={copy.sharedEmpty.body}
+          title={needsItemToScan ? scanCopy.needsItemTitle : copy.sharedEmpty.title}
+          body={needsItemToScan ? scanCopy.needsItem : copy.sharedEmpty.body}
           action={
             <VariableCostDialog
               scope="shared"
