@@ -423,6 +423,9 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F28 Landing page in English and German, one stylesheet, screenshots per language
 - [x] F29 Scan a receipt: photograph it, the app reads total, date and merchant, and the
       household only says which budget it belongs to
+- [x] F30 The trend is read month by month: a guide line and a readout of that month's
+      figures follow the pointer or the arrow keys, so twelve months of history are
+      reachable without a navigation or a page load
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

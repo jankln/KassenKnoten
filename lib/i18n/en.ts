@@ -224,8 +224,8 @@ export const en = {
         variableCosts: "Variable costs",
         savingsRate: "Savings rate",
         freeCash: "Free cash",
-        chartLabel:
-          "Income, fixed costs, variable costs, savings rate and free cash over time",
+        scrubLabel: "Month in the trend",
+        scrubHint: "Drag along the chart, or use the arrow keys.",
         dataLabel: "Monthly figures",
       },
     },

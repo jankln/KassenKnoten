@@ -19,8 +19,9 @@ import { getDashboardData, getTrend } from "@/server/services/dashboard";
 import { loadExtensions, renderCards } from "@/server/extensions/runtime";
 import { getDb } from "@/db/client";
 import { getMessages } from "@/server/i18n";
-import type { Messages } from "@/lib/i18n";
 import type { CardContent } from "@/server/extensions/types";
+import { TrendChart } from "./trend-chart";
+import { trendLabel, trendSeries } from "./trend-series";
 
 // A page title is copy like any other, so it is resolved per request rather than
 // frozen into a module constant at import time.
@@ -566,31 +567,6 @@ function SavingsSection({ dashboard }: { dashboard: DashboardData }) {
   );
 }
 
-/**
- * The series the trend draws, and their colours. Deliberately free of copy: the chart
- * itself needs neither, and a component that takes no strings cannot need a language.
- */
-const trendSeries = [
-  { key: "incomeCents", color: "var(--color-member-1)" },
-  { key: "fixedCostsCents", color: "var(--color-member-2)" },
-  { key: "variableCostsCents", color: "var(--color-member-4)" },
-  { key: "savingsRateCents", color: "var(--color-member-3)" },
-  { key: "freeCashCents", color: "var(--color-brass)" },
-] as const;
-
-type TrendKey = (typeof trendSeries)[number]["key"];
-
-function trendLabel(t: Messages, key: TrendKey): string {
-  const labels: Record<TrendKey, string> = {
-    incomeCents: t.sections.overview.trend.income,
-    fixedCostsCents: t.sections.overview.trend.fixedCosts,
-    variableCostsCents: t.sections.overview.trend.variableCosts,
-    savingsRateCents: t.sections.overview.trend.savingsRate,
-    freeCashCents: t.sections.overview.trend.freeCash,
-  };
-  return labels[key];
-}
-
 function TrendSection({ trend }: { trend: TrendPoint[] }) {
   const t = getMessages();
   const copy = t.sections.overview.trend;
@@ -604,25 +580,7 @@ function TrendSection({ trend }: { trend: TrendPoint[] }) {
           <p className="text-ink-muted text-sm">{copy.empty}</p>
         ) : (
           <>
-            <div
-              role="img"
-              aria-label={copy.chartLabel}
-              className="bg-surface-muted/35 rounded-control min-w-0 p-2 sm:p-4"
-            >
-              <TrendChart trend={trend} />
-            </div>
-            <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs">
-              {trendSeries.map((line) => (
-                <li key={line.key} className="flex items-center gap-2">
-                  <span
-                    aria-hidden
-                    className="size-2 shrink-0 rounded-full"
-                    style={{ backgroundColor: line.color }}
-                  />
-                  <span>{trendLabel(t, line.key)}</span>
-                </li>
-              ))}
-            </ul>
+            <TrendChart trend={trend} />
             <ul
               aria-label={copy.dataLabel}
               className="border-line mt-5 grid gap-3 border-t pt-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -651,64 +609,5 @@ function TrendSection({ trend }: { trend: TrendPoint[] }) {
         )}
       </Card>
     </section>
-  );
-}
-
-function TrendChart({ trend }: { trend: TrendPoint[] }) {
-  const values = trend.flatMap((point) => trendSeries.map((line) => point[line.key]));
-  const min = Math.min(0, ...values);
-  const max = Math.max(0, ...values);
-  const range = max - min || 1;
-  const width = 640;
-  const height = 240;
-  const x = (index: number) =>
-    Math.round(24 + (index * (width - 48)) / (trend.length - 1));
-  const y = (value: number) => Math.round(24 + ((max - value) * (height - 48)) / range);
-
-  return (
-    <svg
-      viewBox={`0 0 ${width} ${height}`}
-      className="block h-auto w-full"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <line
-        x1="24"
-        x2={width - 24}
-        y1={y(0)}
-        y2={y(0)}
-        stroke="var(--color-line)"
-        strokeDasharray="4 5"
-      />
-      {trendSeries.map((line) => (
-        <polyline
-          key={line.key}
-          points={trend
-            .map((point, index) => `${x(index)},${y(point[line.key])}`)
-            .join(" ")}
-          fill="none"
-          pathLength={1}
-          stroke={line.color}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="4"
-          className="line-draw"
-        />
-      ))}
-      {trendSeries.map((line) =>
-        trend.map((point, index) => (
-          <circle
-            key={`${line.key}-${point.period}`}
-            cx={x(index)}
-            cy={y(point[line.key])}
-            r="4"
-            fill="var(--color-surface)"
-            stroke={line.color}
-            strokeWidth="3"
-            className="dot-appear"
-          />
-        )),
-      )}
-    </svg>
   );
 }

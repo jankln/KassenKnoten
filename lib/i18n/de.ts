@@ -225,8 +225,8 @@ export const de: Messages = {
         variableCosts: "Variable Kosten",
         savingsRate: "Sparrate",
         freeCash: "Freies Geld",
-        chartLabel:
-          "Verlauf von Einnahmen, Fixkosten, variablen Kosten, Sparrate und freiem Geld",
+        scrubLabel: "Monat im Verlauf",
+        scrubHint: "Zieh am Verlauf entlang oder nutze die Pfeiltasten.",
         dataLabel: "Monatliche Verlaufsdaten",
       },
     },
