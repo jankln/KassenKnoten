@@ -1,23 +1,30 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Fix #12 – photographed receipts with uneven lighting keep their total
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **fix #11** — a recognition worker that cannot start ends the scan within
-the deadline, and the next scan starts fresh.
+## Goal
 
-Next up: a patch release, 1.4.1. Every release since 1.3.0 ships a scanner that cannot
-start in the image (#10); `main` has the fix and `edge` carries it.
+A receipt photographed with a shadow across it — the ordinary phone case — is read with
+its `SUMME` line, instead of the parser falling back to the largest item price.
 
-Notes for whoever comes next:
+## Scope
 
-- A worker thread that dies while loading a module never reaches tesseract.js'
-  `errorHandler` — there is no `error` listener on the thread, so Node reports it as an
-  `uncaughtException` in the server and the start simply never finishes. That case ends
-  at the 45-second deadline, not at once. Failing faster would mean patching tesseract.js;
-  `scripts/verify-standalone.mjs` keeps the case out of the image instead.
-- Recognition quality on a real supermarket receipt is poor: the large bold total line is
-  not read, so the draft proposes the largest item amount instead.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first.
+- In: the recognition worker binarises with Sauvola (`thresholding_method: 2`) instead of
+  Tesseract's global Otsu threshold.
+- In: a synthetic shadowed receipt as a fixture, and a test that runs the real engine on
+  it and expects the total from the `SUMME` line.
+- Out: resolution, preprocessing in the browser, parser changes. Measured: resolution
+  does not help; Sauvola alone does.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] fixture `scripts/fixtures/receipt-shadow.webp` (synthetic, no real data)
+- [ ] test with the real engine, failing today
+- [ ] `setParameters` in `ocr.ts`, inside the start deadline
+- [ ] `npm run check`, standalone build check, scan both sample receipts again
+
+## Resume here
+
+Add the fixture and the failing test first.
