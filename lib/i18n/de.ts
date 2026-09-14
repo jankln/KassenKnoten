@@ -307,6 +307,7 @@ export const de: Messages = {
       newExpense: "Neue Fixkosten",
       expenseLabel: "Bezeichnung",
       expenseLabelPlaceholder: "z. B. Sportverein",
+      sharedLabelPlaceholder: "z. B. Miete",
       category: "Kategorie",
       noCategory: "Ohne Kategorie",
       person: "Person",

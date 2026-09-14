@@ -84,7 +84,7 @@ export function SharedExpenseDialog({
               id="shared-label"
               name="label"
               defaultValue={expense?.label}
-              placeholder="z. B. Miete"
+              placeholder={copy.sharedLabelPlaceholder}
               maxLength={60}
               autoComplete="off"
               required

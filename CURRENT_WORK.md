@@ -1,25 +1,15 @@
 # Current work
 
-**Feature:** Fix #9 – shared cost placeholder comes from the message files
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fixes #4 to #9** — password sign-in keeps the requested page, dates
+follow the language, the login title and the shared cost placeholder are translated,
+status badges read in the dark theme, and an unconfigured provider has a proper title.
 
-The label field in the shared fixed cost dialog shows "e.g. Rent" on an English instance
-and "z. B. Miete" on a German one.
+Next up: a release, since F30, F04b and these fixes are on `main` but in no tag.
 
-## Scope
+Note for whoever comes next: amounts and percentages still use `de-DE` in both languages
+on purpose — amount input is parsed German-first. Whether an English instance should show
+`€1,234.56` is an open product decision, not an oversight.
 
-- In: `sharedLabelPlaceholder` in both message files, used by the dialog.
-- Out: other dialog copy.
-
-## Plan
-
-- [ ] copy in `en.ts` and `de.ts`
-- [ ] `shared-dialog.tsx` uses it
-- [ ] `npm run check`, then open the dialog in both languages
-
-## Resume here
-
-One string, two files, one attribute.
+See `docs/WORKFLOW.md` for how this file is used.

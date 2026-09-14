@@ -312,6 +312,7 @@ export const en = {
       newExpense: "New fixed cost",
       expenseLabel: "Label",
       expenseLabelPlaceholder: "e.g. Sports club",
+      sharedLabelPlaceholder: "e.g. Rent",
       category: "Category",
       noCategory: "No category",
       person: "Person",
