@@ -381,7 +381,7 @@ OIDC_ALLOWED_EMAILS=            # seeds the allowlist kept in the settings
 | `/fixkosten`       | Fixed costs — segmented into "Privat" per member and "Gemeinsam"                             |
 | `/variable-kosten` | Variable costs for one month — budgets, their mode, and the receipts booked against them     |
 | `/sparen`          | Savings pots with rate, balance, target, progress                                            |
-| `/einstellungen`   | Default split, categories, snapshots, import/export, appearance                              |
+| `/einstellungen`   | Settings overview; one page each for general, planning, sign-in, data and extensions         |
 | `/login`           | Authentik button and/or password form                                                        |
 | `/willkommen`      | First-run onboarding wizard                                                                  |
 
@@ -484,6 +484,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
       reachable without a navigation or a page load
 - [x] F31 Automatic backups: once a day when something changed, the versioned JSON
       written to the data volume, the newest fourteen kept and downloadable in the settings
+- [x] F32 Settings in categories: an overview, and one page each for general, planning,
+      sign-in, data and extensions, with the category list beside them on wide screens
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

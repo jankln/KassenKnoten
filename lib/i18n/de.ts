@@ -463,9 +463,30 @@ export const de: Messages = {
 
     settings: {
       title: "Einstellungen",
-      subtitle: "Sprache, Aufteilung, Kategorien und Daten.",
+      subtitle: "Alles, was keine Zahl ist, sortiert nach dem, was du ändern willst.",
+      groups: {
+        general: {
+          title: "Allgemein",
+          hint: "Sprache, Darstellung und Installation als App.",
+        },
+        planning: {
+          title: "Planung",
+          hint: "Die Standardaufteilung für gemeinsame Kosten und die Kostenkategorien.",
+        },
+        signIn: {
+          title: "Anmeldung",
+          hint: "Wer diesen Haushaltsplan öffnen kann, und wie.",
+        },
+        data: {
+          title: "Daten",
+          hint: "Automatische Sicherungen, Downloads und Wiederherstellung.",
+        },
+        extensions: {
+          title: "Erweiterungen",
+          hint: "Eigener Code, der auf diesem Server läuft.",
+        },
+      },
       themeHint: "Gilt nur auf diesem Gerät.",
-      dataTitle: "Daten sichern",
       dataHint:
         "Lade eine vollständige Sicherung oder die aktuellen Planungsdaten herunter.",
       downloadJson: "JSON-Sicherung herunterladen",
@@ -593,7 +614,6 @@ export const de: Messages = {
    * so plainly — there is no sandbox here to reassure anybody about.
    */
   extensions: {
-    title: "Erweiterungen",
     hint: "Ergänze KassenKnoten um eigenen Code. Erweiterungen laufen auf deinem Server und steuern Karten zur Übersicht bei.",
     warning:
       "Eine Erweiterung läuft auf deinem Server mit vollem Zugriff auf eure Haushaltsdaten und kann sie ändern oder löschen. Installiere nur Code, den du gelesen hast oder dem du vertraust — genau wie bei jeder anderen Software auf diesem Rechner.",
@@ -623,7 +643,6 @@ export const de: Messages = {
   },
 
   signIn: {
-    title: "Anmeldung",
     hint: "Wie man in diesen Haushaltsplan kommt.",
     password: "Haushalts-Passwort",
     passwordHint: "Ein gemeinsames Passwort für alle.",

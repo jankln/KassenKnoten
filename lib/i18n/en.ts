@@ -475,9 +475,31 @@ export const en = {
 
     settings: {
       title: "Settings",
-      subtitle: "Language, split, categories and data.",
+      subtitle: "Everything that is not a figure, grouped by what you came to change.",
+      /** The categories of the settings, as the overview and the sidebar list them. */
+      groups: {
+        general: {
+          title: "General",
+          hint: "Language, appearance and installing the app.",
+        },
+        planning: {
+          title: "Planning",
+          hint: "The default split for shared costs, and the cost categories.",
+        },
+        signIn: {
+          title: "Sign-in",
+          hint: "Who can open this household plan, and how.",
+        },
+        data: {
+          title: "Data",
+          hint: "Automatic backups, downloads and restoring.",
+        },
+        extensions: {
+          title: "Extensions",
+          hint: "Your own code, running on this server.",
+        },
+      },
       themeHint: "Applies to this device only.",
-      dataTitle: "Back up your data",
       dataHint: "Download a full backup or the current plan.",
       downloadJson: "Download JSON backup",
       downloadCsv: "Download plan as CSV",
@@ -601,7 +623,6 @@ export const en = {
    * so plainly — there is no sandbox here to reassure anybody about.
    */
   extensions: {
-    title: "Extensions",
     hint: "Add your own code to KassenKnoten. Extensions run on your server and contribute cards to the overview.",
     warning:
       "An extension runs on your server with full access to your household's data and can change or delete it. Only install code you have read or trust, exactly as you would with any other software on this machine.",
@@ -635,7 +656,6 @@ export const en = {
    * somebody locks themselves out.
    */
   signIn: {
-    title: "Sign-in",
     hint: "How people get into this household plan.",
     password: "Household password",
     passwordHint: "One shared password for everyone.",

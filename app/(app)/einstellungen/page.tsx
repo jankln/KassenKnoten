@@ -1,24 +1,9 @@
 import type { Metadata } from "next";
-import { ThemeToggle } from "@/components/navigation/theme-toggle";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { PageHeader } from "@/components/patterns/page-header";
-import { Card, CardTitle } from "@/components/ui/card";
-import { listCategories } from "@/server/services/categories";
-import { getHouseholdSettings, getSplitContext } from "@/server/services/household";
-import { listMembersWithIncome } from "@/server/services/members";
-import { CategoryList } from "./category-list";
-import { DataBackup } from "./data-backup";
-import { DefaultSplitForm } from "./default-split";
-import { InstallApp } from "./install-app";
-import { LanguagePicker } from "./language-picker";
-import { Extensions } from "./extensions";
-import { getLocale, getMessages } from "@/server/i18n";
-import { loadExtensions } from "@/server/extensions/runtime";
-import { extensionsEnabled } from "@/server/extensions/store";
-import { requireSession } from "@/lib/auth/current-session";
-import { getEnv, oidcRedirectUri } from "@/lib/env";
-import { getSignInState } from "@/server/services/sign-in";
-import { SignInSettings } from "./sign-in";
-import { listBackups } from "@/server/backups/automatic";
+import { getMessages } from "@/server/i18n";
+import { settingsHref, settingsSections } from "./settings-sections";
 
 // A page title is copy like any other, so it is resolved per request rather than
 // frozen into a module constant at import time.
@@ -27,126 +12,39 @@ export function generateMetadata(): Metadata {
   return { title: t.sections.settings.title };
 }
 
-export default async function SettingsPage() {
-  const extensions = await loadExtensions();
+/**
+ * The settings overview: what can be changed, grouped, one line each. It loads nothing —
+ * every category page fetches only what it shows.
+ */
+export default function SettingsOverviewPage() {
   const t = getMessages();
   const copy = t.sections.settings;
-  const categories = listCategories();
-  const members = await listMembersWithIncome();
-  const settings = getHouseholdSettings();
-  const context = await getSplitContext();
-  const session = await requireSession();
-  const env = getEnv();
-  const signIn = getSignInState(env);
 
   return (
     <>
       <PageHeader title={copy.title} subtitle={copy.subtitle} />
 
-      <div className="space-y-4">
-        <Card className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <CardTitle>{t.language.label}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{t.language.hint}</p>
-          </div>
-          <LanguagePicker current={getLocale()} />
-        </Card>
-
-        <Card className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <CardTitle>{t.theme.label}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{copy.themeHint}</p>
-          </div>
-          <ThemeToggle />
-        </Card>
-
-        {members.length > 0 ? (
-          <Card>
-            <div className="mb-4">
-              <CardTitle>{t.sections.fixedCosts.defaultSplit}</CardTitle>
-              <p className="text-ink-muted mt-1 text-sm">
-                {t.sections.fixedCosts.defaultSplitHint}
-              </p>
-            </div>
-            <DefaultSplitForm
-              members={members.map((member) => ({
-                id: member.id,
-                name: member.name,
-                colorIndex: member.colorIndex,
-              }))}
-              defaultMode={settings.defaultSplitMode}
-              defaultShares={context.defaultShares}
-            />
-          </Card>
-        ) : null}
-
-        <Card>
-          <div className="mb-4">
-            <CardTitle>{t.signIn.title}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{t.signIn.hint}</p>
-          </div>
-          <SignInSettings
-            configured={signIn.configured}
-            effective={signIn.effective}
-            chosenInSettings={signIn.chosenInSettings}
-            allowlist={signIn.allowlist}
-            allowlistInSettings={signIn.allowlistInSettings}
-            providerName={env.oidc?.providerName ?? t.login.providerFallback}
-            providerTitle={env.oidc?.providerName ?? t.signIn.providerTitle}
-            redirectUri={oidcRedirectUri(env)}
-            session={{
-              method: session.method,
-              ...(session.email ? { email: session.email } : {}),
-            }}
-          />
-        </Card>
-
-        <Card>
-          <div className="mb-4">
-            <CardTitle>{copy.dataTitle}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{copy.dataHint}</p>
-          </div>
-          <DataBackup
-            automatic={
-              env.backups
-                ? {
-                    directory: env.backups.directory,
-                    keep: env.backups.keep,
-                    backups: listBackups(env.backups.directory).map((backup) => ({
-                      name: backup.name,
-                      takenAt: backup.takenAt.toISOString(),
-                      bytes: backup.bytes,
-                    })),
-                  }
-                : null
-            }
-          />
-        </Card>
-
-        <Card>
-          <div className="mb-4">
-            <CardTitle>{t.install.title}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{t.install.hint}</p>
-          </div>
-          <InstallApp />
-        </Card>
-
-        <Card>
-          <div className="mb-4">
-            <CardTitle>{t.extensions.title}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{t.extensions.hint}</p>
-          </div>
-          <Extensions installed={extensions.installed} enabled={extensionsEnabled()} />
-        </Card>
-
-        <Card>
-          <div className="mb-4">
-            <CardTitle>{copy.categories}</CardTitle>
-            <p className="text-ink-muted mt-1 text-sm">{copy.categoriesHint}</p>
-          </div>
-          <CategoryList categories={categories} />
-        </Card>
-      </div>
+      <ul className="border-line bg-surface divide-line rounded-card divide-y border">
+        {settingsSections(t).map((section) => (
+          <li key={section.slug}>
+            <Link
+              href={settingsHref(section.slug)}
+              className="hover:bg-surface-muted/60 flex min-h-16 items-center gap-4 px-5 py-3.5 transition-colors first:rounded-t-[inherit] last:rounded-b-[inherit]"
+            >
+              <span className="bg-surface-muted text-ink rounded-control flex size-10 shrink-0 items-center justify-center">
+                <section.icon className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{section.title}</span>
+                <span className="text-ink-muted mt-0.5 block text-sm">
+                  {section.hint}
+                </span>
+              </span>
+              <ChevronRight className="text-ink-muted size-4 shrink-0" aria-hidden />
+            </Link>
+          </li>
+        ))}
+      </ul>
     </>
   );
 }

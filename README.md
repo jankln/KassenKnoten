@@ -181,7 +181,7 @@ before anyone signs in.
 
 Once a day, when something has changed, the server writes a backup into `backups/` in the
 data volume and keeps the last fourteen. They are the same versioned JSON as the download
-under **Settings → Back up your data**, where they are also listed: download one, choose it
+under **Settings → Data**, where they are also listed: download one, choose it
 under **Restore a backup**, done. A day on which nothing changed writes nothing, so the
 fourteen are fourteen different states.
 
