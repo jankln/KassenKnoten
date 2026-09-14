@@ -36,7 +36,7 @@ transaction bookkeeping, tax features, mobile native apps.
 | Styling        | Tailwind CSS + shadcn/ui primitives, custom theme                                                                                                                         |
 | Animation      | CSS keyframes, no animation library                                                                                                                                       |
 | Data           | SQLite via Drizzle ORM, file on a mounted volume                                                                                                                          |
-| Auth           | OIDC (Authentik) as primary, optional local password fallback                                                                                                             |
+| Auth           | Shared password and/or OIDC (Authentik), chosen in `.env` before install and in the settings after                                                                        |
 | Authorization  | E-mail allowlist inside the app                                                                                                                                           |
 | Time dimension | Incomes and fixed costs are valid for a range of months; every month is computed from what applied in it. Snapshots remain only for savings balances                      |
 | Split modes    | Fixed quota (default 50/50, configurable) and income-proportional; **the split mode is chosen explicitly per shared item**, the household default only pre-fills the form |
@@ -181,7 +181,7 @@ db/
   migrations/
 lib/
   domain/                calc.ts, split.ts, interval.ts, money.ts   ← pure, unit-tested
-  auth/                  oidc.ts, session.ts, allowlist.ts
+  auth/                  oidc.ts, session.ts, allowlist.ts, methods.ts
   i18n/                  de.ts  (all German copy)
   format.ts              Intl-based de-DE money/date/percent formatting
 server/
@@ -283,14 +283,41 @@ month's computed state is frozen. No cron, no scheduler container.
 - Enabled by the presence of `TOTP_SECRET`. There is deliberately no `AUTH_MODE` value for
   it: a configuration flag that silently disables a security feature is worse than none.
 
-**Later — OIDC / Authentik** (F04b, deferred by request)
+**Optionally — an identity provider** (F04b, built)
 
-- Authorization Code flow with PKCE, discovery via `OIDC_ISSUER`, ID token verified
-  against the JWKS with `jose`, then the e-mail matched against an allowlist.
-- The seam already exists: the session module knows nothing about how an identity was
-  proven, so the callback becomes a second caller of `startSession()` rather than a
-  rewrite. `AUTH_MODE` deliberately rejects `oidc` until that code exists — a config
-  value that silently locks the household out would be worse than an unsupported one.
+- Authorization Code flow with PKCE (S256), discovery via `OIDC_ISSUER`, the ID token
+  verified against the provider's JWKS with `jose`: signature, issuer exact, audience and
+  `azp`, expiry, nonce. No client library; every relying-party check is in
+  `lib/auth/oidc.ts` and tested, the PKCE derivation against RFC 7636's own example.
+- When the ID token carries no e-mail — a strictly conforming provider puts profile claims
+  only on the userinfo endpoint in the code flow — the profile is read from there, and
+  only accepted for the subject the verified token named.
+- State, nonce, PKCE verifier and return path travel in a ten-minute JWE cookie with its
+  own HKDF label. No server-side store: a restart mid-sign-in costs one click.
+- `email_verified: false` is refused. A provider with open enrolment could otherwise hand
+  out an account carrying the household's address. A missing claim is accepted.
+- The seam held: the callback is a second caller of `startSession()`, and TOTP stays a
+  password-only concern — a provider sign-in gets its second factor from the provider.
+
+_Configured versus chosen._ The environment says what is **possible** — a password hash
+exists, a provider is set up — and never holds a choice the household would want to
+change without a shell. `AUTH_MODE` (`local`, `oidc`, `both`) is the **starting** choice;
+Settings → Sign-in stores the household's later choice and the allowlist in `app_setting`,
+and once a row exists it wins over `AUTH_MODE` and `OIDC_ALLOWED_EMAILS`. What is in effect
+is the intersection of configured and chosen, in `lib/auth/methods.ts`. Neither row is a
+secret, so a copy of the database is still not a way in.
+
+_No lockout by clicking._ At least one method stays on; the method a session was proven
+with cannot be switched off from that session (so the password only goes off after
+somebody has actually come in through the provider); the signed-in address cannot be
+removed from the list. If what was chosen is no longer configured, every configured method
+comes back — so removing the provider from `.env` and setting `AUTH_MODE=local` is the
+recovery from a broken provider, the same shape as `EXTENSIONS_ENABLED=false`.
+
+_Revocation is immediate._ `getSession()` re-checks the method and the allowlist on every
+request. A cookie that still decrypts but is no longer allowed is sent to `/login/ended`,
+a route handler that clears it — a server component cannot, and `/login` would bounce it
+straight back through the proxy.
 
 **Everything else**
 
@@ -307,10 +334,15 @@ month's computed state is frozen. No cron, no scheduler container.
 APP_URL=https://kassen.example.com
 DATABASE_PATH=/data/kassenknoten.db
 SESSION_SECRET=                 # 32+ random bytes
-AUTH_MODE=local
+AUTH_MODE=local                 # local | oidc | both — the starting point, see above
 LOCAL_PASSWORD_HASH=            # base64 of the argon2id hash, from npm run auth:hash
 LOCAL_PASSWORD_HASH_FILE=       # alternative: read it from a Docker secret
 TOTP_SECRET=                    # optional second factor, from npm run auth:totp
+OIDC_ISSUER=                    # optional identity provider, exact issuer URL
+OIDC_CLIENT_ID=
+OIDC_CLIENT_SECRET=             # or OIDC_CLIENT_SECRET_FILE
+OIDC_PROVIDER_NAME=             # button label, e.g. Authentik
+OIDC_ALLOWED_EMAILS=            # seeds the allowlist kept in the settings
 ```
 
 ---
@@ -382,7 +414,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F02 Database layer: Drizzle schema, migrations, SQLite connection, seed of system categories
 - [x] F03 Domain engine: money, intervals, income ratio, largest-remainder split, household summary — with full unit tests
 - [x] F04 Auth: local password, session cookie, deny-by-default proxy, login screen
-- [ ] F04b Auth: OIDC flow against Authentik, e-mail allowlist (deferred by request)
+- [x] F04b Auth: OIDC flow against Authentik, e-mail allowlist — optional, chosen in `.env`
+      before install and under Settings → Sign-in after
 
 **Milestone B — Replacing the spreadsheet**
 

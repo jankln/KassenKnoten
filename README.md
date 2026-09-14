@@ -51,6 +51,7 @@ the cent, and shows both people what it actually costs them — while they type.
 | **Dashboard and trend**       | The month at a glance, per person, per category — and the line each month draws over time.                  |
 | **Installable as an app**     | Own icon, no address bar, and an honest offline screen instead of stale figures.                            |
 | **Two-factor sign-in**        | Optional TOTP from any authenticator app, on top of the household password.                                 |
+| **Sign in with Authentik**    | Optional OpenID Connect, next to or instead of the password, with an allowlist kept in the app.             |
 | **Your data stays yours**     | One SQLite file on your volume, versioned JSON backups, CSV export, restore in one transaction.             |
 | **Extend it yourself**        | A single `.mjs` file, installed from the settings screen, adds your own cards to the overview.              |
 | **Scan a receipt**            | Photograph it and the total, date and shop are filled in — read on your own server, never uploaded.         |
@@ -142,6 +143,9 @@ docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=
 # optional: a second factor. Prints a QR code to scan and the line for .env
 docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/totp-secret.ts
 
+# optional: sign in with Authentik or another OIDC provider — see "Sign in with an
+# identity provider" below, and fill in the OIDC_* block of .env
+
 docker compose up -d
 ```
 
@@ -173,6 +177,57 @@ Compose binds to localhost on purpose: put a reverse proxy in front for TLS, for
 `X-Forwarded-Proto` and `X-Forwarded-For`, and set `APP_URL` to the public HTTPS address
 before anyone signs in.
 
+## Sign in with an identity provider
+
+Optional. If you run Authentik — or Keycloak, Pocket ID, Zitadel, anything that speaks
+OpenID Connect — the household can sign in with it instead of, or next to, the shared
+password. Nobody who does not configure it notices it exists.
+
+**Before the first start** it is decided in `.env`: the `OIDC_*` block says how to reach
+the provider, and `AUTH_MODE` says what is switched on — `local` (the password), `oidc`
+(the provider only) or `both`.
+
+**After install** it is decided under **Settings → Sign-in**: switch the password and the
+provider on or off, and keep the list of e-mail addresses that may come in through the
+provider. The first change there takes over from `AUTH_MODE` and `OIDC_ALLOWED_EMAILS`,
+and the card says which of the two currently applies. A provider can sit in `.env`
+switched off and be turned on from the settings later, without a restart.
+
+Setting it up in Authentik:
+
+1. **Applications → Applications → Create with provider**, provider type
+   **OAuth2/OpenID Connect**.
+2. Client type **Confidential**. Redirect URI, strict:
+   `https://kassen.example.com/login/oidc/callback` — your `APP_URL` followed by
+   `/login/oidc/callback`. The settings card shows the exact value.
+3. Pick a **signing key**. Without one Authentik signs ID tokens with the client secret
+   instead of a published key, and they cannot be verified here.
+4. Keep the default scopes `openid`, `email` and `profile`.
+5. Copy the values into `.env`:
+
+```env
+AUTH_MODE=both
+OIDC_ISSUER=https://auth.example.com/application/o/kassenknoten/
+OIDC_CLIENT_ID=...
+OIDC_CLIENT_SECRET=...
+OIDC_PROVIDER_NAME=Authentik
+OIDC_ALLOWED_EMAILS=alex@example.com, robin@example.com
+```
+
+The issuer must match what Authentik publishes character for character, trailing slash
+included; the app names the mismatch in its log if it does not. Addresses the provider
+marks as `email_verified: false` are refused.
+
+Having an account at the provider is not enough to get in: only addresses on the
+allowlist are. Taking someone off the list, or switching a method off, ends the sessions
+it issued on their next request — not when the week-long cookie happens to expire.
+
+The settings will not let you lock yourself out: at least one method stays on, the method
+you are signed in with cannot be switched off from that session, and your own address
+cannot be removed from the list. If the provider breaks while it is the only way in,
+remove `OIDC_ISSUER` and `OIDC_CLIENT_ID` from `.env`, set `AUTH_MODE=local` with a
+`LOCAL_PASSWORD_HASH`, and restart — the password works again.
+
 ## Security
 
 One shared household password, hashed with **argon2id** at OWASP interactive parameters
@@ -184,6 +239,12 @@ code from any authenticator app (RFC 6238, verified against the RFC's own test v
 A code is refused once it has been used, so one read over your shoulder is not one that
 still works. The secret lives in the environment like the password does, which means
 losing the phone is not a lockout and there are no recovery codes to keep safe.
+
+Optionally **OpenID Connect**: authorization code flow with PKCE, the ID token verified
+against the provider's published keys (issuer, audience, expiry, nonce), and the e-mail
+matched against an allowlist kept in the app. The client secret lives in the environment,
+not the database. Written against `jose` directly rather than a client library, so every
+check is in [`lib/auth/oidc.ts`](lib/auth/oidc.ts) and covered by a test.
 
 The session is an **encrypted** cookie (JWE, A256GCM, key derived via HKDF), `httpOnly`,
 `SameSite=Lax`, and `Secure` whenever the request arrived over HTTPS. Every route except
@@ -214,9 +275,8 @@ migration, not by surprise, and breaking changes wait for a major version.
 land in the form. It is read by an OCR engine inside the container — no key to configure,
 no service to trust, and the photo is dropped once it has been read.
 
-Planned: OIDC sign-in against Authentik with an e-mail allowlist. Until it exists,
-`AUTH_MODE` refuses the value rather than silently locking a household out of their own
-finances.
+Unreleased on `main`: optional sign-in with Authentik or any OpenID Connect provider,
+chosen in `.env` before install and in the settings afterwards.
 
 ## Extensions
 
@@ -258,7 +318,7 @@ model, `docs/design.md` the visual direction and the reasoning behind it,
 [`docs/extensions/`](docs/extensions/README.md) how to add your own code without touching
 this repository at all.
 
-`npm run check` — typecheck, lint, format and 293 tests — must pass, and nothing is
+`npm run check` — typecheck, lint, format and 380 tests — must pass, and nothing is
 finished until it works at 375 px.
 
 ## License

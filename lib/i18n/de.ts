@@ -51,6 +51,26 @@ export const de: Messages = {
     throttled: (duration: string) => `Zu viele Versuche. Weiter in ${duration}.`,
     oneMinute: "einer Minute",
     minutes: (count: number) => `${count} Minuten`,
+    passwordDisabled: "Die Anmeldung mit dem Haushalts-Passwort ist abgeschaltet.",
+    introProvider: (provider: string) =>
+      `Der Haushaltsplan ist geschützt. Melde dich mit ${provider} an, um ihn zu öffnen.`,
+    introBoth: (provider: string) =>
+      `Der Haushaltsplan ist geschützt. Melde dich mit ${provider} oder mit dem Haushalts-Passwort an.`,
+    withProvider: (provider: string) => `Mit ${provider} anmelden`,
+    providerFallback: "Single Sign-on",
+    or: "oder",
+    errors: {
+      disabled: "Die Anmeldung über den Identitätsanbieter ist abgeschaltet.",
+      provider:
+        "Der Identitätsanbieter war nicht erreichbar oder hat eine Antwort geliefert, die der Prüfung nicht standhält. Versuch es noch einmal oder bitte die Person, die diese Instanz betreibt, ins Log zu schauen.",
+      expired: "Diese Anmeldung wurde nicht abgeschlossen. Bitte starte sie neu.",
+      unverified:
+        "Der Identitätsanbieter hat diese E-Mail-Adresse nicht bestätigt, deshalb kann sie hier nicht zur Anmeldung dienen.",
+      denied:
+        "Die Anmeldung hat geklappt, aber dieses Konto hat keinen Zugang zu diesem Haushaltsplan.",
+      ended:
+        "Deine Sitzung wurde beendet, weil die Anmeldung dafür in den Einstellungen geändert wurde.",
+    },
   },
 
   nav: {
@@ -584,6 +604,55 @@ export const de: Messages = {
     switchedOff:
       "Erweiterungen sind auf dieser Instanz abgeschaltet (EXTENSIONS_ENABLED=false).",
     cardsTitle: "Aus deinen Erweiterungen",
+  },
+
+  signIn: {
+    title: "Anmeldung",
+    hint: "Wie man in diesen Haushaltsplan kommt.",
+    password: "Haushalts-Passwort",
+    passwordHint: "Ein gemeinsames Passwort für alle.",
+    providerHint: "Alle auf der Liste unten melden sich mit ihrem eigenen Konto an.",
+    notConfiguredPassword:
+      "Nicht eingerichtet. Trag LOCAL_PASSWORD_HASH in die .env ein und starte neu.",
+    notConfiguredProvider:
+      "Nicht eingerichtet. Trag OIDC_ISSUER und OIDC_CLIENT_ID in die .env ein und starte neu.",
+    on: "An",
+    off: "Aus",
+    switchOn: "Einschalten",
+    switchOff: "Abschalten",
+    fromEnvironment:
+      "Derzeit so, wie AUTH_MODE in der .env es vorgibt. Deine erste Änderung hier löst das ab.",
+    fromSettings: "Hier festgelegt. AUTH_MODE in der .env gilt nicht mehr.",
+    signedInWithPassword: "Du bist mit dem Haushalts-Passwort angemeldet.",
+    signedInWithProvider: (email: string, provider: string) =>
+      `Du bist als ${email} über ${provider} angemeldet.`,
+    recovery:
+      "Falls der Identitätsanbieter einmal nicht funktioniert: in der .env OIDC_ISSUER und OIDC_CLIENT_ID entfernen, AUTH_MODE=local setzen, LOCAL_PASSWORD_HASH muss gesetzt sein, dann neu starten. Das Haushalts-Passwort gilt wieder.",
+    redirectUri: "Redirect-URI für den Anbieter",
+    allowlistTitle: (provider: string) => `Wer sich über ${provider} anmelden darf`,
+    allowlistHint:
+      "Ein Konto beim Anbieter allein reicht nicht. Nur diese Adressen kommen herein.",
+    allowlistFromEnvironment:
+      "Aus OIDC_ALLOWED_EMAILS in der .env übernommen. Deine erste Änderung hier löst das ab.",
+    allowlistEmpty: "Noch niemand.",
+    email: "E-Mail-Adresse",
+    add: "Hinzufügen",
+    remove: (email: string) => `${email} entfernen`,
+    saved: "Anmeldung aktualisiert.",
+    refused: {
+      noneLeft: "Mindestens ein Weg zur Anmeldung muss eingeschaltet bleiben.",
+      notConfigured: "Dieser Anmeldeweg ist in der .env nicht eingerichtet.",
+      ownMethodPassword: (provider: string) =>
+        `Melde dich einmal über ${provider} an, bevor du das Passwort abschaltest. Das zeigt, dass es funktioniert.`,
+      ownMethodProvider: (provider: string) =>
+        `Du bist über ${provider} angemeldet. Melde dich mit dem Haushalts-Passwort an, um das abzuschalten.`,
+      emptyWhileOnlyProvider:
+        "Der Anbieter ist der einzige Weg herein, also muss mindestens eine Adresse auf der Liste bleiben.",
+      ownAddress:
+        "Mit dieser Adresse bist du angemeldet. Sie zu entfernen würde dich abmelden.",
+      invalid: "Das ist keine E-Mail-Adresse.",
+      duplicate: "Diese Adresse steht schon auf der Liste.",
+    },
   },
 
   /** Shown by the service worker when a page cannot be loaded. */

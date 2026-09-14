@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/navigation/app-header";
 import { BottomNav } from "@/components/navigation/bottom-nav";
 import { Sidebar } from "@/components/navigation/sidebar";
 import { Toaster } from "@/components/ui/toaster";
-import { requireSession } from "@/lib/auth/current-session";
+import { getSession } from "@/lib/auth/current-session";
 import { redirect } from "next/navigation";
 import { isOnboardingDone } from "@/server/services/household";
 import { ensurePreviousMonthSnapshot } from "@/server/services/snapshots";
@@ -19,7 +19,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   // the only thing standing between a stranger and the household's finances. It also
   // makes this segment dynamic, so pages read the database per request instead of being
   // prerendered once at build time.
-  await requireSession();
+  //
+  // The proxy has already let a decryptable cookie through, so no session here means one
+  // the household has since stopped allowing. `/login/ended` clears it; going to `/login`
+  // directly would bounce straight back.
+  if (!(await getSession())) {
+    redirect("/login/ended");
+  }
   if (!isOnboardingDone()) {
     redirect("/willkommen");
   }

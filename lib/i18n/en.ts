@@ -50,6 +50,28 @@ export const en = {
     throttled: (duration: string) => `Too many attempts. Try again in ${duration}.`,
     oneMinute: "one minute",
     minutes: (count: number) => `${count} minutes`,
+    passwordDisabled: "Signing in with the household password is switched off.",
+    introProvider: (provider: string) =>
+      `This household plan is protected. Sign in with ${provider} to open it.`,
+    introBoth: (provider: string) =>
+      `This household plan is protected. Sign in with ${provider} or with the household password.`,
+    withProvider: (provider: string) => `Sign in with ${provider}`,
+    /** What the provider is called when OIDC_PROVIDER_NAME is not set. */
+    providerFallback: "single sign-on",
+    or: "or",
+    /** Why a provider sign-in did not end in a session, keyed by `?fehler=`. */
+    errors: {
+      disabled: "Signing in through the identity provider is switched off.",
+      provider:
+        "The identity provider could not be reached or gave an answer that did not check out. Try again, or ask whoever runs this instance to look at its log.",
+      expired: "That sign-in did not complete. Please start it again.",
+      unverified:
+        "The identity provider has not verified that e-mail address, so it cannot be used to sign in here.",
+      denied:
+        "You signed in, but that account is not allowed into this household plan.",
+      ended:
+        "Your session has ended because sign-in for it was changed in the settings.",
+    },
   },
 
   nav: {
@@ -585,6 +607,59 @@ export const en = {
     switchedOff:
       "Extensions are switched off on this instance (EXTENSIONS_ENABLED=false).",
     cardsTitle: "From your extensions",
+  },
+
+  /**
+   * Settings → Sign-in. The environment says what is possible, this card what is used; the
+   * copy keeps saying which of the two a line is about, because mixing them up is how
+   * somebody locks themselves out.
+   */
+  signIn: {
+    title: "Sign-in",
+    hint: "How people get into this household plan.",
+    password: "Household password",
+    passwordHint: "One shared password for everyone.",
+    providerHint: "Everyone on the list below signs in with their own account.",
+    notConfiguredPassword: "Not set up. Add LOCAL_PASSWORD_HASH to .env and restart.",
+    notConfiguredProvider:
+      "Not set up. Add OIDC_ISSUER and OIDC_CLIENT_ID to .env and restart.",
+    on: "On",
+    off: "Off",
+    switchOn: "Switch on",
+    switchOff: "Switch off",
+    fromEnvironment:
+      "Currently as AUTH_MODE in .env starts it. Your first change here takes over from it.",
+    fromSettings: "Chosen here. AUTH_MODE in .env no longer applies.",
+    signedInWithPassword: "You are signed in with the household password.",
+    signedInWithProvider: (email: string, provider: string) =>
+      `You are signed in as ${email} through ${provider}.`,
+    recovery:
+      "If the identity provider ever stops working: in .env, remove OIDC_ISSUER and OIDC_CLIENT_ID, set AUTH_MODE=local and make sure LOCAL_PASSWORD_HASH is set, then restart. The household password works again.",
+    redirectUri: "Redirect URI to register with the provider",
+    allowlistTitle: (provider: string) => `Who may sign in through ${provider}`,
+    allowlistHint:
+      "Having an account at the provider is not enough. Only these addresses get in.",
+    allowlistFromEnvironment:
+      "Taken from OIDC_ALLOWED_EMAILS in .env. Your first change here takes over from it.",
+    allowlistEmpty: "Nobody yet.",
+    email: "E-mail address",
+    add: "Add",
+    remove: (email: string) => `Remove ${email}`,
+    saved: "Sign-in updated.",
+    refused: {
+      noneLeft: "At least one way of signing in has to stay on.",
+      notConfigured: "That way of signing in is not set up in .env.",
+      ownMethodPassword: (provider: string) =>
+        `Sign in through ${provider} once before switching the password off. That shows it works.`,
+      ownMethodProvider: (provider: string) =>
+        `You are signed in through ${provider}. Sign in with the household password to switch it off.`,
+      emptyWhileOnlyProvider:
+        "The provider is the only way in, so at least one address has to stay on the list.",
+      ownAddress:
+        "That is the address you are signed in with. Removing it would sign you out.",
+      invalid: "That is not an e-mail address.",
+      duplicate: "That address is already on the list.",
+    },
   },
 
   /** Shown by the service worker when a page cannot be loaded. */

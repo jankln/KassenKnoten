@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { KnotMark } from "@/components/brand/knot-mark";
-import { requireSession } from "@/lib/auth/current-session";
+import { getSession } from "@/lib/auth/current-session";
 import { isOnboardingDone } from "@/server/services/household";
 import { OnboardingWizard } from "./onboarding-wizard";
 import { getLocale, getMessages } from "@/server/i18n";
@@ -14,7 +14,11 @@ export function generateMetadata(): Metadata {
 }
 
 export default async function WelcomePage() {
-  await requireSession();
+  // Same reasoning as the app layout: a cookie the proxy accepted but the household no
+  // longer allows is cleared by `/login/ended`, not thrown at as an error page.
+  if (!(await getSession())) {
+    redirect("/login/ended");
+  }
   if (isOnboardingDone()) {
     redirect("/");
   }

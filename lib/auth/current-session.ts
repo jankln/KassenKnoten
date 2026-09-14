@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { getEnv, isSecureOrigin } from "@/lib/env";
+import { getSignInState, sessionStillAllowed } from "@/server/services/sign-in";
 import {
   createSessionToken,
   readSessionToken,
@@ -16,9 +17,22 @@ import {
  * context, and so the proxy can verify a token it reads from the raw request.
  */
 
+/**
+ * The session, if the cookie decrypts **and** the household still lets it in.
+ *
+ * The second half is what the proxy cannot answer on its own: whether the method that
+ * issued the cookie is still switched on, and whether a provider sign-in's address is
+ * still on the allowlist. Asked here, every page and every server action honours a change
+ * in the settings on its very next request.
+ */
 export async function getSession(): Promise<Session | null> {
+  const env = getEnv();
   const store = await cookies();
-  return readSessionToken(store.get(SESSION_COOKIE)?.value, getEnv().SESSION_SECRET);
+  const session = await readSessionToken(
+    store.get(SESSION_COOKIE)?.value,
+    env.SESSION_SECRET,
+  );
+  return session && sessionStillAllowed(session, getSignInState(env)) ? session : null;
 }
 
 /**

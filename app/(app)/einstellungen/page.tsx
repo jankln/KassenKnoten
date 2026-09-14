@@ -14,6 +14,10 @@ import { Extensions } from "./extensions";
 import { getLocale, getMessages } from "@/server/i18n";
 import { loadExtensions } from "@/server/extensions/runtime";
 import { extensionsEnabled } from "@/server/extensions/store";
+import { requireSession } from "@/lib/auth/current-session";
+import { getEnv, oidcRedirectUri } from "@/lib/env";
+import { getSignInState } from "@/server/services/sign-in";
+import { SignInSettings } from "./sign-in";
 
 // A page title is copy like any other, so it is resolved per request rather than
 // frozen into a module constant at import time.
@@ -30,6 +34,9 @@ export default async function SettingsPage() {
   const members = await listMembersWithIncome();
   const settings = getHouseholdSettings();
   const context = await getSplitContext();
+  const session = await requireSession();
+  const env = getEnv();
+  const signIn = getSignInState(env);
 
   return (
     <>
@@ -71,6 +78,26 @@ export default async function SettingsPage() {
             />
           </Card>
         ) : null}
+
+        <Card>
+          <div className="mb-4">
+            <CardTitle>{t.signIn.title}</CardTitle>
+            <p className="text-ink-muted mt-1 text-sm">{t.signIn.hint}</p>
+          </div>
+          <SignInSettings
+            configured={signIn.configured}
+            effective={signIn.effective}
+            chosenInSettings={signIn.chosenInSettings}
+            allowlist={signIn.allowlist}
+            allowlistInSettings={signIn.allowlistInSettings}
+            providerName={env.oidc?.providerName ?? t.login.providerFallback}
+            redirectUri={oidcRedirectUri(env)}
+            session={{
+              method: session.method,
+              ...(session.email ? { email: session.email } : {}),
+            }}
+          />
+        </Card>
 
         <Card>
           <div className="mb-4">

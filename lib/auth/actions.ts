@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getEnv, requiresSecondFactor } from "@/lib/env";
 import { getMessages } from "@/server/i18n";
+import { getSignInState } from "@/server/services/sign-in";
 import { endSession, startSession } from "./current-session";
 import { verifyPassword } from "./password";
 import { loginLimiter } from "./rate-limit";
@@ -44,6 +45,12 @@ export async function signIn(
   const copy = getMessages().login;
   const env = getEnv();
   const client = await clientKey();
+
+  // The form is not rendered when the password is switched off, but a server action is
+  // an endpoint, and an endpoint is reachable whether or not a form points at it.
+  if (!env.LOCAL_PASSWORD_HASH || !getSignInState(env).effective.local) {
+    return { error: copy.passwordDisabled };
+  }
 
   const limit = loginLimiter.check(client);
   if (!limit.allowed) {

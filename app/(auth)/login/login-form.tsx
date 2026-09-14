@@ -4,17 +4,28 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { signIn, type LoginState } from "@/lib/auth/actions";
 import { useMessages } from "@/components/providers/messages-provider";
+import { cn } from "@/lib/utils";
 
 const field =
   "border-line bg-surface rounded-control placeholder:text-ink-muted/60 focus-visible:border-brass h-12 w-full border px-3.5 text-base transition-colors outline-none";
 
-export function LoginForm({ requiresCode }: { requiresCode: boolean }) {
+export function LoginForm({
+  requiresCode,
+  secondary = false,
+}: {
+  requiresCode: boolean;
+  /** Next to a provider button, which then takes the primary styling and the focus. */
+  secondary?: boolean;
+}) {
   const t = useMessages();
   const [state, formAction] = useActionState<LoginState, FormData>(signIn, {});
   const copy = t.login;
 
   return (
-    <form action={formAction} className="mt-9 space-y-4">
+    <form
+      action={formAction}
+      className={secondary ? "mt-8 space-y-4" : "mt-9 space-y-4"}
+    >
       <div className="space-y-2">
         <label htmlFor="password" className="block text-sm font-medium">
           {copy.password}
@@ -24,7 +35,7 @@ export function LoginForm({ requiresCode }: { requiresCode: boolean }) {
           name="password"
           type="password"
           autoComplete="current-password"
-          autoFocus
+          autoFocus={!secondary}
           required
           aria-describedby={state.error ? "login-error" : undefined}
           aria-invalid={state.error ? true : undefined}
@@ -67,12 +78,12 @@ export function LoginForm({ requiresCode }: { requiresCode: boolean }) {
         </p>
       ) : null}
 
-      <SubmitButton />
+      <SubmitButton secondary={secondary} />
     </form>
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ secondary }: { secondary: boolean }) {
   const t = useMessages();
   const { pending } = useFormStatus();
 
@@ -80,7 +91,12 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="bg-brass text-brass-ink rounded-control h-12 w-full text-sm font-semibold tracking-wide transition-[opacity,transform] hover:opacity-90 active:scale-[0.99] disabled:opacity-70"
+      className={cn(
+        "rounded-control h-12 w-full text-sm font-semibold tracking-wide transition-[opacity,transform] hover:opacity-90 active:scale-[0.99] disabled:opacity-70",
+        secondary
+          ? "border-line bg-surface text-ink border"
+          : "bg-brass text-brass-ink",
+      )}
     >
       {pending ? t.login.pending : t.login.submit}
     </button>
