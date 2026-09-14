@@ -52,7 +52,7 @@ the cent, and shows both people what it actually costs them — while they type.
 | **Installable as an app**     | Own icon, no address bar, and an honest offline screen instead of stale figures.                            |
 | **Two-factor sign-in**        | Optional TOTP from any authenticator app, on top of the household password.                                 |
 | **Sign in with Authentik**    | Optional OpenID Connect, next to or instead of the password, with an allowlist kept in the app.             |
-| **Your data stays yours**     | One SQLite file on your volume, versioned JSON backups, CSV export, restore in one transaction.             |
+| **Your data stays yours**     | One SQLite file on your volume, a daily automatic backup, CSV export, restore in one transaction.           |
 | **Extend it yourself**        | A single `.mjs` file, installed from the settings screen, adds your own cards to the overview.              |
 | **Scan a receipt**            | Photograph it and the total, date and shop are filled in — read on your own server, never uploaded.         |
 
@@ -176,6 +176,25 @@ The override replaces the published image with a local build and tags it
 Compose binds to localhost on purpose: put a reverse proxy in front for TLS, forward
 `X-Forwarded-Proto` and `X-Forwarded-For`, and set `APP_URL` to the public HTTPS address
 before anyone signs in.
+
+### Backups
+
+Once a day, when something has changed, the server writes a backup into `backups/` in the
+data volume and keeps the last fourteen. They are the same versioned JSON as the download
+under **Settings → Back up your data**, where they are also listed: download one, choose it
+under **Restore a backup**, done. A day on which nothing changed writes nothing, so the
+fourteen are fourteen different states.
+
+They live on the same disk as the database, which protects against a mistake, not against
+the disk. Copy them off the machine now and then — from the host that is:
+
+```bash
+docker cp kassenknoten:/data/backups ./kassenknoten-backups
+```
+
+`BACKUP_KEEP` changes how many are kept (`0` switches them off), `BACKUP_DIR` where they go
+— a mounted network share, for instance. A backup carries the household's data only: sign-in
+settings and extension switches stay with the instance and are left alone by a restore.
 
 ## Sign in with an identity provider
 

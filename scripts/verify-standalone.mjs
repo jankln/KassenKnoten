@@ -26,6 +26,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
 } from "node:fs";
@@ -43,6 +44,8 @@ const fixture = join(
 const root = mkdtempSync(join(tmpdir(), "kk-standalone-"));
 const failures = [];
 
+checkNothingExtraWasTraced();
+
 try {
   cpSync(join(standalone, "node_modules"), join(root, "node_modules"), {
     recursive: true,
@@ -58,15 +61,39 @@ try {
 
 if (failures.length > 0) {
   console.error(
-    "verify-standalone: the receipt scanner cannot work in this build.\n  " +
+    "verify-standalone: this standalone build is not fit to ship.\n  " +
       failures.join("\n  ") +
-      "\nSee outputFileTracingIncludes in next.config.ts.",
+      "\nSee the tracing settings in next.config.ts.",
   );
   process.exit(1);
 }
 console.log("verify-standalone: the receipt scanner reads a receipt in this build.");
 
 /* ------------------------------------------------------------------------- */
+
+/**
+ * The standalone output is a server, not a copy of the repository.
+ *
+ * A single filesystem call with a path built at runtime makes Turbopack trace the whole
+ * project — and it only warns about it. The output then carries the source tree, and with
+ * it whatever lies in the working directory: a real database in `data/`, a spreadsheet
+ * of real finances, photographed receipts. The image build's context excludes those, but
+ * a build is not allowed to depend on that to keep household data out of a server bundle.
+ */
+function checkNothingExtraWasTraced() {
+  for (const entry of ["app", "components", "lib", "data", "e2e"]) {
+    if (existsSync(join(standalone, entry))) {
+      failures.push(
+        `the build traced ${entry}/ — a filesystem call with a dynamic path pulled in the whole project`,
+      );
+    }
+  }
+  for (const entry of readdirSync(standalone)) {
+    if (/\.(xlsx|db|db-wal|db-shm)$/i.test(entry)) {
+      failures.push(`the build contains ${entry}`);
+    }
+  }
+}
 
 function walkWorkerGraph() {
   const builtins = new Set(builtinModules.flatMap((name) => [name, `node:${name}`]));

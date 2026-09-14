@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import path from "node:path";
 import { z } from "zod";
 import { parseAllowlist } from "./auth/allowlist";
 import { methodsForMode, type MethodSet } from "./auth/methods";
@@ -64,6 +65,21 @@ const schema = z.object({
   /** Seeds the allowlist until the household edits it in the settings. */
   OIDC_ALLOWED_EMAILS: z.string().optional(),
 
+  /** Where automatic backups go. Defaults to `backups/` beside the database. */
+  BACKUP_DIR: z.string().optional(),
+  /**
+   * How many distinct backups are kept. `0` switches automatic backups off. An empty
+   * value — the untouched line in `.env.example` — means the default.
+   */
+  BACKUP_KEEP: z.preprocess(
+    (value) => (typeof value === "string" && value.trim() === "" ? undefined : value),
+    z.coerce
+      .number({ error: "BACKUP_KEEP must be a whole number, 0 to switch backups off" })
+      .int("BACKUP_KEEP must be a whole number, 0 to switch backups off")
+      .min(0, "BACKUP_KEEP must be a whole number, 0 to switch backups off")
+      .default(14),
+  ),
+
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -89,6 +105,8 @@ export type Env = Omit<
   | "OIDC_CLIENT_SECRET_FILE"
   | "OIDC_PROVIDER_NAME"
   | "OIDC_ALLOWED_EMAILS"
+  | "BACKUP_DIR"
+  | "BACKUP_KEEP"
 > & {
   /** Present only when password sign-in is configured. */
   LOCAL_PASSWORD_HASH?: string;
@@ -96,6 +114,8 @@ export type Env = Omit<
   TOTP_SECRET?: string;
   /** Present only when an identity provider is configured. */
   oidc?: OidcConfig;
+  /** Present only when automatic backups are on. */
+  backups?: { directory: string; keep: number };
 };
 
 const ARGON2ID_PREFIX = "$argon2id$";
@@ -151,6 +171,8 @@ export function getEnv(): Env {
     "OIDC_CLIENT_SECRET_FILE",
     "OIDC_PROVIDER_NAME",
     "OIDC_ALLOWED_EMAILS",
+    "BACKUP_DIR",
+    "BACKUP_KEEP",
   ] as const) {
     delete rest[key];
   }
@@ -160,6 +182,23 @@ export function getEnv(): Env {
     ...(passwordHash ? { LOCAL_PASSWORD_HASH: passwordHash } : {}),
     ...(totpSecret ? { TOTP_SECRET: totpSecret } : {}),
     ...(oidc ? { oidc } : {}),
+    ...(data.BACKUP_KEEP > 0
+      ? {
+          backups: {
+            // `turbopackIgnore`: a path assembled from the environment is otherwise read
+            // by the build as "anything on disk", and the whole project — `.env`, a real
+            // database in `data/` — is traced into the standalone output.
+            directory: path.resolve(
+              /* turbopackIgnore: true */ data.BACKUP_DIR?.trim() ||
+                path.join(
+                  /* turbopackIgnore: true */ path.dirname(data.DATABASE_PATH),
+                  "backups",
+                ),
+            ),
+            keep: data.BACKUP_KEEP,
+          },
+        }
+      : {}),
   };
   return cached;
 }

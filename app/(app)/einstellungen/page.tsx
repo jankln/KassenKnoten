@@ -18,6 +18,7 @@ import { requireSession } from "@/lib/auth/current-session";
 import { getEnv, oidcRedirectUri } from "@/lib/env";
 import { getSignInState } from "@/server/services/sign-in";
 import { SignInSettings } from "./sign-in";
+import { listBackups } from "@/server/backups/automatic";
 
 // A page title is copy like any other, so it is resolved per request rather than
 // frozen into a module constant at import time.
@@ -105,7 +106,21 @@ export default async function SettingsPage() {
             <CardTitle>{copy.dataTitle}</CardTitle>
             <p className="text-ink-muted mt-1 text-sm">{copy.dataHint}</p>
           </div>
-          <DataBackup />
+          <DataBackup
+            automatic={
+              env.backups
+                ? {
+                    directory: env.backups.directory,
+                    keep: env.backups.keep,
+                    backups: listBackups(env.backups.directory).map((backup) => ({
+                      name: backup.name,
+                      takenAt: backup.takenAt.toISOString(),
+                      bytes: backup.bytes,
+                    })),
+                  }
+                : null
+            }
+          />
         </Card>
 
         <Card>

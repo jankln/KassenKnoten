@@ -239,3 +239,37 @@ describe("identity provider", () => {
     );
   });
 });
+
+describe("automatic backups", () => {
+  it("are on by default, beside the database, keeping fourteen", () => {
+    configure({ DATABASE_PATH: "/data/kassenknoten.db" });
+    expect(getEnv().backups).toEqual({ directory: "/data/backups", keep: 14 });
+  });
+
+  it("treat the untouched lines in .env.example as the defaults", () => {
+    configure({
+      DATABASE_PATH: "/data/kassenknoten.db",
+      BACKUP_DIR: "",
+      BACKUP_KEEP: "",
+    });
+    expect(getEnv().backups).toEqual({ directory: "/data/backups", keep: 14 });
+  });
+
+  it("take a directory and a count", () => {
+    configure({ BACKUP_DIR: "/mnt/nas/kassenknoten", BACKUP_KEEP: "30" });
+    expect(getEnv().backups).toEqual({ directory: "/mnt/nas/kassenknoten", keep: 30 });
+  });
+
+  it("are off with BACKUP_KEEP=0", () => {
+    configure({ BACKUP_KEEP: "0" });
+    expect(getEnv().backups).toBeUndefined();
+  });
+
+  it("refuse a count that is not a whole number", () => {
+    for (const value of ["-1", "2.5", "many"]) {
+      resetEnvCache();
+      configure({ BACKUP_KEEP: value });
+      expect(() => getEnv()).toThrow(/BACKUP_KEEP must be a whole number/);
+    }
+  });
+});

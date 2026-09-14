@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatAmountForInput,
+  formatBytes,
   formatCents,
   formatCentsRounded,
   formatInterval,
@@ -141,5 +142,14 @@ describe("formatDay", () => {
 
   it("hands back anything it cannot read rather than inventing a date", () => {
     expect(formatDay("nicht ein datum", de)).toBe("nicht ein datum");
+  });
+});
+
+describe("formatBytes", () => {
+  it("writes sizes in the household's language", () => {
+    expect(normalise(formatBytes(12_345, en))).toBe("12 kB");
+    expect(normalise(formatBytes(2_500_000, en))).toBe("2.5 MB");
+    expect(normalise(formatBytes(2_500_000, de))).toBe("2,5 MB");
+    expect(normalise(formatBytes(80, en))).toBe("1 kB");
   });
 });

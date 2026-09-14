@@ -492,6 +492,18 @@ export const en = {
       restoreRequestInvalid: "The restore could not be started.",
       restoreFailed: "The backup could not be restored.",
       restoreSucceeded: "Backup restored.",
+      automaticTitle: "Automatic backups",
+      automaticHint: (keep: number, directory: string) =>
+        `Once a day, when something has changed, the server saves a backup in ${directory} and keeps the last ${keep}.`,
+      automaticOffsite:
+        "They sit on the same disk as your data. Copy that folder somewhere else now and then — a backup on the disk that fails is gone with it.",
+      automaticOff:
+        "Automatic backups are switched off on this instance (BACKUP_KEEP=0).",
+      automaticNone:
+        "No backup yet. The first one is written shortly after the server starts.",
+      automaticDownload: (when: string) => `Download the backup from ${when}`,
+      automaticRestoreHint:
+        "To restore one, download it and choose it under Restore a backup below.",
       csv: {
         headers: [
           "Type",

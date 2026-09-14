@@ -1,11 +1,25 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Download } from "lucide-react";
 import { buttonStyles } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { useMessages } from "@/components/providers/messages-provider";
+import { formatBytes, formatMoment } from "@/lib/format";
 
-export function DataBackup() {
+export interface AutomaticBackups {
+  directory: string;
+  keep: number;
+  /** Newest first. `takenAt` as an ISO string, so it crosses into the client intact. */
+  backups: { name: string; takenAt: string; bytes: number }[];
+}
+
+export function DataBackup({
+  automatic,
+}: {
+  /** `null` when BACKUP_KEEP=0 on this instance. */
+  automatic: AutomaticBackups | null;
+}) {
   const t = useMessages();
   const copy = t.sections.settings;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -66,6 +80,61 @@ export function DataBackup() {
         >
           {copy.downloadCsv}
         </a>
+      </div>
+
+      <div className="border-line border-t pt-5">
+        <h3 className="font-semibold">{copy.automaticTitle}</h3>
+        {automatic ? (
+          <>
+            <p className="text-ink-muted mt-1 text-sm leading-relaxed">
+              {copy.automaticHint(automatic.keep, automatic.directory)}
+            </p>
+            <p className="text-ink-muted mt-2 text-sm leading-relaxed">
+              {copy.automaticOffsite}
+            </p>
+            {automatic.backups.length === 0 ? (
+              <p className="text-ink-muted mt-4 text-sm">{copy.automaticNone}</p>
+            ) : (
+              <>
+                <ul className="border-line divide-line rounded-card mt-4 divide-y border">
+                  {automatic.backups.map((backup) => {
+                    // The reader's own clock, so this is formatted in the browser; the
+                    // server's time zone would render a different hour first.
+                    const when = formatMoment(new Date(backup.takenAt), t);
+                    return (
+                      <li
+                        key={backup.name}
+                        className="flex min-h-12 items-center gap-3 py-1.5 pr-1.5 pl-4"
+                      >
+                        <span className="min-w-0 flex-1 text-sm">
+                          <time dateTime={backup.takenAt} suppressHydrationWarning>
+                            {when}
+                          </time>
+                          <span className="text-ink-muted ml-2 text-xs">
+                            {formatBytes(backup.bytes, t)}
+                          </span>
+                        </span>
+                        <a
+                          className={buttonStyles({ variant: "ghost", size: "icon" })}
+                          href={`/api/backup/automatic/${encodeURIComponent(backup.name)}`}
+                          download
+                          aria-label={copy.automaticDownload(when)}
+                        >
+                          <Download className="size-4" aria-hidden />
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="text-ink-muted mt-2 text-xs">
+                  {copy.automaticRestoreHint}
+                </p>
+              </>
+            )}
+          </>
+        ) : (
+          <p className="text-ink-muted mt-1 text-sm">{copy.automaticOff}</p>
+        )}
       </div>
 
       <div className="border-line border-t pt-5">

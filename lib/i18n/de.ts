@@ -482,6 +482,18 @@ export const de: Messages = {
       restoreRequestInvalid: "Die Wiederherstellung konnte nicht gestartet werden.",
       restoreFailed: "Die Sicherung konnte nicht wiederhergestellt werden.",
       restoreSucceeded: "Sicherung wiederhergestellt.",
+      automaticTitle: "Automatische Sicherungen",
+      automaticHint: (keep: number, directory: string) =>
+        `Einmal am Tag, wenn sich etwas geändert hat, legt der Server eine Sicherung in ${directory} ab und behält die letzten ${keep}.`,
+      automaticOffsite:
+        "Sie liegen auf derselben Festplatte wie eure Daten. Kopiere den Ordner ab und zu an einen anderen Ort — eine Sicherung auf der Platte, die ausfällt, ist mit ihr weg.",
+      automaticOff:
+        "Automatische Sicherungen sind auf dieser Instanz abgeschaltet (BACKUP_KEEP=0).",
+      automaticNone:
+        "Noch keine Sicherung. Die erste entsteht kurz nach dem Start des Servers.",
+      automaticDownload: (when: string) => `Sicherung vom ${when} herunterladen`,
+      automaticRestoreHint:
+        "Zum Wiederherstellen herunterladen und unten unter „Sicherung wiederherstellen“ auswählen.",
       csv: {
         headers: [
           "Typ",

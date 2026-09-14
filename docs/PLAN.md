@@ -123,6 +123,29 @@ line larger than the total, a VAT rate that would double a small receipt, a date
 naive amount pattern reads as 14,03 €. The OCR engine is I/O around that, and I/O is the
 part that is allowed to be imperfect.
 
+### Why automatic backups are JSON, written by a timer
+
+The backup the server writes is the file the settings screen downloads, not a copy of the
+SQLite database. It is what the restore screen reads, so recovering is the path the
+household already knows; it opens in a text editor; and since #15 it carries household data
+only, while a database copy would also carry who may sign in and which extensions run —
+things a restore must never change.
+
+It is written by a check inside the server once an hour, from `instrumentation.ts`, rather
+than on the first request of a day the way monthly snapshots are. A snapshot records a
+month that is already over, so it can wait for somebody to open the app; a backup exists
+for the day the disk fails, and the changes worth having are the ones made before that,
+whether or not anybody came back afterwards. There is still no cron and no second
+container.
+
+A household that did not change is not written again. Keeping fourteen copies of a quiet
+fortnight would push the last real change out of the window, which is the opposite of what
+retention is for.
+
+The backups sit in the data volume, on the same disk as the database. That protects against
+a mistaken deletion or a bad restore, not against the disk, and the README and the settings
+screen say so rather than let a folder called `backups` suggest more than it is.
+
 ### Why the service worker caches nothing
 
 Installability requires a service worker with a fetch handler, and the usual next step is
@@ -459,6 +482,8 @@ Each item is one feature and one commit on `main`, preceded by a committed
 - [x] F30 The trend is read month by month: a guide line and a readout of that month's
       figures follow the pointer or the arrow keys, so twelve months of history are
       reachable without a navigation or a page load
+- [x] F31 Automatic backups: once a day when something changed, the versioned JSON
+      written to the data volume, the newest fourteen kept and downloadable in the settings
 
 Milestone A + B means the spreadsheet can be retired. C and D make it something worth
 keeping. Ideas parked for later: recurring bookings, importing bank statements,

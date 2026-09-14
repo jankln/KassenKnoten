@@ -180,6 +180,34 @@ export function formatDay(isoDate: string, t: Messages): string {
   return datesFor(t).dayAndMonth.format(new Date(Date.UTC(year, month - 1, day)));
 }
 
+/**
+ * `"14 Sept 2026, 10:15"` / `"14.09.2026, 10:15"` — a moment, such as when a backup was
+ * written, in the reader's own time zone.
+ *
+ * Unlike `formatDay`, which names a calendar day and is therefore fixed to UTC, this is a
+ * point in time: the household wants to read it against the clock on their wall. Rendered
+ * in the browser, so that clock is the one it uses.
+ */
+export function formatMoment(date: Date, t: Messages): string {
+  return new Intl.DateTimeFormat(t.intlLocale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+/** `12345` → `"12 KB"`. For file sizes, where a decimal kilobyte is precise enough. */
+export function formatBytes(bytes: number, t: Messages): string {
+  const [value, unit] =
+    bytes >= 1_000_000
+      ? [bytes / 1_000_000, "megabyte"]
+      : [Math.max(1, bytes / 1000), "kilobyte"];
+  return new Intl.NumberFormat(t.intlLocale, {
+    style: "unit",
+    unit,
+    maximumFractionDigits: value < 10 ? 1 : 0,
+  }).format(value);
+}
+
 /** The period key for a date, e.g. `"2026-08"`. */
 export function toPeriod(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
