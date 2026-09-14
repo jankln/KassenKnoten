@@ -1,44 +1,21 @@
 # Current work
 
-**Feature:** Fix #12 – photographed receipts with uneven lighting keep their total
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fixes #10, #11 and #12** — the receipt scanner starts in the image, a
+worker that cannot start ends the scan instead of hanging it, and photographed receipts
+with uneven lighting keep their total (Sauvola thresholding, both language models).
 
-A receipt photographed with a shadow across it — the ordinary phone case — is read with
-its `SUMME` line, instead of the parser falling back to the largest item price.
+Next up: a patch release, 1.4.1 — every release since 1.3.0 ships a scanner that cannot
+start in the image.
 
-## Scope
+Notes for whoever comes next:
 
-- In: the recognition worker binarises with Sauvola (`thresholding_method: 2`) instead of
-  Tesseract's global Otsu threshold.
-- In: the worker loads both language models, the household's language first. Decided
-  2026-09-14 after measuring: Sauvola with the English model alone read the sample's
-  bold total with a wrong digit and presented it as read, not guessed.
-- In: a synthetic shadowed receipt as a fixture, and a test that runs the real engine on
-  it and expects the total from the `SUMME` line.
-- Out: resolution, preprocessing in the browser, parser changes. Measured: resolution
-  does not help.
+- A worker thread that dies while loading a module never reaches tesseract.js'
+  `errorHandler`; that case ends at the 45-second deadline. `scripts/verify-standalone.mjs`
+  keeps it out of the image.
+- The merchant can come back with leading OCR noise, e.g. `| Kaufland`. Not yet an issue.
+- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
+  parsed German-first.
 
-## Plan
-
-- [ ] fixture `scripts/fixtures/receipt-shadow.webp` (synthetic, no real data)
-- [ ] test with the real engine, failing today
-- [ ] `setParameters` in `ocr.ts`, inside the start deadline
-- [ ] both models from one directory: tesseract.js reads every language from a single
-      `langPath`, and passing model data directly is broken upstream, so the two files
-      are copied into a private temporary directory per process; if that fails, one
-      language as before
-- [ ] `npm run check`, standalone build check, scan both sample receipts again
-
-## Notes / decisions
-
-- Cost of the second model, measured: about 35 MB more while a worker is alive (128 MB
-  instead of 93 MB) and about half a second more on a large photo.
-- The temporary directory comes from `mkdtemp`, not a fixed name, so on a shared host
-  nobody can place model files there first; it is removed when the process exits.
-
-## Resume here
-
-Add the fixture and the failing test first.
+See `docs/WORKFLOW.md` for how this file is used.

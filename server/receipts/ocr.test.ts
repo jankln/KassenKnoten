@@ -1,3 +1,6 @@
+import { existsSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -11,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 type Options = { errorHandler?: (error: unknown) => void };
 type FakeWorker = {
   recognize: ReturnType<typeof vi.fn>;
+  setParameters: ReturnType<typeof vi.fn>;
   terminate: ReturnType<typeof vi.fn>;
 };
 
@@ -21,6 +25,7 @@ vi.mock("tesseract.js", () => ({ createWorker }));
 function workingWorker(text = "SUMME 12,34"): FakeWorker {
   return {
     recognize: vi.fn(async () => ({ data: { text, confidence: 90 } })),
+    setParameters: vi.fn(async () => ({})),
     terminate: vi.fn(async () => {}),
   };
 }
@@ -51,6 +56,24 @@ describe("recogniseReceipt", () => {
       text: "SUMME 12,34",
       confidence: 90,
     });
+    // Sauvola, set before the first image is read (#12).
+    expect(worker.setParameters).toHaveBeenCalledWith({ thresholding_method: "2" });
+    expect(worker.setParameters.mock.invocationCallOrder[0]).toBeLessThan(
+      worker.recognize.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it("starts with both models, the household's language first, and removes the copies", async () => {
+    createWorker.mockImplementation(async () => workingWorker());
+    const { recogniseReceipt } = await import("./ocr");
+
+    await recogniseReceipt(image, "en");
+
+    const [langs, , options] = createWorker.mock.calls[0]!;
+    expect(langs).toBe("eng+deu");
+    // Tesseract has the models in memory once it has started; the copies must not pile
+    // up in the temporary directory with every restart (#12).
+    expect(existsSync((options as { langPath: string }).langPath)).toBe(false);
   });
 
   it("fails at once when the worker reports an error while starting", async () => {
@@ -108,5 +131,44 @@ describe("recogniseReceipt", () => {
     finishStart(late);
     await vi.advanceTimersByTimeAsync(0);
     expect(late.terminate).toHaveBeenCalled();
+  });
+});
+
+describe("prepareModelDirectory", () => {
+  const parents: string[] = [];
+  afterEach(() => {
+    for (const parent of parents.splice(0)) {
+      rmSync(parent, { recursive: true, force: true });
+    }
+    vi.restoreAllMocks();
+  });
+
+  it("puts both language models into one fresh directory", async () => {
+    const parent = mkdtempSync(join(tmpdir(), "kk-ocr-test-"));
+    parents.push(parent);
+    const { prepareModelDirectory } = await import("./ocr");
+
+    const directory = prepareModelDirectory(parent);
+
+    expect(directory).not.toBeNull();
+    expect(directory!.startsWith(join(parent, "kassenknoten-tessdata-"))).toBe(true);
+    expect(readdirSync(directory!).sort()).toEqual([
+      "deu.traineddata.gz",
+      "eng.traineddata.gz",
+    ]);
+    // A second call gets a directory of its own rather than reusing a predictable one.
+    expect(prepareModelDirectory(parent)).not.toBe(directory);
+  });
+
+  it("answers null, leaving nothing behind, where it cannot write", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    const parent = mkdtempSync(join(tmpdir(), "kk-ocr-test-"));
+    parents.push(parent);
+    const notADirectory = join(parent, "file");
+    writeFileSync(notADirectory, "");
+    const { prepareModelDirectory } = await import("./ocr");
+
+    expect(prepareModelDirectory(notADirectory)).toBeNull();
+    expect(existsSync(join(notADirectory, "kassenknoten-tessdata-"))).toBe(false);
   });
 });

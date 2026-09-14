@@ -14,13 +14,21 @@
  *
  * 1. Every literal `require` in the worker's graph resolves. This covers the engine builds
  *    for CPUs other than the one running the check.
- * 2. A real recognition of `scripts/fixtures/receipt-smoke.png`, in both languages, with
- *    the options `server/receipts/ocr.ts` uses. This covers what a static walk cannot —
+ * 2. A real recognition of `scripts/fixtures/receipt-smoke.png` with both language models
+ *    and the options `server/receipts/ocr.ts` uses. This covers what a static walk cannot —
  *    which engine build really loads, and whether the models are where the app looks.
  *
  * Usage: node scripts/verify-standalone.mjs [standalone-dir]
  */
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+} from "node:fs";
 import { builtinModules, createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, extname, join, resolve } from "node:path";
@@ -123,29 +131,40 @@ async function recognise() {
     return;
   }
 
+  // Mirrors server/receipts/ocr.ts: both models copied into one directory, the
+  // household's language first, Sauvola thresholding.
+  const models = join(root, "tessdata");
+  mkdirSync(models);
   for (const code of ["deu", "eng"]) {
+    const { langPath } = requireHere(`@tesseract.js-data/${code}`);
+    copyFileSync(
+      join(dirname(langPath), "4.0.0_best_int", `${code}.traineddata.gz`),
+      join(models, `${code}.traineddata.gz`),
+    );
+  }
+
+  for (const langs of ["deu+eng", "eng+deu"]) {
     let worker;
     try {
-      const { langPath } = requireHere(`@tesseract.js-data/${code}`);
-      // Mirrors server/receipts/ocr.ts — the variant directory and the worker options.
       worker = await withTimeout(
-        createWorker(code, 1, {
-          langPath: join(dirname(langPath), "4.0.0_best_int"),
+        createWorker(langs, 1, {
+          langPath: models,
           gzip: true,
           cacheMethod: "none",
           legacyCore: false,
           legacyLang: false,
-          errorHandler: (error) => failures.push(`${code}: worker failed: ${error}`),
+          errorHandler: (error) => failures.push(`${langs}: worker failed: ${error}`),
         }),
-        `${code}: the worker did not start`,
+        `${langs}: the worker did not start`,
       );
+      await worker.setParameters({ thresholding_method: "2" });
       const { data } = await withTimeout(
         worker.recognize(fixture),
-        `${code}: recognition did not finish`,
+        `${langs}: recognition did not finish`,
       );
       if (!data.text.includes("12,34")) {
         failures.push(
-          `${code}: read ${JSON.stringify(data.text)} instead of the fixture`,
+          `${langs}: read ${JSON.stringify(data.text)} instead of the fixture`,
         );
       }
     } catch (error) {
