@@ -1,23 +1,37 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** CI runs `npm run check`, and no image is built without it
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **1.4.1 released.** `latest`, `1.4` and `1.4.1` are one manifest on amd64
-and arm64, carrying a receipt scanner that starts in the image (#10), fails cleanly
-instead of hanging (#11), reads shadowed photos (#12) and cleans the merchant name (#13).
-The image build itself now proves a recognition works before publishing.
+## Goal
 
-Nothing open on `docs/PLAN.md`.
+Every push to `main` and every pull request runs typecheck, lint, format check and the
+full test suite on GitHub, and an image — `edge` or a release tag — is only built when
+that passed. Today the suite runs only on the machine that commits, so nothing stops a
+commit or a tag that skipped it.
 
-Notes for whoever comes next:
+## Scope
 
-- A worker thread that dies while loading a module never reaches tesseract.js'
-  `errorHandler`; that case ends at the 45-second deadline.
-- Measured on one real photo: the browser's 2000 px downscale reads its total, the
-  original full-size photo still does not. The original is only sent when a browser
-  cannot downscale.
-- Not yet tried against a live Authentik, only against `oidc-provider`.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first.
+- In: `.github/workflows/check.yml`, a reusable workflow that runs on pull requests and is
+  called from `image.yml`; `image.yml`'s build waits for it.
+- In: Node 22, the version the image runs, so the suite passes on the runtime that ships.
+- In: `docs/WORKFLOW.md` and `docs/PLAN.md` §8 say what CI enforces.
+- Out: Playwright (next item), a live status badge.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] `check.yml`: checkout, setup-node 22 with npm cache, `npm ci`, `npm run check`
+- [ ] `image.yml`: a `check` job calling it, `build` needs it
+- [ ] docs
+- [ ] push and watch: check runs first, build starts only after it
+
+## Notes / decisions
+
+- One workflow file for the checks rather than a copy in each trigger: `image.yml` calls it
+  with `workflow_call`, pull requests trigger it directly. Two copies of the steps would be
+  two definitions of "green" that can drift.
+
+## Resume here
+
+Write `check.yml`, then add the `needs` in `image.yml`.
