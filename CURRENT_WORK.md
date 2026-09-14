@@ -1,30 +1,18 @@
 # Current work
 
-**Feature:** Fix #15 – a restore leaves sign-in settings and extension switches alone
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fix #15** — backups carry household data only; sign-in configuration
+(`auth.*`) and extension switches (`extensions.*`) stay out of new files and survive a
+restore, including from older files that still carry them.
 
-Restoring a backup brings back the household's data and nothing else: which sign-in
-methods are on, who is on the allowlist and which extensions run stay as the instance has
-them.
+Next up (agreed 2026-09-14): automatic backups.
 
-## Scope
+Notes for whoever comes next:
 
-- In: `server/services/backup.ts` — instance keys (`auth.*`, `extensions.enabled`) are left
-  out of new exports and kept across a restore; a file that still carries them has those
-  rows ignored.
-- In: tests for both directions.
-- Out: automatic backups — next, and they depend on this.
+- #15 shipped in 1.4.0 with sign-in settings and is on `main` only; it belongs in the next
+  release.
+- The README's tests badge is still a static number.
+- Not yet tried against a live Authentik, only against `oidc-provider`.
 
-## Plan
-
-- [ ] failing tests: export omits instance keys; restore keeps current values even when the
-      file has other ones or none
-- [ ] one list of instance keys, next to the modules that own them
-- [ ] `npm run check`
-
-## Resume here
-
-Tests first in `server/services/backup.test.ts`.
+See `docs/WORKFLOW.md` for how this file is used.

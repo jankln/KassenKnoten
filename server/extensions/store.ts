@@ -13,6 +13,8 @@ import * as schema from "@/db/schema";
  * `docker compose pull`. An extension somebody wrote has to outlive an upgrade.
  */
 
+// Under `extensions.`: instance configuration, kept out of backups and across restores
+// (server/services/instance-settings.ts).
 const SETTING_KEY = "extensions.enabled";
 
 export function extensionsDir(): string {

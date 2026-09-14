@@ -7,6 +7,7 @@ import { monthlyCents } from "@/lib/domain/interval";
 import { isPeriod, periodFromDate } from "@/lib/domain/period";
 import { getMessages } from "@/server/i18n";
 import { isLocale } from "@/lib/i18n";
+import { isInstanceSetting } from "./instance-settings";
 
 export const BACKUP_FORMAT = "kassenknoten-backup";
 /**
@@ -599,11 +600,14 @@ export function exportBackup(db: Db = getDb(), exportedAt = new Date()): BackupP
         asc(schema.snapshotMember.memberId),
       )
       .all(),
+    // Sign-in configuration and extension switches belong to the instance, not the
+    // household, and stay out of the file; see instance-settings.ts.
     appSettings: db
       .select()
       .from(schema.appSetting)
       .orderBy(asc(schema.appSetting.key))
       .all()
+      .filter((row) => !isInstanceSetting(row.key))
       .map((row) => ({ ...row, updatedAt: iso(row.updatedAt) })),
   };
 }
@@ -645,7 +649,16 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
     tx.delete(schema.savingsPot).run();
     tx.delete(schema.snapshot).run();
     tx.delete(schema.member).run();
-    tx.delete(schema.appSetting).run();
+    // Only the household's settings are replaced. This instance's sign-in configuration
+    // and extension switches survive a restore, whatever the file says (#15).
+    for (const { key } of tx
+      .select({ key: schema.appSetting.key })
+      .from(schema.appSetting)
+      .all()) {
+      if (!isInstanceSetting(key)) {
+        tx.delete(schema.appSetting).where(eq(schema.appSetting.key, key)).run();
+      }
+    }
     tx.delete(schema.category).where(eq(schema.category.isSystem, false)).run();
 
     tx.update(schema.household)
@@ -804,10 +817,14 @@ export function restoreBackup(payload: BackupPayload, db: Db = getDb()): void {
     if (validated.snapshotMembers.length > 0) {
       tx.insert(schema.snapshotMember).values(validated.snapshotMembers).run();
     }
-    if (validated.appSettings.length > 0) {
+    // A file written before #15 can still carry instance settings; they are ignored.
+    const householdSettings = validated.appSettings.filter(
+      (row) => !isInstanceSetting(row.key),
+    );
+    if (householdSettings.length > 0) {
       tx.insert(schema.appSetting)
         .values(
-          validated.appSettings.map((row) => ({
+          householdSettings.map((row) => ({
             key: row.key,
             value: row.value,
             updatedAt: date(row.updatedAt),

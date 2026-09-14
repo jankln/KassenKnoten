@@ -3,7 +3,9 @@ import { eq } from "drizzle-orm";
 import { createDb } from "@/db/client";
 import * as schema from "@/db/schema";
 import { setLocale } from "@/server/i18n";
+import { readEnabled, setEnabled } from "@/server/extensions/store";
 import { createCategory } from "./categories";
+import { saveAllowlist, saveMethods } from "./sign-in";
 import {
   exportBackup,
   exportPlanningCsv,
@@ -134,6 +136,81 @@ describe("backup", () => {
     );
     expect(handle.db.select().from(schema.appSetting).all()).toHaveLength(1);
     expect(handle.db.select().from(schema.snapshotMember).all()).toHaveLength(1);
+  });
+
+  describe("instance settings (#15)", () => {
+    const instanceKeys = () =>
+      handle.db
+        .select({ key: schema.appSetting.key })
+        .from(schema.appSetting)
+        .all()
+        .map((row) => row.key)
+        .filter((key) => key.startsWith("auth.") || key.startsWith("extensions."))
+        .sort();
+
+    function configureInstance() {
+      saveMethods({ local: false, oidc: true }, handle.db);
+      saveAllowlist(["alex@example.com"], handle.db);
+      setEnabled("savings-runway", false, handle.db);
+    }
+
+    it("leaves sign-in and extension settings out of a backup", () => {
+      seedHouseholdData();
+      configureInstance();
+
+      const keys = exportBackup(handle.db).appSettings.map((row) => row.key);
+
+      expect(keys.filter((key) => /^(auth|extensions)\./.test(key))).toEqual([]);
+      // Household data in the same table still travels.
+      expect(keys.length).toBeGreaterThan(0);
+    });
+
+    it("keeps this instance's sign-in and extension settings across a restore", () => {
+      seedHouseholdData();
+      const beforeConfiguration = exportBackup(handle.db);
+      configureInstance();
+
+      restoreBackup(beforeConfiguration, handle.db);
+
+      expect(instanceKeys()).toEqual([
+        "auth.allowedEmails",
+        "auth.methods",
+        "extensions.enabled",
+      ]);
+      expect(readEnabled(handle.db)).toEqual({ "savings-runway": false });
+    });
+
+    it("ignores the instance settings an older backup file still carries", () => {
+      seedHouseholdData();
+      const payload = exportBackup(handle.db);
+      configureInstance();
+      const stale = {
+        ...payload,
+        appSettings: [
+          ...payload.appSettings,
+          {
+            key: "auth.allowedEmails",
+            value: ["intruder@example.com"],
+            updatedAt: payload.exportedAt,
+          },
+          {
+            key: "extensions.enabled",
+            value: { "savings-runway": true },
+            updatedAt: payload.exportedAt,
+          },
+        ],
+      };
+
+      restoreBackup(parseBackup(stale), handle.db);
+
+      const allowlist = handle.db
+        .select({ value: schema.appSetting.value })
+        .from(schema.appSetting)
+        .where(eq(schema.appSetting.key, "auth.allowedEmails"))
+        .get();
+      expect(allowlist?.value).toEqual(["alex@example.com"]);
+      expect(readEnabled(handle.db)).toEqual({ "savings-runway": false });
+    });
   });
 
   it("rejects unsupported versions and invalid references before changing data", () => {

@@ -20,6 +20,8 @@ import { configuredMethods, startingMethods, type Env } from "@/lib/env";
  * stay in the environment, so a copy of the database is still not a way in.
  */
 
+// Under `auth.`: instance configuration, kept out of backups and across restores
+// (instance-settings.ts).
 const METHODS_KEY = "auth.methods";
 const ALLOWLIST_KEY = "auth.allowedEmails";
 
