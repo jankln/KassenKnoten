@@ -1,15 +1,25 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Fix #8 – an unconfigured provider has a proper title in the settings
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **fix #7** — status badges read in the dark theme, through one shared
-`Badge` component.
+## Goal
 
-Open bugs, in the order they are being fixed: #8 (unconfigured provider titled
-"single sign-on"), #9 (German placeholder in the shared cost dialog).
+Without `OIDC_PROVIDER_NAME`, the provider row in Settings → Sign-in reads
+"Identity provider" / "Identitätsanbieter" instead of a lower-case "single sign-on".
 
-Note for whoever comes next: amounts and percentages still use `de-DE` in both languages
-on purpose — amount input is parsed German-first. Whether an English instance should show
-`€1,234.56` is an open product decision, not an oversight.
+## Scope
 
-See `docs/WORKFLOW.md` for how this file is used.
+- In: a title fallback next to the sentence fallback; the row uses the title.
+- Out: the sentences, where "single sign-on" reads naturally.
+
+## Plan
+
+- [ ] copy in both message files
+- [ ] the settings page passes a title; the card uses it for the row
+- [ ] `npm run check`, then the card on a password-only instance in both languages
+
+## Resume here
+
+Start with the copy.
