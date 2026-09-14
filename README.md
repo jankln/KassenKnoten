@@ -320,7 +320,9 @@ model, `docs/design.md` the visual direction and the reasoning behind it,
 this repository at all.
 
 `npm run check` — typecheck, lint, format and 393 tests — must pass, and nothing is
-finished until it works at 375 px.
+finished until it works at 375 px. `npm run test:e2e` walks the critical path in a real
+browser at that width, against the standalone build (`BUILD_STANDALONE=1 npm run build`
+first). CI runs both before any image is built.
 
 ## License
 

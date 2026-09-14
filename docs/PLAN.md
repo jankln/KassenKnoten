@@ -471,8 +471,11 @@ multi-currency.
 - **Vitest** for the domain layer — the money math is where correctness actually matters.
   Target: every rounding and split path covered, including zero income, single member,
   and 100/0 splits.
-- **Playwright** smoke test for the critical path (login → add shared cost → dashboard
-  shows the right shares) once the UI stabilizes in Milestone C.
+- **Playwright** smoke test for the critical path — sign in, set up the household, add a
+  shared cost split by income, read the shares on the overview — in `e2e/smoke.spec.ts`.
+  It runs at 375 px against the standalone build, the server the image ships, on a
+  throwaway database, with the expected shares worked out by hand rather than by the
+  app's own split function. `npm run test:e2e` after `BUILD_STANDALONE=1 npm run build`.
 - `npm run check` = typecheck + lint + format + test, run before every commit — and by CI
   (`.github/workflows/check.yml`) on every pull request and before every image build, so an
   image cannot be published from a commit that fails it.

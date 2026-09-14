@@ -6,6 +6,10 @@
 # and `image.yml` calls this workflow and builds nothing — not `edge`, not a release —
 # until it has passed.
 #
+# Two jobs, side by side: the checks, and one end-to-end journey in a real browser against
+# the standalone build — the same server the image runs. A caller of this workflow waits
+# for both.
+#
 # One definition, two triggers. Pull requests run it directly; pushes to main and tags
 # reach it through `image.yml`, so the checks are written down once and cannot drift
 # between "what a PR must pass" and "what an image must pass".
@@ -36,3 +40,36 @@ jobs:
       - run: npm ci
 
       - run: npm run check
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # The standalone output is what the image ships, and what the receipt scanner once
+      # worked everywhere but in. The test runs against it rather than `next dev`.
+      - run: npm run build
+        env:
+          BUILD_STANDALONE: "1"
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+
+      # What the browser saw, for a failure that only happens on the runner.
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

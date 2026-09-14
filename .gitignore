@@ -46,3 +46,7 @@ npm-debug.log*
 # TypeScript incremental build info
 *.tsbuildinfo
 dist/
+
+# Playwright
+/test-results/
+/playwright-report/

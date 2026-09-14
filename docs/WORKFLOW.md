@@ -103,8 +103,9 @@ feature branches would. `main` is expected to stay green: never commit something
 not typecheck, lint and test cleanly.
 
 GitHub enforces the same thing after the fact. `.github/workflows/check.yml` runs
-`npm run check` on Node 22, the image's version, for every pull request, and `image.yml`
-calls it first — no image, `edge` or release, is built from a commit that fails it. A red
+`npm run check` on Node 22, the image's version, for every pull request, and next to it
+the Playwright smoke test against the standalone build. `image.yml` calls it first — no
+image, `edge` or release, is built from a commit that fails either. A red
 check on `main` is fixed before anything else, and never by tagging around it.
 
 ## Definition of done for a feature
