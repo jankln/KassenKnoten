@@ -1,20 +1,37 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Fix #10 – receipt scanning works in the Docker image
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **1.4.0 released.** `latest`, `1.4` and `1.4.0` are one manifest on amd64
-and arm64, carrying optional sign-in with an identity provider (F04b), the trend readout
-(F30) and fixes #4 to #9. The release carries `docker-compose.yml` and `env.example`, so
-the README's `releases/latest/download` commands fetch the new OIDC block.
+## Goal
 
-Nothing open on `docs/PLAN.md`.
+A receipt scanned on an instance running the published image is read, as it is under
+`next dev`. Today the recognition worker cannot start there, because the standalone build
+lacks modules the worker imports.
 
-Notes for whoever comes next:
+## Scope
 
-- Not yet tried against a live **Authentik**, only against `oidc-provider`. The README
-  covers the issuer's trailing slash and the signing key.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first. Whether an English instance should show `€1,234.56` is an open
-  product decision, not an oversight.
+- In: `outputFileTracingIncludes` carries the worker's dependencies.
+- In: a check that walks the worker's `require` graph inside `.next/standalone` and fails
+  the image build when anything is missing, so this cannot ship silently again.
+- Out: the hang when a worker fails to start — that is #11, its own commit.
+- Out: recognition accuracy.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] `scripts/verify-standalone.mjs`, run against the current build: must report the
+      missing modules
+- [ ] add the modules to the trace; the check passes
+- [ ] run the check in the Dockerfile after `npm run build`
+- [ ] standalone server: scan both test receipts end to end
+
+## Notes / decisions
+
+- Tesseract starts its worker from a file path in a `worker_threads` thread, which the
+  tracer cannot follow. Listing packages by hand is the only lever `next.config.ts` has;
+  the check is what keeps the list honest.
+
+## Resume here
+
+Write the check first and watch it fail on the current build.
