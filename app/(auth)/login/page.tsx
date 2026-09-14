@@ -21,9 +21,11 @@ function isLoginError(value: unknown): value is LoginError {
   return ERRORS.includes(value as LoginError);
 }
 
-export const metadata: Metadata = {
-  title: "Anmelden",
-};
+// A page title is copy like any other, so it is resolved per request rather than
+// frozen into a module constant at import time.
+export function generateMetadata(): Metadata {
+  return { title: getMessages().login.title };
+}
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const t = getMessages();

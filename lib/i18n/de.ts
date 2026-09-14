@@ -36,6 +36,7 @@ export const de: Messages = {
    * action — the one place in the app that broke the rule this file exists for.
    */
   login: {
+    title: "Anmelden",
     intro: "Der Haushaltsplan ist mit einem Passwort geschützt.",
     introWithCode:
       "Der Haushaltsplan ist mit einem Passwort und einem Bestätigungscode geschützt.",

@@ -39,6 +39,7 @@ export const en = {
   },
 
   login: {
+    title: "Sign in",
     intro: "This household plan is protected by a password.",
     introWithCode:
       "This household plan is protected by a password and a one-time code.",
