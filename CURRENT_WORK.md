@@ -1,35 +1,18 @@
 # Current work
 
-**Feature:** Release 1.5.0
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **1.5.0 released.** `latest`, `1.5` and `1.5.0` are one manifest on amd64
+and arm64, carrying automatic backups (F31) and the restore fix for instance settings
+(#15).
 
-Get automatic backups (F31) and the restore fix for instance settings (#15) onto a tag.
-Both are on `main` and therefore only in `:edge`.
+Open from the improvement list of 2026-09-14: scanner robustness beyond one real photo
+(server-side downscale as a fallback, more synthetic fixtures), a live test against
+Authentik, the English number format decision, and the features parked in `docs/PLAN.md`.
 
-## Scope
+Notes for whoever comes next:
 
-- In: version in `package.json`, the pinned tag in `docker-compose.yml`, the release and
-  tests badges, the test count and the Status section in `README.md`, the `v1.5.0` tag,
-  the GitHub release with both assets.
-- Out: any change to behaviour. Minor, not patch: F31 adds optional environment variables
-  and writes into the data volume. No migration; the backup format version is unchanged.
+- The README's tests badge is still a static number.
+- `npm audit` still lists four moderate findings in development tooling; assessed in #14.
 
-## Plan
-
-- [x] Image build of the feature commit green, with checks, smoke test and trace guard.
-- [ ] `npm version 1.5.0 --no-git-tag-version`, compose pin, README.
-- [ ] commit `chore(release): 1.5.0`, push, build green.
-- [ ] Tag `v1.5.0`, confirm `1.5.0`, `1.5` and `latest` on one manifest.
-- [ ] GitHub release with notes and both assets.
-
-## Notes / decisions
-
-- The notes must say that upgraded instances start writing into `/data/backups` on their
-  own, how to switch that off, and that the backups share the disk with the data.
-
-## Resume here
-
-`npm version 1.5.0 --no-git-tag-version`.
+See `docs/WORKFLOW.md` for how this file is used.
