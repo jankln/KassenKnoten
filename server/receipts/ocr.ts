@@ -83,6 +83,14 @@ let current: { model: string; worker: Worker } | null = null;
 let idleTimer: NodeJS.Timeout | null = null;
 
 /**
+ * Bumped by every `release()`. A worker whose start began in an earlier generation was
+ * given up on while it was starting, and is terminated when it arrives instead of being
+ * adopted — otherwise a start that took ninety seconds would quietly become the worker
+ * for a later scan, or leak a second copy of the language model.
+ */
+let generation = 0;
+
+/**
  * Recognitions run one at a time, queued behind each other.
  *
  * Tesseract saturates a core for a second or two. Two people submitting receipts at once
@@ -110,7 +118,21 @@ async function workerFor(model: {
     return current.worker;
   }
   await release();
-  const worker = await createWorker(model.code, 1, {
+  const startedIn = generation;
+
+  // Rejected by the worker's error handler. A worker that fails while starting — a
+  // module missing from the build, a model file that is not there — reports it there,
+  // and the promise from `createWorker` then never settles. Without this, the scan waits
+  // for it forever and every later scan queues behind it (#11).
+  let failStart: (error: unknown) => void = () => {};
+  const startFailed = new Promise<never>((_, reject) => {
+    failStart = reject;
+  });
+  // An error after a successful start rejects nobody; it must not become an unhandled
+  // rejection either.
+  startFailed.catch(() => undefined);
+
+  const starting = createWorker(model.code, 1, {
     langPath: langPathFor(model),
     gzip: true,
     // The models are on disk already. Caching them again would write into the working
@@ -127,15 +149,32 @@ async function workerFor(model: {
     // photograph could not be read.
     errorHandler: (error: unknown) => {
       console.error("[receipt] recognition worker failed:", error);
+      failStart(error);
       void release();
     },
   });
+
+  // Whenever the start finishes, a worker nobody is waiting for any more is stopped.
+  void starting.then(
+    (worker) => {
+      if (generation !== startedIn) {
+        void worker.terminate().catch(() => undefined);
+      }
+    },
+    () => undefined,
+  );
+
+  const worker = await Promise.race([starting, startFailed]);
+  if (generation !== startedIn) {
+    throw new Error("Recognition worker was released while starting");
+  }
   current = { model: model.code, worker };
   return worker;
 }
 
 /** Give the language model's memory back. Safe to call when nothing is running. */
 export async function release(): Promise<void> {
+  generation += 1;
   const running = current;
   current = null;
   if (idleTimer) {
@@ -160,8 +199,9 @@ export async function recogniseReceipt(
   const model = MODELS[locale] ?? MODELS.en;
 
   const run = queue.then(async () => {
-    const worker = await workerFor(model);
-
+    // One deadline for starting the worker and reading the image together. Starting is
+    // where a broken build fails, so a deadline that only covered the reading would not
+    // cover the failure most worth bounding.
     let expiry: NodeJS.Timeout | undefined;
     const timeout = new Promise<never>((_, reject) => {
       expiry = setTimeout(() => {
@@ -173,7 +213,10 @@ export async function recogniseReceipt(
     });
 
     try {
-      const { data } = await Promise.race([worker.recognize(image), timeout]);
+      const { data } = await Promise.race([
+        workerFor(model).then((worker) => worker.recognize(image)),
+        timeout,
+      ]);
       keepAlive();
       return { text: data.text, confidence: data.confidence };
     } finally {

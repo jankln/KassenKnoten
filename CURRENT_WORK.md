@@ -1,31 +1,23 @@
 # Current work
 
-**Feature:** Fix #11 – a worker that cannot start ends the scan instead of hanging it
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fix #11** — a recognition worker that cannot start ends the scan within
+the deadline, and the next scan starts fresh.
 
-When the recognition worker fails while starting, the scan answers with the existing
-"could not be read" message within the same time budget as a slow recognition, and the
-next scan starts a fresh worker instead of waiting behind the stuck one.
+Next up: a patch release, 1.4.1. Every release since 1.3.0 ships a scanner that cannot
+start in the image (#10); `main` has the fix and `edge` carries it.
 
-## Scope
+Notes for whoever comes next:
 
-- In: `server/receipts/ocr.ts` — one deadline covering start and recognition; the
-  worker's `errorHandler` rejects a pending start; a start that completes after it was
-  given up on is terminated rather than adopted.
-- In: tests with a mocked `tesseract.js` — a start that errors, a start that never
-  finishes, and the scan after each.
-- Out: recognition quality.
+- A worker thread that dies while loading a module never reaches tesseract.js'
+  `errorHandler` — there is no `error` listener on the thread, so Node reports it as an
+  `uncaughtException` in the server and the start simply never finishes. That case ends
+  at the 45-second deadline, not at once. Failing faster would mean patching tesseract.js;
+  `scripts/verify-standalone.mjs` keeps the case out of the image instead.
+- Recognition quality on a real supermarket receipt is poor: the large bold total line is
+  not read, so the draft proposes the largest item amount instead.
+- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
+  parsed German-first.
 
-## Plan
-
-- [ ] tests first, failing against today's code
-- [ ] `ocr.ts`
-- [ ] `npm run check`; standalone server with a model path that does not exist answers 500
-      quickly and recovers
-
-## Resume here
-
-Start with `server/receipts/ocr.test.ts`.
+See `docs/WORKFLOW.md` for how this file is used.
