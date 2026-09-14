@@ -1,19 +1,29 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Release 1.4.2
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **fix #14** — `next` 16.3.5 and `sharp` 0.35.4, leaving the versions named
-in the 2026-09-08 advisories, and `js-yaml` 4.3.2. `npm audit` now reports only the four
-development-only findings assessed in #14 (`drizzle-kit`/`esbuild`, `exceljs`/`uuid`).
+## Goal
 
-Next up: a patch release, 1.4.2, so instances following `latest` or `1.4` leave the
-advised versions too.
+Instances following `latest` or `1.4` leave Next.js 16.3.2 and sharp 0.35.3, the versions
+named in the 2026-09-08 security advisories (#14). `main` has the update; only `edge`
+carries it.
 
-Notes for whoever comes next:
+## Scope
 
-- The README's tests badge is still a static number.
-- Not yet tried against a live Authentik, only against `oidc-provider`.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first.
+- In: version in `package.json`, the pinned tag in `docker-compose.yml`, the release badge
+  and Status version in `README.md`, the `v1.4.2` tag, the GitHub release with both assets.
+- Out: anything else. A patch: no schema change, no new environment variable.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [x] Image build of the fix commit green, with checks and the smoke test.
+- [ ] `npm version 1.4.2 --no-git-tag-version`, compose pin, README.
+- [ ] commit `chore(release): 1.4.2`, push, build green.
+- [ ] Tag `v1.4.2`, confirm `1.4.2`, `1.4` and `latest` on one manifest.
+- [ ] GitHub release with notes and both assets.
+
+## Resume here
+
+`npm version 1.4.2 --no-git-tag-version`.
