@@ -1,15 +1,26 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Fix #6 – login tab title follows the household's language
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **fix #5** — dates follow the household's language.
+## Goal
 
-Open bugs, in the order they are being fixed: #6 (login tab title always German), #7
-(status badges unreadable in the dark theme), #8 (unconfigured provider titled
-"single sign-on").
+The login page's browser tab reads "Sign in · KassenKnoten" on an English instance and
+"Anmelden · KassenKnoten" on a German one.
 
-Note for whoever comes next: amounts and percentages still use `de-DE` in both languages
-on purpose — amount input is parsed German-first. Whether an English instance should show
-`€1,234.56` is an open product decision, not an oversight.
+## Scope
 
-See `docs/WORKFLOW.md` for how this file is used.
+- In: `login.title` in both message files; the page resolves it with `generateMetadata`,
+  like every other page.
+- Out: anything else on the login page.
+
+## Plan
+
+- [ ] copy in `en.ts` and `de.ts`
+- [ ] `generateMetadata` in `app/(auth)/login/page.tsx`
+- [ ] `npm run check`, then the `<title>` in both languages
+
+## Resume here
+
+Two small edits; start with the copy.
