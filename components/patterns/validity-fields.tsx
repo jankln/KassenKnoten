@@ -182,19 +182,19 @@ function Preview({
     mode === "change"
       ? [
           {
-            when: copy.previewUntil(formatPeriod(previousPeriod(changeFrom))),
+            when: copy.previewUntil(formatPeriod(previousPeriod(changeFrom), t)),
             cents: oldCents,
             note: copy.previewOld,
           },
           {
-            when: copy.previewFrom(formatPeriod(changeFrom)),
+            when: copy.previewFrom(formatPeriod(changeFrom, t)),
             cents: newCents,
             note: copy.previewNew,
           },
         ]
       : [
           {
-            when: copy.previewFrom(formatPeriod(currentFrom)),
+            when: copy.previewFrom(formatPeriod(currentFrom, t)),
             cents: newCents,
             note: copy.previewNew,
           },

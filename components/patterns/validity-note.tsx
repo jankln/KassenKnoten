@@ -37,10 +37,10 @@ export function ValidityNote({
 
   const text =
     validUntil === null
-      ? copy.since(formatPeriod(validFrom))
+      ? copy.since(formatPeriod(validFrom, t))
       : validFrom === validUntil
-        ? formatPeriod(validFrom)
-        : copy.range(formatPeriod(validFrom), formatPeriod(validUntil));
+        ? formatPeriod(validFrom, t)
+        : copy.range(formatPeriod(validFrom, t), formatPeriod(validUntil, t));
 
   return (
     <span

@@ -95,7 +95,7 @@ export function TrendChart({ trend }: { trend: TrendPoint[] }) {
     return null;
   }
 
-  const spoken = `${formatPeriod(point.period)}: ${trendSeries
+  const spoken = `${formatPeriod(point.period, t)}: ${trendSeries
     .map((line) => `${trendLabel(t, line.key)} ${formatCents(point[line.key])}`)
     .join(", ")}`;
 
@@ -105,7 +105,7 @@ export function TrendChart({ trend }: { trend: TrendPoint[] }) {
           colour, which is the whole job the separate legend list used to do. */}
       <div className="mb-3">
         <p className="font-display text-sm font-semibold">
-          {formatPeriod(point.period)}
+          {formatPeriod(point.period, t)}
         </p>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-5">
           {trendSeries.map((line) => (

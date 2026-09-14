@@ -319,7 +319,7 @@ export function ReceiptScan({
                   state.draft.bookedOn === null
                     ? copy.noDate
                     : inOtherMonth
-                      ? copy.otherMonth(formatPeriod(bookedOn.slice(0, 7)))
+                      ? copy.otherMonth(formatPeriod(bookedOn.slice(0, 7), t))
                       : undefined
                 }
               >

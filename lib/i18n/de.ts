@@ -10,6 +10,8 @@ import type { Messages } from "./en";
  * A user-facing string hardcoded in a component is a bug.
  */
 export const de: Messages = {
+  intlLocale: "de-DE",
+
   app: {
     name: "KassenKnoten",
     tagline: "Haushaltsfinanzen planen",

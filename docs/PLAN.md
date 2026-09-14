@@ -183,7 +183,7 @@ lib/
   domain/                calc.ts, split.ts, interval.ts, money.ts   ← pure, unit-tested
   auth/                  oidc.ts, session.ts, allowlist.ts, methods.ts
   i18n/                  de.ts  (all German copy)
-  format.ts              Intl-based de-DE money/date/percent formatting
+  format.ts              Intl-based formatting: de-DE amounts, dates in the household language
 server/
   services/              household.ts, expenses.ts, savings.ts, snapshots.ts
   actions/               server actions, zod-validated

@@ -41,7 +41,7 @@ export function MonthNav({
       </Link>
 
       <p className="font-display min-w-0 truncate text-center text-base font-semibold">
-        {formatPeriod(period)}
+        {formatPeriod(period, t)}
       </p>
 
       <div className="flex items-center gap-1">

@@ -218,7 +218,7 @@ export function CostCard({
                   className="border-line flex items-center gap-3 border-t px-5 py-2.5"
                 >
                   <span className="font-ledger tabular text-ink-muted w-12 shrink-0 text-xs">
-                    {formatDay(booking.bookedOn)}
+                    {formatDay(booking.bookedOn, t)}
                   </span>
                   {/* Wraps rather than truncates: at 375 px a row of date, amount and
                       two 44 px touch targets leaves little for the label, and "Großein…"

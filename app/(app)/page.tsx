@@ -588,7 +588,7 @@ function TrendSection({ trend }: { trend: TrendPoint[] }) {
               {trend.map((point) => (
                 <li key={point.period} className="min-w-0">
                   <p className="font-display text-sm font-semibold">
-                    {formatPeriod(point.period)}
+                    {formatPeriod(point.period, t)}
                   </p>
                   <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
                     {trendSeries.map((line) => (

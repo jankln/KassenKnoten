@@ -19,15 +19,37 @@ const currencyNoFraction = new Intl.NumberFormat("de-DE", {
   maximumFractionDigits: 0,
 });
 
-const monthAndYear = new Intl.DateTimeFormat("de-DE", {
-  month: "long",
-  year: "numeric",
-});
+/**
+ * Date formatters, one per language, built on first use.
+ *
+ * Dates carry words — a month is "June" or "Juni" — so unlike amounts they follow the
+ * household's language. Constructing an `Intl.DateTimeFormat` is expensive enough that a
+ * dashboard naming twelve months should not build twelve of them.
+ */
+const dateFormatters = new Map<
+  string,
+  { monthAndYear: Intl.DateTimeFormat; dayAndMonth: Intl.DateTimeFormat }
+>();
 
-const dayAndMonth = new Intl.DateTimeFormat("de-DE", {
-  day: "2-digit",
-  month: "2-digit",
-});
+function datesFor(t: Messages) {
+  let formatters = dateFormatters.get(t.intlLocale);
+  if (!formatters) {
+    formatters = {
+      monthAndYear: new Intl.DateTimeFormat(t.intlLocale, {
+        month: "long",
+        year: "numeric",
+        timeZone: "UTC",
+      }),
+      dayAndMonth: new Intl.DateTimeFormat(t.intlLocale, {
+        day: "2-digit",
+        month: "2-digit",
+        timeZone: "UTC",
+      }),
+    };
+    dateFormatters.set(t.intlLocale, formatters);
+  }
+  return formatters;
+}
 
 /** `123456` → `"1.234,56 €"`. */
 export function formatCents(cents: number): string {
@@ -133,29 +155,29 @@ export function formatInterval(months: number, t: Messages): string {
   return known ?? t.intervals.other(months);
 }
 
-/** `"2026-08"` → `"August 2026"`. */
-export function formatPeriod(period: string): string {
+/** `"2026-06"` → `"June 2026"` / `"Juni 2026"`. */
+export function formatPeriod(period: string, t: Messages): string {
   const [year, month] = period.split("-").map(Number);
   if (!year || !month) {
     return period;
   }
-  return monthAndYear.format(new Date(Date.UTC(year, month - 1, 1)));
+  return datesFor(t).monthAndYear.format(new Date(Date.UTC(year, month - 1, 1)));
 }
 
 /**
- * `"2026-08-03"` → `"03.08."`. For a list of receipts inside one month, where the year
+ * `"2026-08-03"` → `"03/08"` / `"03.08."`. For a list of receipts inside one month, where the year
  * is already established by the screen and repeating it in every row is noise.
  *
  * Parsed as UTC so a date near midnight cannot slide into the previous day in a timezone
  * behind it; these are calendar days, not moments.
  */
-export function formatDay(isoDate: string): string {
+export function formatDay(isoDate: string, t: Messages): string {
   const [year, month, day] = isoDate.split("-").map(Number);
   if (!year || !month || !day) {
     return isoDate;
   }
   // de-DE already renders "03.08." with its trailing dot; adding one gives "03.08..".
-  return dayAndMonth.format(new Date(Date.UTC(year, month - 1, day)));
+  return datesFor(t).dayAndMonth.format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 /** The period key for a date, e.g. `"2026-08"`. */

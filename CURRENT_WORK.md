@@ -1,28 +1,15 @@
 # Current work
 
-**Feature:** Fix #5 – dates follow the household's language
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fix #5** — dates follow the household's language.
 
-An English instance reads "June 2026" and "03/08", a German one "Juni 2026" and "03.08.",
-wherever a month or a day is named.
+Open bugs, in the order they are being fixed: #6 (login tab title always German), #7
+(status badges unreadable in the dark theme), #8 (unconfigured provider titled
+"single sign-on").
 
-## Scope
+Note for whoever comes next: amounts and percentages still use `de-DE` in both languages
+on purpose — amount input is parsed German-first. Whether an English instance should show
+`€1,234.56` is an open product decision, not an oversight.
 
-- In: `formatPeriod` and `formatDay` take the messages, like `formatInterval` already does,
-  and the messages name the `Intl` locale for their language.
-- Out: amounts and percentages. Input is parsed German-first, and showing one number
-  format while parsing another would be a new inconsistency; that is its own decision.
-
-## Plan
-
-- [ ] `intlLocale` in `en.ts` / `de.ts`
-- [ ] `formatPeriod(period, t)`, `formatDay(date, t)`, formatters cached per locale; tests
-- [ ] every caller passes its messages
-- [ ] `npm run check`, then the dashboard and variable costs in both languages at 375 px
-
-## Resume here
-
-Start with `lib/format.ts`; the compiler lists every caller once the signatures change.
+See `docs/WORKFLOW.md` for how this file is used.

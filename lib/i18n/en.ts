@@ -13,6 +13,12 @@
  * A user-facing string hardcoded in a component is a bug.
  */
 export const en = {
+  /**
+   * The `Intl` locale for dates written in this language. British rather than American
+   * English: day before month, which is how the household's other paperwork reads.
+   */
+  intlLocale: "en-GB",
+
   app: {
     name: "KassenKnoten",
     tagline: "Plan your household finances",

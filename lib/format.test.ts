@@ -116,13 +116,14 @@ describe("formatInterval", () => {
 });
 
 describe("periods", () => {
-  it("renders a period as a German month", () => {
-    expect(formatPeriod("2026-08")).toBe("August 2026");
-    expect(formatPeriod("2026-01")).toBe("Januar 2026");
+  it("names the month in the household's language", () => {
+    expect(formatPeriod("2026-06", en)).toBe("June 2026");
+    expect(formatPeriod("2026-06", de)).toBe("Juni 2026");
+    expect(formatPeriod("2026-01", de)).toBe("Januar 2026");
   });
 
   it("returns the raw value rather than a wrong date for nonsense", () => {
-    expect(formatPeriod("kaputt")).toBe("kaputt");
+    expect(formatPeriod("kaputt", de)).toBe("kaputt");
   });
 
   it("derives the period key from a date", () => {
@@ -133,11 +134,12 @@ describe("periods", () => {
 
 describe("formatDay", () => {
   it("shows the day and month of a receipt, without the year", () => {
-    expect(formatDay("2026-08-03")).toBe("03.08.");
-    expect(formatDay("2026-12-31")).toBe("31.12.");
+    expect(formatDay("2026-08-03", de)).toBe("03.08.");
+    expect(formatDay("2026-12-31", de)).toBe("31.12.");
+    expect(formatDay("2026-08-03", en)).toBe("03/08");
   });
 
   it("hands back anything it cannot read rather than inventing a date", () => {
-    expect(formatDay("nicht ein datum")).toBe("nicht ein datum");
+    expect(formatDay("nicht ein datum", de)).toBe("nicht ein datum");
   });
 });
