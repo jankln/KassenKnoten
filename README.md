@@ -12,7 +12,7 @@ and want the maths to be exactly right.
 **[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Where it runs](#where-it-runs) · [Backups](#backups) · [Security](#security) · [Extensions](#extensions)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/badge/release-v1.6.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
+[![Release](https://img.shields.io/badge/release-v1.6.1-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
 [![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
 [![Checks](https://img.shields.io/github/actions/workflow/status/jankln/KassenKnoten/image.yml?branch=main&label=checks&style=flat-square)](https://github.com/jankln/KassenKnoten/actions/workflows/image.yml)
 [![UI](https://img.shields.io/badge/UI-English%20%C2%B7%20Deutsch-008aa3?style=flat-square)](#a-note-on-language)
