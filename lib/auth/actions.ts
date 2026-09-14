@@ -9,6 +9,7 @@ import { getSignInState } from "@/server/services/sign-in";
 import { endSession, startSession } from "./current-session";
 import { verifyPassword } from "./password";
 import { loginLimiter } from "./rate-limit";
+import { safeReturnPath } from "./return-path";
 import { verifyTotp } from "./totp";
 import { loginReplayGuard } from "./totp-replay";
 
@@ -90,7 +91,8 @@ export async function signIn(
 
   loginLimiter.reset(client);
   await startSession({ subject: "household", method: "local" });
-  redirect("/");
+  const destination = formData.get("weiter");
+  redirect(safeReturnPath(typeof destination === "string" ? destination : null));
 }
 
 export async function signOut(): Promise<void> {

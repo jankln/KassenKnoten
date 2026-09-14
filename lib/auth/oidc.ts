@@ -6,6 +6,7 @@ import {
   type JWTPayload,
   type JWTVerifyGetKey,
 } from "jose";
+import { safeReturnPath } from "./return-path";
 
 /**
  * OpenID Connect, Authorization Code flow with PKCE.
@@ -166,24 +167,6 @@ export function authorizationUrl(input: {
   url.searchParams.set("code_challenge", pkceChallenge(input.verifier));
   url.searchParams.set("code_challenge_method", "S256");
   return url;
-}
-
-/**
- * Only a path on this instance may be returned to after signing in.
- *
- * `//evil.example` and `/\evil.example` are both paths to a naive check and both are read
- * by browsers as another host, which would turn the sign-in into an open redirect.
- */
-export function safeReturnPath(value: string | null | undefined): string {
-  if (
-    !value ||
-    !value.startsWith("/") ||
-    value.startsWith("//") ||
-    value.includes("\\")
-  ) {
-    return "/";
-  }
-  return value;
 }
 
 /* ------------------------------------------------------------------------- *

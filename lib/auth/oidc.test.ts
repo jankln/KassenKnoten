@@ -7,7 +7,6 @@ import {
   exchangeCode,
   openTransaction,
   pkceChallenge,
-  safeReturnPath,
   sealTransaction,
   TRANSACTION_TTL_SECONDS,
   verifyIdToken,
@@ -92,24 +91,6 @@ describe("authorizationUrl", () => {
       code_challenge: "E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM",
       code_challenge_method: "S256",
     });
-  });
-});
-
-describe("safeReturnPath", () => {
-  it("keeps a path on this instance", () => {
-    expect(safeReturnPath("/fixkosten")).toBe("/fixkosten");
-  });
-
-  it("refuses anything a browser would read as another host", () => {
-    for (const value of [
-      "//evil.example",
-      "/\\evil.example",
-      "https://evil.example",
-      "",
-    ]) {
-      expect(safeReturnPath(value)).toBe("/");
-    }
-    expect(safeReturnPath(null)).toBe("/");
   });
 });
 

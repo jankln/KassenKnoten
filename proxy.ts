@@ -156,9 +156,11 @@ export async function proxy(request: NextRequest) {
 
   if (!session) {
     const target = new URL("/login", request.url);
-    // Remember where they were headed, so signing in continues the journey.
-    if (pathname !== "/") {
-      target.searchParams.set("weiter", pathname);
+    // Remember where they were headed, so signing in continues the journey — the query
+    // too, or a month picked on the variable costs screen is forgotten on the way.
+    const destination = `${pathname}${request.nextUrl.search}`;
+    if (destination !== "/") {
+      target.searchParams.set("weiter", destination);
     }
     return harden(NextResponse.redirect(target));
   }

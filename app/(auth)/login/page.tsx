@@ -42,8 +42,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   const params = await searchParams;
   const error = isLoginError(params.fehler) ? t.login.errors[params.fehler] : undefined;
-  // Carried through the provider round trip, so signing in continues where the proxy
-  // stopped somebody. Checked again on the way back; this is only passed along.
+  // Carried through the password form and the provider round trip, so signing in
+  // continues where the proxy stopped somebody. Checked again on the way back; this is
+  // only passed along.
   const returnTo = typeof params.weiter === "string" ? params.weiter : undefined;
   const providerHref = returnTo
     ? `/login/oidc?${new URLSearchParams({ weiter: returnTo })}`
@@ -95,7 +96,11 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         ) : null}
 
         {effective.local ? (
-          <LoginForm requiresCode={requiresCode} secondary={effective.oidc} />
+          <LoginForm
+            requiresCode={requiresCode}
+            secondary={effective.oidc}
+            {...(returnTo ? { returnTo } : {})}
+          />
         ) : null}
       </div>
     </main>

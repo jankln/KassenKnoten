@@ -12,8 +12,11 @@ const field =
 export function LoginForm({
   requiresCode,
   secondary = false,
+  returnTo,
 }: {
   requiresCode: boolean;
+  /** Where the proxy sent somebody away from. Checked again by the action. */
+  returnTo?: string;
   /** Next to a provider button, which then takes the primary styling and the focus. */
   secondary?: boolean;
 }) {
@@ -26,6 +29,7 @@ export function LoginForm({
       action={formAction}
       className={secondary ? "mt-8 space-y-4" : "mt-9 space-y-4"}
     >
+      {returnTo ? <input type="hidden" name="weiter" value={returnTo} /> : null}
       <div className="space-y-2">
         <label htmlFor="password" className="block text-sm font-medium">
           {copy.password}

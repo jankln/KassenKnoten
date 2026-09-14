@@ -5,6 +5,7 @@ import { isAllowed } from "@/lib/auth/allowlist";
 import { getEnv, isSecureOrigin, oidcRedirectUri, type OidcConfig } from "@/lib/env";
 import { getSignInState } from "@/server/services/sign-in";
 import { startSession } from "./current-session";
+import { safeReturnPath } from "./return-path";
 import {
   authorizationUrl,
   discover,
@@ -12,7 +13,6 @@ import {
   OidcError,
   openTransaction,
   randomToken,
-  safeReturnPath,
   sealTransaction,
   TRANSACTION_COOKIE,
   TRANSACTION_TTL_SECONDS,
