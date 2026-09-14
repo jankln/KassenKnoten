@@ -6,7 +6,7 @@
     <title>KassenKnoten — household finances, split to the cent</title>
     <meta
       name="description"
-      content="Self-hosted household finance planner for two incomes: every cost split by its own rule, exact to the cent. Fixed costs, variable budgets, savings — one Docker container, your data."
+      content="Self-hosted household finance planner for two incomes: every cost split by its own rule, exact to the cent. Fixed costs, variable budgets with receipt scanning, savings, daily backups — one Docker container, your data."
     />
     <link rel="icon" href="media/logo.svg" type="image/svg+xml" />
 
@@ -204,6 +204,35 @@
           <article class="card">
             <span class="icon" aria-hidden="true">
               <svg viewBox="0 0 24 24">
+                <path
+                  d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M7 12h10"
+                />
+              </svg>
+            </span>
+            <h3>Scan a receipt</h3>
+            <p>
+              Photograph it and the total, the date and the shop are filled in. Read on
+              your own server — the photo is never uploaded anywhere and never stored.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M3 17l5-5 4 3 8-8" />
+                <path d="M15 7h5v5" />
+              </svg>
+            </span>
+            <h3>Month by month</h3>
+            <p>
+              Twelve months in one chart. Drag along it and each month's income, costs,
+              savings and free cash follow — no navigation, no page load.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
                 <path d="M3 12h4l3 8 4-16 3 8h4" />
               </svg>
             </span>
@@ -242,6 +271,20 @@
               Negative free cash, a savings rate above income, an overspent budget — as
               a calm banner, not a modal. Deleting offers “Undo” instead of asking “are
               you sure?”.
+            </p>
+          </article>
+
+          <article class="card">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="8" cy="15" r="4" />
+                <path d="M10.8 12.2 20 3m-3 3 3 3m-6-0 2 2" />
+              </svg>
+            </span>
+            <h3>Sign in your way</h3>
+            <p>
+              A household password with an optional one-time code, Authentik or any
+              other OpenID Connect provider — or both, switched in the settings.
             </p>
           </article>
 
@@ -297,10 +340,11 @@
                 <path d="M8 12l3 3 8-8" />
               </svg>
             </span>
-            <h3>Your data stays yours</h3>
+            <h3>Backed up every day</h3>
             <p>
-              One SQLite file on a volume you control. Versioned JSON backups and CSV
-              export; restoring runs in a single transaction.
+              One SQLite file on a volume you control. The server keeps the last
+              fourteen states of your data beside it — download one, restore it in one
+              step.
             </p>
           </article>
         </div>
@@ -332,12 +376,39 @@
               src="media/en/shared-costs.png"
               width="2160"
               height="1500"
-              alt="Shared fixed costs: every row shows both members' shares in euros and percent, and the split rule that produced them."
+              alt="Shared fixed costs: every row shows both people's shares in euros and percent, and the split rule that produced them."
             />
           </figure>
         </div>
 
         <div class="row row--flip">
+          <div class="row__text">
+            <p class="eyebrow">Month by month</p>
+            <h2>The past, one drag away.</h2>
+            <p>
+              Every entry knows the months it applies to, so every month can be shown as
+              it really was. The overview draws the last twelve — drag along the chart,
+              or use the arrow keys, and that month's figures follow.
+            </p>
+            <ul>
+              <li>Income, fixed and variable costs, savings rate and free cash</li>
+              <li>A raise in April changes April on, not the months before</li>
+              <li>Every figure also listed underneath, for reading without a chart</li>
+            </ul>
+          </div>
+          <figure>
+            <img
+              class="shot"
+              loading="lazy"
+              src="media/en/trend.png"
+              width="2160"
+              height="1500"
+              alt="The month-by-month chart: five lines over twelve months, with the selected month's figures above it."
+            />
+          </figure>
+        </div>
+
+        <div class="row">
           <div class="row__text">
             <p class="eyebrow">Variable costs</p>
             <h2>A plan, or every receipt.</h2>
@@ -360,9 +431,35 @@
               src="media/en/variable-costs.png"
               width="2160"
               height="1500"
-              alt="Variable costs: a shared budget in detailed mode with a progress bar, both members' shares, and the individual expenses with their dates."
+              alt="Variable costs: a shared budget in detailed mode with a progress bar, both people's shares, and the individual expenses with their dates."
             />
           </figure>
+        </div>
+
+        <div class="row row--flip">
+          <div class="row__text">
+            <p class="eyebrow">Receipts</p>
+            <h2>Photograph it. Check it. Save.</h2>
+            <p>
+              <strong>Scan receipt</strong> opens the camera, and the total, the date
+              and the shop come back filled in. The one question left is which budget it
+              belongs to — the budget carries the split, so that stays your decision.
+            </p>
+            <ul>
+              <li>Read by an OCR engine inside the container, in German and English</li>
+              <li>No key, no cloud service; the photo is dropped once it is read</li>
+              <li>What it could not read stays empty and says so</li>
+            </ul>
+          </div>
+          <div class="phones">
+            <img
+              loading="lazy"
+              src="media/en/receipt-scan.png"
+              width="780"
+              height="1688"
+              alt="A scanned receipt on a phone: amount, date and shop filled in, the budget chosen, ready to save."
+            />
+          </div>
         </div>
 
         <div class="row">
@@ -383,6 +480,33 @@
               width="2160"
               height="1500"
               alt="Savings pots with a monthly rate, current balance, target and a progress bar."
+            />
+          </figure>
+        </div>
+
+        <div class="row row--flip">
+          <div class="row__text">
+            <p class="eyebrow">Settings</p>
+            <h2>Everything else, sorted.</h2>
+            <p>
+              Language and appearance, the default split and categories, sign-in,
+              backups and extensions — each on its own page, all listed on one overview.
+              On a wide screen the list stays beside you.
+            </p>
+            <ul>
+              <li>Switch sign-in methods and keep the allowlist without a restart</li>
+              <li>Download any of the daily backups, restore in one step</li>
+              <li>Settings that could lock you out refuse to</li>
+            </ul>
+          </div>
+          <figure>
+            <img
+              class="shot"
+              loading="lazy"
+              src="media/en/settings.png"
+              width="2160"
+              height="1500"
+              alt="Settings on a wide screen: the categories beside the sign-in page, with the household password and Authentik switched on and the allowlist below."
             />
           </figure>
         </div>
@@ -419,7 +543,7 @@
               src="media/en/login.png"
               width="860"
               height="1800"
-              alt="The sign-in screen with the household password and the field for the one-time code."
+              alt="The sign-in screen: a button for the identity provider, and the household password with the field for the one-time code."
             />
           </div>
         </div>
@@ -444,11 +568,19 @@
             </p>
           </article>
           <article class="card">
+            <h3>Your identity provider</h3>
+            <p>
+              OpenID Connect with PKCE, the ID token checked against the provider's
+              keys, and only addresses on an allowlist kept in the app get in. Taking
+              someone off the list ends their session on the next click.
+            </p>
+          </article>
+          <article class="card">
             <h3>Encrypted session</h3>
             <p>
               The session cookie is encrypted, not merely signed (JWE, A256GCM),
               <span class="num">httpOnly</span>,
-              <span class="num">SameSite=Lax</span> und
+              <span class="num">SameSite=Lax</span> and
               <span class="num">Secure</span> over HTTPS.
             </p>
           </article>
@@ -465,6 +597,14 @@
             <p>
               A Content-Security-Policy with a per-request nonce, self-hosted fonts, no
               CDNs, no telemetry. The container runs as an unprivileged user.
+            </p>
+          </article>
+          <article class="card">
+            <h3>Checked before it ships</h3>
+            <p>
+              No image is published before the tests pass and a real browser has signed
+              in, set up a household and checked a split on the phone layout — against
+              the very server the image runs.
             </p>
           </article>
         </div>
@@ -498,6 +638,8 @@ docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
 <span class="c"># optional: a second factor, prints a QR code into your terminal</span>
 docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
   node scripts/totp-secret.ts
+
+<span class="c"># optional: sign in with Authentik — fill in the OIDC_* lines of .env</span>
 
 docker compose up -d</code></pre>
 

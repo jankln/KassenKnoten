@@ -13,6 +13,9 @@
  *   node scripts/screenshot.mjs http://localhost:3000/fixkosten shot.png 375 820 light \
  *     "kk_session=$(node scripts/dev-session.mjs)"
  *
+ * Set SCALE to change the pixel density (default 2). The desktop screenshots in docs/media
+ * are 1440 × 1000 at SCALE=1.5, which keeps them sharp without doubling their weight.
+ *
  * Set MEASURE to a JS expression to print a value from the page, or to interact with it
  * (a `.click()` works) before the shot is taken — useful for asserting that nothing
  * overflows, and for capturing a dialog:
@@ -91,7 +94,7 @@ await send(
   {
     width: Number(width),
     height: Number(height),
-    deviceScaleFactor: 2,
+    deviceScaleFactor: Number(process.env.SCALE ?? 2),
     mobile: Number(width) < 700,
   },
   s,

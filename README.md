@@ -9,19 +9,19 @@
 A self-hosted household finance planner for people who share costs unevenly —
 and want the maths to be exactly right.
 
-**[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Security](#security) · [Extensions](#extensions)
+**[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Backups](#backups) · [Security](#security) · [Extensions](#extensions)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.6.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
 [![Image](https://img.shields.io/badge/ghcr.io-amd64%20%C2%B7%20arm64-b6498d?style=flat-square)](https://github.com/jankln/KassenKnoten/pkgs/container/kassenknoten)
-[![Tests](https://img.shields.io/badge/tests-412%20passing-1e8f6a?style=flat-square)](#contributing)
+[![Checks](https://img.shields.io/github/actions/workflow/status/jankln/KassenKnoten/image.yml?branch=main&label=checks&style=flat-square)](https://github.com/jankln/KassenKnoten/actions/workflows/image.yml)
 [![UI](https://img.shields.io/badge/UI-English%20%C2%B7%20Deutsch-008aa3?style=flat-square)](#a-note-on-language)
 
 </div>
 
 <br>
 
-<img src="docs/media/dashboard.png" alt="The overview screen: income, fixed costs, variable costs, savings rate and free cash as headline figures, with a per-person breakdown and costs by category.">
+<img src="docs/media/en/dashboard.png" alt="The overview: income, fixed costs, variable costs, savings rate and free cash for the month, with each person's share and the costs by category.">
 
 <br>
 
@@ -45,16 +45,17 @@ the cent, and shows both people what it actually costs them — while they type.
 | **Split per item**            | Fixed quota or proportional to income, chosen for each cost. The household default only pre-fills the form. |
 | **Exact to the cent**         | Integer cents, basis points, largest-remainder splitting. No float ever touches money.                      |
 | **A real time dimension**     | Every entry knows the months it applies to. A raise in September leaves August reporting August.            |
+| **Month by month**            | Drag along the trend, or use the arrow keys, and the figures of any of the last twelve months follow.       |
 | **Variable budgets**          | Groceries, fuel, going out — counted as a plan, or receipt by receipt with a date.                          |
+| **Scan a receipt**            | Photograph it and the total, date and shop are filled in — read on your own server, never uploaded.         |
 | **Every interval normalised** | A 132,00 € yearly insurance sits next to everything else as 11,00 € a month.                                |
 | **Savings pots**              | Monthly rate, balance, optional target, owned by a person or by the household.                              |
-| **Dashboard and trend**       | The month at a glance, per person, per category — and the line each month draws over time.                  |
+| **Sign in your way**          | A household password with an optional second factor, Authentik or any OpenID Connect provider — or both.    |
+| **Backed up every day**       | The server keeps the last fourteen states of your data in its volume, ready to download and restore.        |
+| **Settings in one place**     | General, planning, sign-in, data and extensions, each on its own page.                                      |
 | **Installable as an app**     | Own icon, no address bar, and an honest offline screen instead of stale figures.                            |
-| **Two-factor sign-in**        | Optional TOTP from any authenticator app, on top of the household password.                                 |
-| **Sign in with Authentik**    | Optional OpenID Connect, next to or instead of the password, with an allowlist kept in the app.             |
-| **Your data stays yours**     | One SQLite file on your volume, a daily automatic backup, CSV export, restore in one transaction.           |
-| **Extend it yourself**        | A single `.mjs` file, installed from the settings screen, adds your own cards to the overview.              |
-| **Scan a receipt**            | Photograph it and the total, date and shop are filled in — read on your own server, never uploaded.         |
+| **English and German**        | Chosen by the household, not the browser, so the tablet in the kitchen agrees with the laptop.              |
+| **Extend it yourself**        | A single `.mjs` file, installed from the settings, adds your own cards to the overview.                     |
 
 <br>
 
@@ -65,7 +66,7 @@ cost shows who pays what and _why_ — rent by income, electricity down the midd
 preview while you type is computed by the very same function that later saves, because a
 preview that calculates a second way is a preview that can disagree with the result.
 
-<img src="docs/media/shared-costs.png" alt="Shared fixed costs, each row showing both members' shares in euros and percent, and which split rule produced them.">
+<img src="docs/media/en/shared-costs.png" alt="Shared fixed costs: each row shows both people's shares in euros and percent, and which split rule produced them.">
 
 ### Get the cents right
 
@@ -77,20 +78,37 @@ calculation engine is a pure, unit-tested module.
 ### Keep the past honest
 
 Every income and fixed cost carries the months it applies to. Giving someone a raise in
-September leaves August reporting August, and the dashboard steps back through the months
+September leaves August reporting August, and the overview steps back through the months
 to show what each one actually was. When an amount changes the app **asks what that
 means** — a new figure from a month on, or a correction to what was always true — and
 shows the resulting rows before saving.
 
+The last twelve months sit in one chart on the overview. Drag along it, or use the arrow
+keys, and a guide line and that month's five figures follow — no navigation, no page load.
+
+<img src="docs/media/en/trend.png" alt="The month-by-month chart: income, fixed costs, variable costs, savings rate and free cash over twelve months, with the figures of the selected month above it.">
+
 ### Plan the parts that move
 
 Each variable cost gets a budget, and you choose per budget how it is kept. **Plan**
-counts the figure you set and asks nothing more of you. **Detailliert** counts what you
+counts the figure you set and asks nothing more of you. **Detailed** counts what you
 actually booked, receipt by receipt with a date, and turns the plan into a budget to
 measure against. Both are split between you the same way fixed costs are, and both land
-on the dashboard.
+on the overview.
 
-<img src="docs/media/variable-costs.png" alt="Variable costs: a shared budget in detailed mode with a progress bar, both members' shares, and the individual receipts with their dates.">
+<img src="docs/media/en/variable-costs.png" alt="Variable costs: a shared budget in detailed mode with a progress bar, both people's shares, and the individual receipts with their dates.">
+
+### Scan the receipt instead of typing it
+
+**Scan receipt** opens the camera. The total, the date and the shop come back filled in,
+and the only question left is which budget it belongs to — because the budget carries the
+split, and a receipt that filed itself would be deciding who pays what. A field that could
+not be read stays empty and says so; a total guessed rather than read off the `SUMME` line
+is marked for a second look; nothing is booked until you press save.
+
+It is read on your own server by an OCR engine inside the container, in German and English
+at once. There is no key to configure and no service to trust, and the photo is dropped
+the moment it has been read.
 
 ### Save on purpose, and stay out of trouble
 
@@ -99,28 +117,42 @@ savings rate above income, a pot past its target, an overspent budget — surfac
 banners, not modal scolding. Deleting shows a "Rückgängig" toast instead of asking "are
 you sure?".
 
-<img src="docs/media/savings.png" alt="Savings pots with monthly rate, current balance, target and a progress bar.">
+<img src="docs/media/en/savings.png" alt="Savings pots with monthly rate, current balance, target and a progress bar.">
 
 <br>
 
 <table>
 <tr>
-<td width="50%" valign="top">
+<td width="33%" valign="top">
 
-<img src="docs/media/mobile-dark.png" alt="The overview screen on a phone in dark mode.">
+<img src="docs/media/en/mobile-dark.png" alt="The overview on a phone in dark mode.">
 
 </td>
-<td width="50%" valign="top">
+<td width="33%" valign="top">
 
-<img src="docs/media/login.png" alt="The sign-in screen with the household password and the field for the second-factor code.">
+<img src="docs/media/en/receipt-scan.png" alt="A scanned receipt on a phone: amount, date and shop filled in, the budget chosen, ready to save.">
+
+</td>
+<td width="33%" valign="top">
+
+<img src="docs/media/en/login.png" alt="The sign-in screen: a button for the identity provider, and the household password with the field for the second-factor code.">
 
 </td>
 </tr>
 <tr>
 <td valign="top"><sub>Designed at 375 px first. Same features, not a shrunken desktop — and it installs to the home screen.</sub></td>
-<td valign="top"><sub>Optional second factor: a six-digit code from any authenticator app, refused once it has been used.</sub></td>
+<td valign="top"><sub>A photographed receipt, read on your server: the total, the date and the shop, filled in for a check.</sub></td>
+<td valign="top"><sub>Sign in with your identity provider, or with the household password and a one-time code.</sub></td>
 </tr>
 </table>
+
+### All settings, sorted
+
+Language and appearance, the default split and the cost categories, sign-in, backups and
+extensions each have their own page, listed on one overview. On a wide screen the list
+stays beside the page, so moving from sign-in to backups is one click.
+
+<img src="docs/media/en/settings.png" alt="Settings on a wide screen: the categories General, Planning, Sign-in, Data and Extensions beside the sign-in page, with the household password and Authentik switched on and the allowlist below.">
 
 <br>
 
@@ -281,29 +313,16 @@ someone to the household does not create an account.
 ## Built with
 
 Next.js 16 (App Router, Turbopack) · TypeScript · Tailwind CSS · SQLite via Drizzle ORM ·
-argon2id · Vitest. No animation library, no CDN, no telemetry, no external calls at
-runtime.
+argon2id · jose · Tesseract · Vitest · Playwright. No animation library, no CDN, no
+telemetry — and no calls to anywhere at runtime, unless you configure an identity provider
+for it to talk to.
 
 ## Status
 
-**Stable — 1.6.0.** Everything described above works and is in daily use. The data model,
-the backup format and the environment variables are settled; from here they change by
-migration, not by surprise, and breaking changes wait for a major version.
-
-1.6 sorts the settings into categories — general, planning, sign-in, data and extensions
-— each on its own page.
-
-1.5 added automatic backups: once a day, when something changed, the server keeps a copy
-of the household's data in the data volume, listed in the settings for download and
-restore.
-
-1.4 added optional sign-in with Authentik or any OpenID Connect provider, next to or
-instead of the household password — chosen in `.env` before install and in the settings
-afterwards — and a trend chart you read month by month by dragging along it.
-
-1.3 added the receipt scanner: photograph a till receipt and its total, date and shop
-land in the form. It is read by an OCR engine inside the container — no key to configure,
-no service to trust, and the photo is dropped once it has been read.
+**Stable.** Everything described here works and is in daily use. The data model, the backup
+format and the environment variables are settled; they change by migration, not by
+surprise, and breaking changes wait for a major version. What changed when is in the
+[releases](https://github.com/jankln/KassenKnoten/releases).
 
 ## Extensions
 
@@ -345,8 +364,8 @@ model, `docs/design.md` the visual direction and the reasoning behind it,
 [`docs/extensions/`](docs/extensions/README.md) how to add your own code without touching
 this repository at all.
 
-`npm run check` — typecheck, lint, format and 412 tests — must pass, and nothing is
-finished until it works at 375 px. `npm run test:e2e` walks the critical path in a real
+`npm run check` — typecheck, lint, format and the full test suite — must pass, and nothing
+is finished until it works at 375 px. `npm run test:e2e` walks the critical path in a real
 browser at that width, against the standalone build (`BUILD_STANDALONE=1 npm run build`
 first). CI runs both before any image is built.
 
