@@ -1,17 +1,30 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Fix #15 – a restore leaves sign-in settings and extension switches alone
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **1.4.2 released.** `latest`, `1.4` and `1.4.2` are one manifest on amd64
-and arm64, with Next.js 16.3.5 and sharp 0.35.4 (#14).
+## Goal
 
-Next up (agreed 2026-09-14): automatic backups.
+Restoring a backup brings back the household's data and nothing else: which sign-in
+methods are on, who is on the allowlist and which extensions run stay as the instance has
+them.
 
-Notes for whoever comes next:
+## Scope
 
-- The README's tests badge is still a static number.
-- Not yet tried against a live Authentik, only against `oidc-provider`.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first.
+- In: `server/services/backup.ts` — instance keys (`auth.*`, `extensions.enabled`) are left
+  out of new exports and kept across a restore; a file that still carries them has those
+  rows ignored.
+- In: tests for both directions.
+- Out: automatic backups — next, and they depend on this.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] failing tests: export omits instance keys; restore keeps current values even when the
+      file has other ones or none
+- [ ] one list of instance keys, next to the modules that own them
+- [ ] `npm run check`
+
+## Resume here
+
+Tests first in `server/services/backup.test.ts`.
