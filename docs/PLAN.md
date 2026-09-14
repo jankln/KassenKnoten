@@ -473,5 +473,7 @@ multi-currency.
   and 100/0 splits.
 - **Playwright** smoke test for the critical path (login → add shared cost → dashboard
   shows the right shares) once the UI stabilizes in Milestone C.
-- `npm run check` = typecheck + lint + test, run before every commit.
+- `npm run check` = typecheck + lint + format + test, run before every commit — and by CI
+  (`.github/workflows/check.yml`) on every pull request and before every image build, so an
+  image cannot be published from a commit that fails it.
 - No feature is done while it only works on desktop.

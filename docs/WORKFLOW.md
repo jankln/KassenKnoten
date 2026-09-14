@@ -102,6 +102,11 @@ one-feature-per-commit rule plus `CURRENT_WORK.md` already provide the traceabil
 feature branches would. `main` is expected to stay green: never commit something that does
 not typecheck, lint and test cleanly.
 
+GitHub enforces the same thing after the fact. `.github/workflows/check.yml` runs
+`npm run check` on Node 22, the image's version, for every pull request, and `image.yml`
+calls it first — no image, `edge` or release, is built from a commit that fails it. A red
+check on `main` is fixed before anything else, and never by tagging around it.
+
 ## Definition of done for a feature
 
 - Domain logic covered by unit tests where it computes money.

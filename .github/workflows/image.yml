@@ -20,7 +20,13 @@ permissions:
   packages: write
 
 jobs:
+  # Nothing is built from a commit or a tag that does not pass `npm run check`. Without
+  # this, a tag pushed from a machine that skipped the suite would publish `latest`.
+  check:
+    uses: ./.github/workflows/check.yml
+
   build:
+    needs: check
     strategy:
       fail-fast: false
       matrix:

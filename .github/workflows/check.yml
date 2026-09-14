@@ -1,0 +1,38 @@
+# Typecheck, lint, format check and the full test suite — `npm run check`, on GitHub.
+#
+# Until this existed the suite ran only on the machine that made the commit, which is a
+# promise rather than a gate: the receipt scanner shipped broken in three releases
+# without a single red mark anywhere. Now a pull request cannot look green without it,
+# and `image.yml` calls this workflow and builds nothing — not `edge`, not a release —
+# until it has passed.
+#
+# One definition, two triggers. Pull requests run it directly; pushes to main and tags
+# reach it through `image.yml`, so the checks are written down once and cannot drift
+# between "what a PR must pass" and "what an image must pass".
+name: Check
+
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      # The version the image runs (Dockerfile: node:22-bookworm-slim). A suite that only
+      # passes on a newer Node than the one that ships proves less than it looks.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run check
