@@ -1,23 +1,36 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Release 1.4.1
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **fixes #10 to #13** — the receipt scanner starts in the image, a worker
-that cannot start ends the scan, photographed receipts with uneven lighting keep their
-total, and the proposed merchant name loses OCR noise.
+## Goal
 
-Next up: a patch release, 1.4.1 — every release since 1.3.0 ships a scanner that cannot
-start in the image.
+Get the receipt scanner working on deployed instances. Every release since 1.3.0 ships an
+image whose recognition worker cannot start (#10), and the scan then hangs (#11); `main`
+fixes both, reads shadowed photos far better (#12) and cleans up the merchant name (#13),
+but only `edge` carries it.
 
-Notes for whoever comes next:
+## Scope
 
-- A worker thread that dies while loading a module never reaches tesseract.js'
-  `errorHandler`; that case ends at the 45-second deadline. `scripts/verify-standalone.mjs`
-  keeps it out of the image.
-- Measured on one real photo: the browser's 2000 px downscale reads its total, the
-  original full-size photo still does not. The original is only sent when a browser
-  cannot downscale.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first.
+- In: version in `package.json`, the pinned tag in `docker-compose.yml`, the release and
+  tests badges and the test count in `README.md`, the `v1.4.1` tag, the GitHub release
+  with `docker-compose.yml` and `env.example` attached.
+- Out: anything else. A patch: no schema change, no new environment variable.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [x] Image builds of the fix commits green, including the new build check.
+- [ ] `npm version 1.4.1 --no-git-tag-version`, compose pin, README.
+- [ ] `npm run check`, commit `chore(release): 1.4.1`, push, build green.
+- [ ] Tag `v1.4.1`, push, confirm `1.4.1`, `1.4` and `latest` land on one manifest.
+- [ ] GitHub release with notes and both assets.
+
+## Notes / decisions
+
+- The notes must say plainly that scanning did not work in any image before this one, and
+  that a scan now holds about 35 MB more memory while a worker is alive.
+
+## Resume here
+
+`npm version 1.4.1 --no-git-tag-version`, then the README and the compose pin.
