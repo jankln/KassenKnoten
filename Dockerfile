@@ -37,6 +37,11 @@ COPY . .
 # needs no secrets: every route that touches configuration is rendered per request.
 RUN BUILD_STANDALONE=1 npm run build
 
+# The receipt scanner's worker is started from a file path, so tracing cannot see what it
+# imports. This walks those imports inside the standalone output and stops the build if
+# one is missing — an image that cannot scan is an image that is never published (#10).
+RUN node scripts/verify-standalone.mjs
+
 # --- runtime ---------------------------------------------------------------
 FROM ${NODE_IMAGE} AS runner
 WORKDIR /app

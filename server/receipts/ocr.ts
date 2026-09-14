@@ -116,7 +116,9 @@ async function workerFor(model: {
     // The models are on disk already. Caching them again would write into the working
     // directory of a container that has no reason to be writable.
     cacheMethod: "none",
-    // OEM 1 above is the LSTM engine; this keeps the legacy core out of the bundle too.
+    // OEM 1 above is the LSTM engine. These two ask for the LSTM-only core as well, but
+    // tesseract.js 7 ignores that under Node and loads the full build anyway — see the
+    // tracing notes in next.config.ts, which is where that actually matters.
     legacyCore: false,
     legacyLang: false,
     // Without this, a failure inside the worker — a model file that is not where it was
