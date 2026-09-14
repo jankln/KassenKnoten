@@ -9,7 +9,7 @@
 A self-hosted household finance planner for people who share costs unevenly —
 and want the maths to be exactly right.
 
-**[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Backups](#backups) · [Security](#security) · [Extensions](#extensions)
+**[→ See it in action](https://jankln.github.io/KassenKnoten/)** · [Features](#what-it-does) · [Run it](#run-it) · [Where it runs](#where-it-runs) · [Backups](#backups) · [Security](#security) · [Extensions](#extensions)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-e4a249?style=flat-square)](LICENSE)
 [![Release](https://img.shields.io/badge/release-v1.6.0-008aa3?style=flat-square)](https://github.com/jankln/KassenKnoten/releases/latest)
@@ -158,22 +158,41 @@ stays beside the page, so moving from sign-in to backups is one click.
 
 ## Run it
 
-You need Docker and about two minutes. No checkout, no Node, no build — the image is
-published for **amd64 and arm64**, so a Raspberry Pi is as much a target as a NUC.
+You need Docker and about two minutes. No checkout, no Node, no build.
+
+### Where it runs
+
+Anywhere Docker runs Linux containers. The image is published for **amd64 and arm64**, and
+`docker pull` picks the right one by itself:
+
+| Machine                                                                       | Image             |
+| ----------------------------------------------------------------------------- | ----------------- |
+| Linux server, mini PC or NUC with an Intel or AMD processor                   | `amd64`           |
+| NAS and home-server systems on x86 — Synology, QNAP, Unraid, TrueNAS, Proxmox | `amd64`           |
+| Raspberry Pi 4 or 5 with a **64-bit** OS, ARM cloud servers                   | `arm64`           |
+| macOS with Docker Desktop — Apple silicon or Intel                            | `arm64` / `amd64` |
+| Windows 10 or 11 with Docker Desktop (WSL 2) — Intel, AMD or Windows on ARM   | `amd64` / `arm64` |
+
+Both images are started and used before every release: CI runs them on a native amd64 and
+a native arm64 machine and walks the critical path in a browser against each — sign in,
+set up a household, split a cost, read a receipt. Not supported: 32-bit ARM, such as a
+Raspberry Pi running a 32-bit OS.
+
+### Linux and macOS
 
 ```bash
 mkdir kassenknoten && cd kassenknoten
 curl -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
 curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/env.example
 
-# a session secret
-echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
+# a session secret, appended to .env
+docker run --rm ghcr.io/jankln/kassenknoten:latest node scripts/session-secret.ts >> .env
 
 # your household password, hashed — paste the printed line into .env
-docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/hash-password.ts
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest node scripts/hash-password.ts
 
 # optional: a second factor. Prints a QR code to scan and the line for .env
-docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/totp-secret.ts
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest node scripts/totp-secret.ts
 
 # optional: sign in with Authentik or another OIDC provider — see "Sign in with an
 # identity provider" below, and fill in the OIDC_* block of .env
@@ -181,8 +200,36 @@ docker run -it --rm ghcr.io/jankln/kassenknoten:latest   node --disable-warning=
 docker compose up -d
 ```
 
-The two setup scripts run **inside the image**, so there is nothing to install to produce
-an argon2id hash or a TOTP secret.
+### Windows
+
+Install [Docker Desktop](https://docs.docker.com/desktop/setup/install/windows-install/)
+with the WSL 2 backend, then in **PowerShell**:
+
+```powershell
+mkdir kassenknoten; cd kassenknoten
+curl.exe -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
+curl.exe -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/env.example
+
+# a session secret, appended to .env
+docker run --rm ghcr.io/jankln/kassenknoten:latest node scripts/session-secret.ts | Add-Content .env
+
+# your household password, hashed — paste the printed line into .env (notepad .env)
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest node scripts/hash-password.ts
+
+# optional: a second factor. Prints a QR code to scan and the line for .env
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest node scripts/totp-secret.ts
+
+docker compose up -d
+```
+
+`curl.exe`, not `curl`: in Windows PowerShell `curl` is a different command with other
+options. `Add-Content` rather than `>`, which would write the file in an encoding Docker
+Compose cannot read.
+
+### Either way
+
+The setup scripts run **inside the image**, so there is nothing to install to produce a
+session secret, an argon2id hash or a TOTP secret — and they are the same on every system.
 
 Open <http://127.0.0.1:3000> and a three-step wizard sets up the household. The database
 is created, migrated and seeded on first use — there is no separate migration step.
@@ -195,7 +242,7 @@ Upgrading is editing the tag in `docker-compose.yml` and `docker compose up -d`.
 git clone https://github.com/jankln/KassenKnoten.git
 cd KassenKnoten
 cp .env.example .env
-echo "SESSION_SECRET=$(openssl rand -base64 32)" >> .env
+npm run auth:secret >> .env
 npm run auth:hash
 docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 ```

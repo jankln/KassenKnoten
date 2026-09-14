@@ -51,6 +51,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV DATABASE_PATH=/data/kassenknoten.db
+# The setup scripts are TypeScript files that Node 22 runs directly, and it warns about the
+# standalone package.json having no "type" field on every one of them — a field that would
+# break Next's CommonJS server.js if it were added. Silenced here, once, so the commands in
+# the README stay short and read the same on Linux, macOS and Windows.
+ENV NODE_OPTIONS=--disable-warning=MODULE_TYPELESS_PACKAGE_JSON
 
 # The database lives on a volume, owned by the unprivileged user the server runs as.
 # A named volume inherits this ownership; a bind mount does not — see the README.
@@ -67,24 +72,23 @@ COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
 
-# The two setup scripts travel with the image.
+# The setup scripts travel with the image.
 #
 # Whoever pulls this instead of cloning still has to produce an argon2id hash and, if they
 # want it, a TOTP secret — and without a checkout there is nothing to run. "Just pull the
 # image" would be a promise that breaks at step two.
 #
-#   docker run -it --rm ghcr.io/jankln/kassenknoten \
-#     node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/hash-password.ts
-#   ... likewise scripts/totp-secret.ts
+#   docker run -it --rm ghcr.io/jankln/kassenknoten node scripts/hash-password.ts
+#   ... likewise scripts/totp-secret.ts and scripts/session-secret.ts
 #
 # Node 22 strips TypeScript types on its own, so these go in as the very files the test
-# suite covers rather than as a JavaScript copy that can drift away from them. The
-# --disable-warning flag silences one specific notice about the standalone package.json
-# having no "type" field; adding that field would break Next's CommonJS server.js. @node-rs/argon2
-# is already in the traced standalone output; `uqr` only draws the QR code for the second
+# suite covers rather than as a JavaScript copy that can drift away from them —
+# NODE_OPTIONS above keeps them quiet about it. @node-rs/argon2 is already in the traced
+# standalone output; `uqr` only draws the QR code for the second
 # factor and is a devDependency, so it is copied in beside them.
 COPY --from=builder --chown=node:node /app/scripts/hash-password.ts ./scripts/hash-password.ts
 COPY --from=builder --chown=node:node /app/scripts/totp-secret.ts ./scripts/totp-secret.ts
+COPY --from=builder --chown=node:node /app/scripts/session-secret.ts ./scripts/session-secret.ts
 COPY --from=builder --chown=node:node /app/lib/auth/password.ts ./lib/auth/password.ts
 COPY --from=builder --chown=node:node /app/lib/auth/totp.ts ./lib/auth/totp.ts
 COPY --from=deps --chown=node:node /app/node_modules/uqr ./node_modules/uqr

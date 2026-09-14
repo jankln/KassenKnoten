@@ -2,8 +2,10 @@
 #
 # Built once per architecture on a native runner rather than once with QEMU: ARM runners
 # are free for public repositories, and emulating an arm64 Next.js build costs half an
-# hour per release for byte-identical output. The two builds are then joined into a single
-# manifest, so `docker pull` picks the right one without anybody choosing a tag by hand.
+# hour per release for byte-identical output. Each runner then starts the image it built
+# and runs the browser smoke test against it, so both architectures are used, not only
+# compiled. The two builds are joined into a single manifest only after that, so
+# `docker pull` picks the right one without anybody choosing a tag by hand.
 name: Publish image
 
 on:
@@ -71,6 +73,62 @@ jobs:
           outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ env.ARCH }}
           cache-to: type=gha,mode=max,scope=${{ env.ARCH }}
+
+      # Start the image this runner just built — on its own architecture, amd64 here and
+      # arm64 on the ARM runner — and use it the way a household would, before the
+      # manifest that publishes it exists. The build stage already proves the standalone
+      # output is complete; this proves the image around it starts, signs somebody in,
+      # sets up a household, splits a cost and reads a receipt. The password hash and the
+      # session secret come from the setup scripts inside the image, which tests those
+      # too.
+      - name: Start the image
+        run: |
+          ref="${REGISTRY}/${IMAGE}@${DIGEST}"
+          docker pull "$ref"
+          {
+            printf '%s\n' "$E2E_PASSWORD" \
+              | docker run -i --rm "$ref" node scripts/hash-password.ts \
+              | grep '^LOCAL_PASSWORD_HASH='
+            docker run --rm "$ref" node scripts/session-secret.ts
+          } > /tmp/e2e.env
+          test "$(wc -l < /tmp/e2e.env)" -eq 2
+          docker run -d --name kassenknoten -p 127.0.0.1:3000:3000 --env-file /tmp/e2e.env "$ref"
+          for attempt in $(seq 60); do
+            curl -fsS http://127.0.0.1:3000/api/health && exit 0
+            sleep 2
+          done
+          docker logs kassenknoten
+          exit 1
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+          E2E_PASSWORD: image-smoke-test-password
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Use the image in a browser
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_PASSWORD: image-smoke-test-password
+
+      - name: What the container said
+        if: failure()
+        run: docker logs kassenknoten || true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: image-test-${{ env.ARCH }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
 
       - name: Keep the digest
         run: |

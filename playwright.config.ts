@@ -13,6 +13,12 @@ import { defineConfig, devices } from "@playwright/test";
  */
 
 const port = 3210;
+/**
+ * A running instance to test instead of starting one — the container CI has just built,
+ * for example. It must be fresh (the test begins at the setup wizard) and signed in to
+ * with E2E_PASSWORD.
+ */
+const external = process.env.E2E_BASE_URL;
 // A test password for a throwaway instance, not a secret. Shared with the server script
 // and the test through the environment so it is written down once.
 process.env.E2E_PORT = String(port);
@@ -28,7 +34,7 @@ export default defineConfig({
   retries: 0,
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: `http://127.0.0.1:${port}`,
+    baseURL: external ?? `http://127.0.0.1:${port}`,
     locale: "en-GB",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
@@ -42,14 +48,18 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    // The same flag the package scripts pass: the server script imports a .ts file.
-    command:
-      "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/e2e-server.mjs",
-    url: `http://127.0.0.1:${port}/api/health`,
-    reuseExistingServer: false,
-    timeout: 60_000,
-    stdout: "pipe",
-    stderr: "pipe",
-  },
+  ...(external
+    ? {}
+    : {
+        webServer: {
+          // The same flag the package scripts pass: the server script imports a .ts file.
+          command:
+            "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/e2e-server.mjs",
+          url: `http://127.0.0.1:${port}/api/health`,
+          reuseExistingServer: false,
+          timeout: 60_000,
+          stdout: "pipe",
+          stderr: "pipe",
+        },
+      }),
 });

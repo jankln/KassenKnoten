@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { en } from "../lib/i18n/en";
 
@@ -116,5 +117,28 @@ test("a household is set up and a shared cost splits by income", async ({ page }
       await expect(sharedCosts).toHaveText(euros(share));
     }
     await expectNoHorizontalOverflow(page);
+  });
+
+  await test.step("a photographed receipt is read on this server", async () => {
+    // Through the API rather than the camera sheet: what is under test is that the
+    // recognition engine starts and reads in this build — the part that once worked under
+    // `next dev` and nowhere it was deployed (#10) — not the sheet around it.
+    const response = await page.request.post("/api/receipt", {
+      multipart: {
+        image: {
+          name: "receipt.webp",
+          mimeType: "image/webp",
+          buffer: readFileSync("scripts/fixtures/receipt-shadow.webp"),
+        },
+        today: "2026-09-14",
+      },
+      timeout: 60_000,
+    });
+    expect(response.status()).toBe(200);
+    expect(await response.json()).toMatchObject({
+      amountCents: 1321,
+      amountSource: "total",
+      label: "MUSTERMARKT",
+    });
   });
 });

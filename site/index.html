@@ -111,7 +111,7 @@
 
         <div class="facts">
           <span><strong>Exact to the cent</strong> — no float ever touches money</span>
-          <span><strong>One container</strong> for amd64 and arm64</span>
+          <span><strong>Linux, macOS, Windows</strong> — amd64 and arm64</span>
           <span><strong>No telemetry</strong>, no external calls</span>
           <span><strong>MIT licence</strong></span>
         </div>
@@ -618,20 +618,25 @@
           Docker and two minutes.
         </h2>
         <p class="lede" style="margin-top: 1.25rem">
-          No checkout, no Node, no build: the image is published for amd64 and arm64, so
-          a Raspberry Pi is as much a target as a NUC. Download two files, generate two
-          secrets — the scripts for that run inside the image — and start. The database
-          is created and migrated on first use.
+          No checkout, no Node, no build. The image is published for amd64 and arm64 and
+          runs wherever Docker runs Linux containers: a Linux server or NAS, a Raspberry
+          Pi 4 or 5 with a 64-bit OS, a Mac, or Windows with Docker Desktop. Both images
+          are started and tested in a browser before every release. Download two files,
+          generate the secrets — the scripts for that run inside the image — and start.
         </p>
 
-        <pre><code>mkdir kassenknoten &amp;&amp; cd kassenknoten
+        <p class="eyebrow" style="margin-top: 2.25rem">Linux and macOS</p>
+        <pre
+          style="margin-top: 0.75rem"
+        ><code>mkdir kassenknoten &amp;&amp; cd kassenknoten
 curl -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
 curl -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/env.example
 
-<span class="c"># a session secret</span>
-echo "SESSION_SECRET=$(openssl rand -base64 32)" &gt;&gt; .env
+<span class="c"># a session secret, appended to .env</span>
+docker run --rm ghcr.io/jankln/kassenknoten:latest \
+  node scripts/session-secret.ts &gt;&gt; .env
 
-<span class="c"># your household password, hashed</span>
+<span class="c"># your household password, hashed — paste the printed line into .env</span>
 docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
   node scripts/hash-password.ts
 
@@ -643,10 +648,29 @@ docker run -it --rm ghcr.io/jankln/kassenknoten:latest \
 
 docker compose up -d</code></pre>
 
+        <p class="eyebrow" style="margin-top: 2.25rem">Windows · PowerShell</p>
+        <pre style="margin-top: 0.75rem"><code>mkdir kassenknoten; cd kassenknoten
+curl.exe -LO https://github.com/jankln/KassenKnoten/releases/latest/download/docker-compose.yml
+curl.exe -L -o .env https://github.com/jankln/KassenKnoten/releases/latest/download/env.example
+
+<span class="c"># a session secret, appended to .env</span>
+docker run --rm ghcr.io/jankln/kassenknoten:latest `
+  node scripts/session-secret.ts | Add-Content .env
+
+<span class="c"># your household password, hashed — paste the printed line into .env (notepad .env)</span>
+docker run -it --rm ghcr.io/jankln/kassenknoten:latest `
+  node scripts/hash-password.ts
+
+docker compose up -d</code></pre>
+
         <p style="margin-top: 1.5rem; color: var(--ink-muted); font-size: 0.9375rem">
-          Then open <span class="num">http://127.0.0.1:3000</span> — a three-step wizard
-          sets up the household. For access from outside the machine, put a reverse
-          proxy with TLS in front.
+          Windows needs
+          <a href="https://docs.docker.com/desktop/setup/install/windows-install/"
+            >Docker Desktop</a
+          >
+          with WSL 2. Then open <span class="num">http://127.0.0.1:3000</span> — a
+          three-step wizard sets up the household. For access from outside the machine,
+          put a reverse proxy with TLS in front.
         </p>
 
         <div class="cta">

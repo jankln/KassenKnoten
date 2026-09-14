@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "auth:hash": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/hash-password.ts",
     "auth:totp": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/totp-secret.ts",
+    "auth:secret": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/session-secret.ts",
     "import:excel": "tsx scripts/import-excel.ts",
     "dev:shot": "node scripts/screenshot.mjs",
     "lint": "eslint",
