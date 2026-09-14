@@ -1,17 +1,43 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** README and landing page describe the product as it is today
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **1.6.0 released.** `latest`, `1.6` and `1.6.0` are one manifest on amd64
-and arm64, carrying the settings in categories (F32).
+## Goal
 
-Open from the improvement list of 2026-09-14: scanner robustness beyond one real photo, a
-live test against Authentik, the English number format decision, and the features parked
-in `docs/PLAN.md`.
+Somebody reading the README or the landing page sees the application as it currently is —
+every feature it has, in screenshots taken from the current version — and not a history of
+what arrived in which release.
 
-Notes for whoever comes next:
+## Scope
 
-- The README's tests badge is still a static number.
-- `npm audit` still lists four moderate findings in development tooling; assessed in #14.
+- In: fresh screenshots in `docs/media/` (German) and `docs/media/en/` (English), from
+  the standalone build running the documented example household: overview with the trend
+  readout, shared costs, variable costs, savings, phone in dark mode, sign-in; new ones
+  for the receipt scanner and the settings.
+- In: README — the feature table, the sections and the Status paragraph read as a
+  description of today, not a changelog; the receipt scanner, settings categories, the
+  trend readout and CI get their place.
+- In: `site/index.html` and `site/de/index.html` — the same: receipt scanner, sign-in
+  with an identity provider, automatic backups, settings, the trend; security section
+  with OIDC; setup commands as the README has them.
+- Out: the app itself. Release notes stay what they are — history belongs there.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] example household in a throwaway database (Alex 2050 €, Robin 2310 €, shared costs
+      1182,35 €, a raise and costs starting in earlier months so the trend has shape)
+- [ ] capture every screen in both languages; check nothing personal is in any of them
+- [ ] README
+- [ ] both landing pages; check at 375 px and desktop, light and dark
+- [ ] `npm run format:check`
+
+## Notes / decisions
+
+- No real household data: every figure comes from `docs/WORKFLOW.md`'s example household,
+  and the receipt shown in the scanner is the synthetic fixture.
+
+## Resume here
+
+Build the example household database first.
