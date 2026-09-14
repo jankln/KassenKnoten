@@ -626,6 +626,8 @@ export const en = {
     hint: "How people get into this household plan.",
     password: "Household password",
     passwordHint: "One shared password for everyone.",
+    /** The provider row's title when OIDC_PROVIDER_NAME is not set. */
+    providerTitle: "Identity provider",
     providerHint: "Everyone on the list below signs in with their own account.",
     notConfiguredPassword: "Not set up. Add LOCAL_PASSWORD_HASH to .env and restart.",
     notConfiguredProvider:

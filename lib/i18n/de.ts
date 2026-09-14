@@ -614,6 +614,7 @@ export const de: Messages = {
     hint: "Wie man in diesen Haushaltsplan kommt.",
     password: "Haushalts-Passwort",
     passwordHint: "Ein gemeinsames Passwort für alle.",
+    providerTitle: "Identitätsanbieter",
     providerHint: "Alle auf der Liste unten melden sich mit ihrem eigenen Konto an.",
     notConfiguredPassword:
       "Nicht eingerichtet. Trag LOCAL_PASSWORD_HASH in die .env ein und starte neu.",

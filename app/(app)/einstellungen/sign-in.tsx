@@ -20,7 +20,10 @@ export interface SignInCardProps {
   chosenInSettings: boolean;
   allowlist: string[];
   allowlistInSettings: boolean;
+  /** For sentences: the configured name, or "single sign-on". */
   providerName: string;
+  /** For the row heading: the configured name, or "Identity provider". */
+  providerTitle: string;
   redirectUri: string;
   session: { method: SignInMethod; email?: string };
 }
@@ -71,7 +74,7 @@ export function SignInSettings(props: SignInCardProps) {
     },
     {
       method: "oidc",
-      label: props.providerName,
+      label: props.providerTitle,
       hint: copy.providerHint,
       notConfigured: copy.notConfiguredProvider,
       guard: copy.refused.ownMethodProvider(props.providerName),

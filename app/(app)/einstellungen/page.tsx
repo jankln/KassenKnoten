@@ -91,6 +91,7 @@ export default async function SettingsPage() {
             allowlist={signIn.allowlist}
             allowlistInSettings={signIn.allowlistInSettings}
             providerName={env.oidc?.providerName ?? t.login.providerFallback}
+            providerTitle={env.oidc?.providerName ?? t.signIn.providerTitle}
             redirectUri={oidcRedirectUri(env)}
             session={{
               method: session.method,
