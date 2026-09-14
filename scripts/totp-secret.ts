@@ -1,7 +1,8 @@
 /**
  * Generate the second-factor secret and everything needed to enrol a phone.
  *
- * Run with: npm run auth:totp
+ * Run with: docker run -it --rm ghcr.io/jankln/kassenknoten node scripts/totp-secret.ts
+ * or, from a checkout: npm run auth:totp
  *
  * Built in the shape of `scripts/hash-password.ts`, and for the same reason: the secret
  * belongs in the environment, not in the database. A copy of the SQLite file must not be

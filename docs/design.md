@@ -63,7 +63,9 @@ behind `prefers-reduced-motion`, which the base layer already honours globally.
 
 ## Copy
 
-German, sentence case, plain verbs, no filler and no apologies. A control says what it
-does and keeps that name through the whole flow: the button reads "Anmelden", the failure
-reads "Das Passwort stimmt nicht." — what happened, in the interface's voice, with no
-speculation about why.
+English and German, sentence case, plain verbs, no filler and no apologies. A control says
+what it does and keeps that name through the whole flow: the button reads "Sign in" /
+"Anmelden", the failure reads "Those credentials are not right." / "Die Anmeldedaten
+stimmen nicht." — what happened, in the interface's voice, with no speculation about why.
+Both languages are written, not translated from each other: each one reads as if it were
+the only one.

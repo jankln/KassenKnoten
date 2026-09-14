@@ -1,7 +1,8 @@
 /**
  * Turn a household password into the argon2id hash that belongs in LOCAL_PASSWORD_HASH.
  *
- * Run with: npm run auth:hash
+ * Run with: docker run -it --rm ghcr.io/jankln/kassenknoten node scripts/hash-password.ts
+ * or, from a checkout: npm run auth:hash
  *
  * Reads the password from stdin rather than argv, so it never lands in the shell history
  * or in the process list of a shared machine.

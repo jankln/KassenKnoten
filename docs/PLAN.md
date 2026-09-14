@@ -1,8 +1,9 @@
 # KassenKnoten — Project Plan
 
 A self-hosted household finance planner that replaces `Finanzplan.xlsx`.
-Single household per instance, no per-person accounts, German UI, strong UX,
-runs as one Docker container on a home server.
+Single household per instance, no per-person accounts, English and German UI, strong UX,
+runs as one Docker container on any machine that runs Linux containers — amd64 or arm64,
+Linux, macOS or Windows.
 
 Status of this document: **agreed baseline**. Changes to it are their own `docs:` commit.
 
@@ -163,7 +164,7 @@ call straight to the network. Offline, the app says it is offline.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Browser (German UI, responsive, motion)                 │
+│  Browser (English/German UI, responsive, motion)         │
 │  React Server Components + client islands for forms      │
 └───────────────┬──────────────────────────────────────────┘
                 │ Server Actions (mutations) / RSC (reads)
@@ -205,7 +206,7 @@ db/
 lib/
   domain/                calc.ts, split.ts, interval.ts, money.ts   ← pure, unit-tested
   auth/                  oidc.ts, session.ts, allowlist.ts, methods.ts
-  i18n/                  de.ts  (all German copy)
+  i18n/                  en.ts, de.ts — every string; en is canonical, de is typed against it
   format.ts              Intl-based formatting: de-DE amounts, dates in the household language
 server/
   services/              household.ts, expenses.ts, savings.ts, snapshots.ts
@@ -356,11 +357,11 @@ straight back through the proxy.
 ```env
 APP_URL=https://kassen.example.com
 DATABASE_PATH=/data/kassenknoten.db
-SESSION_SECRET=                 # 32+ random bytes
+SESSION_SECRET=                 # 32+ random bytes, from scripts/session-secret.ts
 AUTH_MODE=local                 # local | oidc | both — the starting point, see above
-LOCAL_PASSWORD_HASH=            # base64 of the argon2id hash, from npm run auth:hash
+LOCAL_PASSWORD_HASH=            # base64 of the argon2id hash, from scripts/hash-password.ts
 LOCAL_PASSWORD_HASH_FILE=       # alternative: read it from a Docker secret
-TOTP_SECRET=                    # optional second factor, from npm run auth:totp
+TOTP_SECRET=                    # optional second factor, from scripts/totp-secret.ts
 OIDC_ISSUER=                    # optional identity provider, exact issuer URL
 OIDC_CLIENT_ID=
 OIDC_CLIENT_SECRET=             # or OIDC_CLIENT_SECRET_FILE
@@ -506,4 +507,10 @@ multi-currency.
 - `npm run check` = typecheck + lint + format + test, run before every commit — and by CI
   (`.github/workflows/check.yml`) on every pull request and before every image build, so an
   image cannot be published from a commit that fails it.
+- **The image itself**, per architecture. The build stage runs `scripts/verify-standalone.mjs`
+  — a real receipt recognition against the standalone output, and a refusal of any build
+  that traced source or data files. Then each native runner, amd64 and arm64, starts the
+  image it built, creates the password hash and session secret with the image's own setup
+  scripts, and runs the Playwright smoke test against the container, receipt included. The
+  manifest is published only after both pass, so neither architecture ships unused.
 - No feature is done while it only works on desktop.

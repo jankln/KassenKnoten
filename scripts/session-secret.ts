@@ -10,6 +10,8 @@
  *   docker run --rm ghcr.io/jankln/kassenknoten node scripts/session-secret.ts >> .env
  *   docker run --rm ghcr.io/jankln/kassenknoten node scripts/session-secret.ts | Add-Content .env
  *
+ * or, from a checkout: npm run auth:secret >> .env
+ *
  * Thirty-two random bytes, base64: what `openssl rand -base64 32` printed before, and more
  * than the thirty-two characters `lib/env.ts` insists on.
  */

@@ -17,6 +17,21 @@ import { isBase32 } from "./auth/totp";
  * instance, alongside the English README and .env.example. Everything the household sees
  * in the browser is German.
  */
+/**
+ * How to produce a value, for the message that says it is missing or wrong.
+ *
+ * Both ways, because both kinds of people read these: whoever pulled the image has Docker
+ * and no `npm`, whoever cloned the repository has both. A message that names only the
+ * checkout's command sends the first group looking for a tool they were promised they
+ * would not need.
+ */
+function howToMake(script: string, npmScript: string): string {
+  return (
+    `  Generate one with:  docker run -it --rm ghcr.io/jankln/kassenknoten node scripts/${script}\n` +
+    `  or from a checkout: npm run ${npmScript}`
+  );
+}
+
 const schema = z.object({
   APP_URL: z.url().default("http://localhost:3000"),
 
@@ -24,7 +39,10 @@ const schema = z.object({
 
   SESSION_SECRET: z
     .string()
-    .min(32, "SESSION_SECRET must be at least 32 characters (openssl rand -base64 32)"),
+    .min(
+      32,
+      "SESSION_SECRET must be at least 32 characters — docker run --rm ghcr.io/jankln/kassenknoten node scripts/session-secret.ts",
+    ),
 
   /**
    * Which sign-in methods are switched on **before anyone has changed it in the
@@ -264,7 +282,7 @@ function resolvePasswordHash(
     throw new Error(
       "Configuration error:\n" +
         `  LOCAL_PASSWORD_HASH is required for AUTH_MODE=${env.AUTH_MODE}.\n` +
-        "  Generate one with: npm run auth:hash",
+        howToMake("hash-password.ts", "auth:hash"),
     );
   }
 
@@ -281,15 +299,15 @@ function resolvePasswordHash(
     throw new Error(
       "Configuration error:\n" +
         "  LOCAL_PASSWORD_HASH lost its $ characters — whatever read your .env or\n" +
-        "  compose file expanded them as variables.\n" +
-        "  Use the base64 form printed by: npm run auth:hash",
+        "  compose file expanded them as variables. Use the base64 form the script prints.\n" +
+        howToMake("hash-password.ts", "auth:hash"),
     );
   }
 
   throw new Error(
     "Configuration error:\n" +
       "  LOCAL_PASSWORD_HASH is neither an argon2id hash nor base64 of one.\n" +
-      "  Generate a valid value with: npm run auth:hash",
+      howToMake("hash-password.ts", "auth:hash"),
   );
 }
 
@@ -314,7 +332,7 @@ function resolveTotpSecret(env: Parsed): string | undefined {
     throw new Error(
       "Configuration error:\n" +
         "  TOTP_SECRET is not valid base32.\n" +
-        "  Generate a valid value with: npm run auth:totp",
+        howToMake("totp-secret.ts", "auth:totp"),
     );
   }
   return raw;
