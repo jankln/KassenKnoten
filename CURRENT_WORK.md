@@ -1,21 +1,31 @@
 # Current work
 
-**Status:** idle — nothing in flight.
+**Feature:** Fix #11 – a worker that cannot start ends the scan instead of hanging it
+**Status:** in progress
+**Started:** 2026-09-14
 
-Last finished: **fix #10** — receipt scanning works in the standalone build, and the image
-build now runs a real recognition so it cannot ship broken again.
+## Goal
 
-Next up: **#11** — a worker that fails to start hangs the scan forever. Then a patch
-release, because 1.3.0 to 1.4.0 all ship a scanner that cannot start.
+When the recognition worker fails while starting, the scan answers with the existing
+"could not be read" message within the same time budget as a slow recognition, and the
+next scan starts a fresh worker instead of waiting behind the stuck one.
 
-Notes for whoever comes next:
+## Scope
 
-- tesseract.js 7 loads the full engine build under Node regardless of `legacyCore`; the
-  tracing list in `next.config.ts` follows what really loads, and
-  `scripts/verify-standalone.mjs` fails the image build the day that changes.
-- Recognition quality on a real supermarket receipt is poor: the large bold total line is
-  not read, so the draft proposes the largest item amount instead. Separate from #10.
-- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
-  parsed German-first.
+- In: `server/receipts/ocr.ts` — one deadline covering start and recognition; the
+  worker's `errorHandler` rejects a pending start; a start that completes after it was
+  given up on is terminated rather than adopted.
+- In: tests with a mocked `tesseract.js` — a start that errors, a start that never
+  finishes, and the scan after each.
+- Out: recognition quality.
 
-See `docs/WORKFLOW.md` for how this file is used.
+## Plan
+
+- [ ] tests first, failing against today's code
+- [ ] `ocr.ts`
+- [ ] `npm run check`; standalone server with a model path that does not exist answers 500
+      quickly and recovers
+
+## Resume here
+
+Start with `server/receipts/ocr.test.ts`.
