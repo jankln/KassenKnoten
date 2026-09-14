@@ -1,30 +1,15 @@
 # Current work
 
-**Feature:** Fix #7 – status badges readable in the dark theme
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fix #7** — status badges read in the dark theme, through one shared
+`Badge` component.
 
-The small brass status pills — Settings → Extensions, Settings → Sign-in, and the plan
-badge on variable costs — can be read in the dark theme as well as the light one.
+Open bugs, in the order they are being fixed: #8 (unconfigured provider titled
+"single sign-on"), #9 (German placeholder in the shared cost dialog).
 
-## Scope
+Note for whoever comes next: amounts and percentages still use `de-DE` in both languages
+on purpose — amount input is parsed German-first. Whether an English instance should show
+`€1,234.56` is an open product decision, not an oversight.
 
-- In: one shared badge style instead of three copies of `bg-brass/15 text-brass-ink`.
-- Out: any other colour in either theme.
-
-## Plan
-
-- [ ] find a text colour that reads on the brass tint in both themes, checked by contrast
-- [ ] apply it in all three places
-- [ ] `npm run check`, then screenshots in both themes at 375 px
-
-## Notes / decisions
-
-- `--color-brass-ink` is meant for text on a solid brass fill. On a 15 % tint over the
-  dark surface it is nearly the surface's own colour.
-
-## Resume here
-
-Measure the contrast first, then change the classes.
+See `docs/WORKFLOW.md` for how this file is used.

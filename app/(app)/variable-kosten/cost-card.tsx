@@ -4,6 +4,7 @@ import type { CSSProperties } from "react";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { CategoryIcon } from "@/components/ui/category-icon";
@@ -280,14 +281,9 @@ function ModeBadge({ detailed }: { detailed: boolean }) {
   const t = useMessages();
   const copy = t.sections.variableCosts;
   return (
-    <span
-      className={cn(
-        "rounded-full px-2 py-0.5 text-[11px] font-medium",
-        detailed ? "bg-surface-muted text-ink-muted" : "bg-brass/15 text-brass-ink",
-      )}
-    >
+    <Badge tone={detailed ? "muted" : "accent"}>
       {detailed ? copy.modeBadgeDetailed : copy.modeBadgePlan}
-    </span>
+    </Badge>
   );
 }
 

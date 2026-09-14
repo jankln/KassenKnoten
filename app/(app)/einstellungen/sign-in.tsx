@@ -3,11 +3,11 @@
 import { useState, useTransition, type FormEvent } from "react";
 import { Info, Plus, X } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { useMessages } from "@/components/providers/messages-provider";
 import type { MethodSet, SignInMethod } from "@/lib/auth/methods";
-import { cn } from "@/lib/utils";
 import {
   addAllowedEmail,
   removeAllowedEmail,
@@ -94,16 +94,9 @@ export function SignInSettings(props: SignInCardProps) {
               <div className="min-w-0 flex-1 basis-48">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <p className="font-medium break-words">{label}</p>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[11px] font-medium",
-                      on
-                        ? "bg-brass/15 text-brass-ink"
-                        : "bg-surface-muted text-ink-muted",
-                    )}
-                  >
+                  <Badge tone={on ? "accent" : "muted"}>
                     {on ? copy.on : copy.off}
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-ink-muted mt-1 text-sm leading-relaxed">
                   {configured ? hint : notConfigured}

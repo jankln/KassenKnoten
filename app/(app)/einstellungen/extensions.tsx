@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { AlertTriangle, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button, buttonStyles } from "@/components/ui/button";
 import { Input } from "@/components/ui/field";
 import { useMessages } from "@/components/providers/messages-provider";
@@ -88,22 +89,21 @@ export function Extensions({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                   <p className="font-medium break-words">{extension.manifest.name}</p>
-                  <span
-                    className={cn(
-                      "rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  <Badge
+                    tone={
                       extension.error
-                        ? "bg-negative/15 text-negative"
+                        ? "negative"
                         : extension.enabled
-                          ? "bg-brass/15 text-brass-ink"
-                          : "bg-surface-muted text-ink-muted",
-                    )}
+                          ? "accent"
+                          : "muted"
+                    }
                   >
                     {extension.error
                       ? "!"
                       : extension.enabled
                         ? copy.enabled
                         : copy.disabled}
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-ink-muted mt-0.5 text-xs">
                   {copy.installed(extension.manifest.version)}
