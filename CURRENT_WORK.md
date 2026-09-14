@@ -1,26 +1,23 @@
 # Current work
 
-**Feature:** Fix #13 – the scanned merchant name loses leading OCR noise
-**Status:** in progress
-**Started:** 2026-09-14
+**Status:** idle — nothing in flight.
 
-## Goal
+Last finished: **fixes #10 to #13** — the receipt scanner starts in the image, a worker
+that cannot start ends the scan, photographed receipts with uneven lighting keep their
+total, and the proposed merchant name loses OCR noise.
 
-A photographed receipt proposes "Hofladen Waldeck", not "| Hofladen Waldeck".
+Next up: a patch release, 1.4.1 — every release since 1.3.0 ships a scanner that cannot
+start in the image.
 
-## Scope
+Notes for whoever comes next:
 
-- In: `findLabel` in `lib/domain/receipt.ts` drops leading and trailing characters that
-  are neither letters nor digits; tests.
-- Out: anything inside the name. A name is still returned as printed.
+- A worker thread that dies while loading a module never reaches tesseract.js'
+  `errorHandler`; that case ends at the 45-second deadline. `scripts/verify-standalone.mjs`
+  keeps it out of the image.
+- Measured on one real photo: the browser's 2000 px downscale reads its total, the
+  original full-size photo still does not. The original is only sent when a browser
+  cannot downscale.
+- Amounts and percentages use `de-DE` in both languages on purpose — amount input is
+  parsed German-first.
 
-## Plan
-
-- [ ] tests for `| `, `; `, `/ ` in front and a stray mark behind; `e.K.` and `7-Eleven`
-      unchanged
-- [ ] `findLabel`
-- [ ] `npm run check`
-
-## Resume here
-
-Tests first, in `lib/domain/receipt.test.ts` under "the merchant".
+See `docs/WORKFLOW.md` for how this file is used.

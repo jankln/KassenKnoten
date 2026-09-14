@@ -199,6 +199,28 @@ describe("parseReceipt", () => {
       );
     });
 
+    it("drops the stray marks a photo puts around the name", () => {
+      for (const line of [
+        "| Hofladen Waldeck",
+        "; Hofladen Waldeck",
+        "/ Hofladen Waldeck",
+        "Hofladen Waldeck }",
+      ]) {
+        expect(parseReceipt(`${line}\nSumme 4,20`, TODAY).label).toBe(
+          "Hofladen Waldeck",
+        );
+      }
+    });
+
+    it("keeps a name as printed, digits and abbreviations included", () => {
+      expect(parseReceipt("7-Eleven Nordring\nSumme 4,20", TODAY).label).toBe(
+        "7-Eleven Nordring",
+      );
+      expect(parseReceipt("Bäckerei Waldeck e.K.\nSumme 4,20", TODAY).label).toBe(
+        "Bäckerei Waldeck e.K.",
+      );
+    });
+
     it("trims a name too long for the booking label", () => {
       const long = `${"Handelsgesellschaft ".repeat(6)}`;
       const label = parseReceipt(long, TODAY).label;

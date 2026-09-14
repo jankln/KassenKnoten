@@ -328,7 +328,11 @@ function findLabel(lines: readonly string[]): string | null {
     if (letters.length < line.length / 2) {
       continue;
     }
-    return line.slice(0, LABEL_MAX).trim();
+    // What is not a letter or a digit at either end is not part of any name: it is the
+    // paper's edge or a logo that the camera caught and the engine read as a `|` or a
+    // `;` (#13). Inside the name nothing is touched, and a closing `.` stays for `e.K.`.
+    const name = line.replace(/^[^\p{L}\p{N}]+/u, "").replace(/[^\p{L}\p{N}.)]+$/u, "");
+    return name.slice(0, LABEL_MAX).trim();
   }
   return null;
 }
